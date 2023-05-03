@@ -52,11 +52,10 @@ enum State {
   CONNECT_TO_DEVICE,
   DEVICE_CONNECTED,
   INITIALIZE,
-  START_KEYBOARD_BROADCAST,
-  KEYBOARD_BROADCASTING,
+  FINISHED,
   DISCONNECTED
 };
-static State state = INITIALIZE;
+static State state = SCAN_DEVICE;
 
 bool connectToServer() {
   if (device == nullptr) {
@@ -113,7 +112,8 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 
   auto currentID = dataToInt(data, length);
 
-  Serial.println("[Client] Sending newly received: " + String(currentID));
+  Serial.println("[Client] Sending newly received:" +  String(currentID));
+  Serial.println("X:" + String(BUTTON_A_A_BLACK == currentID));
 
   if (currentID == 0x0000) {
     Serial1.printf("[Keyboard] Button released %x\n", activeID);
@@ -205,11 +205,17 @@ void my_gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if,
 }
 
 void setup() {
-  Serial.println("Starting ESP32 ...");
-  pinMode(0x02, OUTPUT);
-  BLEDevice::init("");
-
   Serial.begin(SERIAL_BAUD_RATE);
+  Serial.println("Starting ESP32 ...");
+
+  Serial.println("Enable Keyboard");
+  keyboard.begin();
+
+  Serial.println("Enable output LED pins");
+  pinMode(0x02, OUTPUT);
+
+  // BLEDevice::init("");
+
   Serial.println("[Client] Starting...");
 
   scan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
@@ -220,11 +226,13 @@ void setup() {
   client->setClientCallbacks(new ClientCallback());
   client->setMTU(23);
 
-  BLEDevice::setCustomGattcHandler(gattcEventHandler);
-  BLEDevice::setCustomGattsHandler(my_gatts_event_handler);
-  BLEDevice::setCustomGapHandler(my_gap_event_handler);
-
   setupButtons();
+
+  #if defined(DEBUG)
+    BLEDevice::setCustomGattcHandler(gattcEventHandler);
+    BLEDevice::setCustomGattsHandler(my_gatts_event_handler);
+    BLEDevice::setCustomGapHandler(my_gap_event_handler);
+  #endif
 }
 
 void loop() {
@@ -241,21 +249,10 @@ void loop() {
   case DEVICE_CONNECTED:
     if (connectToServer()) {
       Serial.println("Everything good, connected!");
-      state = START_KEYBOARD_BROADCAST;
+      state = FINISHED;
     } else {
       state = SCAN_DEVICE;
     }
-    break;
-  case START_KEYBOARD_BROADCAST:
-    Serial.println("Start keyboard broadcast");
-    keyboard.begin();
-    state = KEYBOARD_BROADCASTING;
-    break;
-  case KEYBOARD_BROADCASTING:
-    // Everything good!
-    break;
-  case INITIALIZE:
-    state = SCAN_DEVICE;
     break;
   case DISCONNECTED:
     Serial.println("Will restart as device has disconnected");
@@ -264,4 +261,3 @@ void loop() {
 
   delay(10);
 };
-
