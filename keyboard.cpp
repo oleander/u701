@@ -3,7 +3,9 @@
 #include <OneButton.h>
 #include <unordered_map>
 
-std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_A_BLACK, new OneButton(PIN, false, false)},
+std::unordered_map<ID, OneButton *> buttons = {
+  {0x0000, new OneButton(PIN, false, false)},
+  {BUTTON_A_A_BLACK, new OneButton(PIN, false, false)},
                                                {BUTTON_A_B_BLUE, new OneButton(PIN, false, false)},
                                                {BUTTON_A_C_BLACK, new OneButton(PIN, false, false)},
                                                {BUTTON_A_D_RED, new OneButton(PIN, false, false)},
@@ -252,5 +254,7 @@ void setupButtons() {
     btn->attachMultiClick(multiClickHandler, point);
     btn->attachLongPressStart(longPressStartHandler, point);
     btn->attachLongPressStop(longPressStopHandler, point);
+    btn->setClickTicks(300);
+    btn->setDebounceTicks(0);
   }
 }

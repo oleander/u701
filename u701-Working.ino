@@ -97,7 +97,8 @@ int32_t dataToInt(uint8_t *pData, size_t length) {
   return result;
 }
 
-ID activeID = 0x0000;
+ID activeID      = 0x0000;
+bool activeState = false;
 
 static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length,
                            bool isNotify) {
@@ -106,13 +107,9 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 
   auto currentID = dataToInt(data, length);
 
-  Serial.println("[Client] Sending newly received:" + String(currentID));
-  Serial.println("X:" + String(BUTTON_A_A_BLACK == currentID));
-
   if (currentID == 0x0000) {
     Serial1.printf("[Keyboard] Button released %x\n", activeID);
-    buttons.at(activeID)->tick(false);
-    activeID = currentID;
+    activeState = false;
   } else if (activeID != 0x0000) {
     Serial1.print("[Keyboard] ");
     Serial1.printf("Second button was pushed: %x\n", currentID);
@@ -122,8 +119,8 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
     Serial1.printf("Will ignore new press\n");
   } else {
     Serial1.printf("[Keyboard] Button was pushed: %x\n", currentID);
-    buttons.at(currentID)->tick(true);
-    activeID = currentID;
+    activeState = true;
+    activeID    = currentID;
   }
 }
 
@@ -252,8 +249,13 @@ void loop() {
   case DISCONNECTED:
     Serial.println("Will restart as device has disconnected");
     ESP.restart();
+  case FINISHED:
+    if (activeID != 0x0000) {
+      buttons.at(activeID)->tick(activeState);
+    }
+    break;
   }
-  
+
   handleWatchdog();
   delay(10);
 };
