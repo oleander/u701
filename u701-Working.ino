@@ -1,0 +1,267 @@
+#include "keyboard.h"
+#include <BLEAdvertisedDevice.h>
+#include <BLEDevice.h>
+#include <BLEScan.h>
+#include <BLEUtils.h>
+
+#define SERIAL_BAUD_RATE 115200
+#define SCAN_INTERVAL    2000
+#define SCAN_WINDOW      1500
+#define SCAN_DURATION    5
+
+const std::map<uint8_t, const char *> hci_error_codes = {
+    {0x00, "HCI_SUCCESS"},
+    {0x02, "HCI_ERROR_CODE_UNKNOWN_CONN_ID"},
+    {0x03, "HCI_ERROR_CODE_HW_FAILURE"},
+    {0x04, "HCI_ERROR_CODE_PAGE_TIMEOUT"},
+    {0x06, "HCI_ERROR_CODE_PIN_KEY_MISSING"},
+    {0x07, "HCI_ERROR_CODE_MEM_CAP_EXCEEDED"},
+    {0x08, "HCI_ERROR_CODE_CONN_TIMEOUT"},
+    {0x09, "HCI_ERROR_CODE_CONN_LIMIT_EXCEEDED"},
+    {0x12, "HCI_ERROR_CODE_INVALID_HCI_CMD_PARAMS"},
+    {0x14, "HCI_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_LOW_RESOURCES"},
+    {0x26, "HCI_ERROR_CODE_LINK_KEY_CAN_NOT_BE_CHANGED"},
+    {0x28, "HCI_ERROR_CODE_INSTANT_PASSED"},
+    {0x2e, "HCI_ERROR_CODE_CHAN_ASSESSMENT_NOT_SUPPORTED"},
+
+};
+
+static BLEUUID idService("f3641400-00b0-4240-b0-05ca45bf8abc");
+static BLEUUID hidService("1812");
+static BLEUUID reportUUID("2A4D");
+static BLEUUID cccdUUID("2902");
+
+static uint8_t ON[] = {0x1, 0x0};
+
+static BLERemoteCharacteristic *characteristic = nullptr;
+static BLEAdvertisedDevice *device             = nullptr;
+
+BLEClient *client = BLEDevice::createClient();
+BLEScan *scan     = BLEDevice::getScan();
+
+const char *getErrorMessage(uint8_t error_code) {
+  auto it = hci_error_codes.find(error_code);
+  if (it != hci_error_codes.end()) {
+    return it->second;
+  }
+  return nullptr;
+}
+
+enum State {
+  SCAN_DEVICE,
+  CONNECT_TO_DEVICE,
+  DEVICE_CONNECTED,
+  INITIALIZE,
+  START_KEYBOARD_BROADCAST,
+  KEYBOARD_BROADCASTING,
+  DISCONNECTED
+};
+static State state = INITIALIZE;
+
+bool connectToServer() {
+  if (device == nullptr) {
+    Serial.println("[Client] [BUG] Address is null");
+    return false;
+  }
+
+  Serial.println("[Client] Discovering services ...");
+  auto service = client->getService(hidService);
+  if (!service) {
+    Serial.println("[Client] [BUG] Service not found");
+    return false;
+  }
+
+  auto characteristic = service->getCharacteristic(reportUUID);
+  if (!characteristic->canNotify()) {
+    Serial.println("[Client] [BUG] Characteristic cannot notify");
+    return false;
+  }
+
+  Serial.println("[Client] Subscribing to notifications");
+  characteristic->registerForNotify(onNotification);
+
+  delay(50);
+
+  auto descriptor = characteristic->getDescriptor(cccdUUID);
+  if (!descriptor) {
+    Serial.println("[Client] [BUG] Descriptor not found");
+    return false;
+  }
+
+  Serial.println("[Client] Enabling notifications");
+  descriptor->writeValue(ON, sizeof(ON), true);
+
+  return true;
+}
+
+int32_t dataToInt(uint8_t *pData, size_t length) {
+  int32_t result = 0;
+
+  for (size_t i = 0; i < length; ++i) {
+    result = (result << 8) | pData[i];
+  }
+
+  return result;
+}
+
+ID activeID = 0x0000;
+
+static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length,
+                           bool isNotify) {
+  if (!isNotify) return;
+  if (length != 4) return;
+
+  auto currentID = dataToInt(data, length);
+
+  Serial.println("[Client] Sending newly received: " + String(currentID));
+
+  if (currentID == 0x0000) {
+    Serial1.printf("[Keyboard] Button released %x\n", activeID);
+    buttons.at(activeID)->tick(false);
+    activeID = currentID;
+  } else if (activeID != 0x0000) {
+    Serial1.print("[Keyboard] ");
+    Serial1.printf("Second button was pushed: %x\n", currentID);
+    Serial1.print("[Keyboard] ");
+    Serial1.printf("Active button: %x\n", activeID);
+    Serial1.print("[Keyboard] ");
+    Serial1.printf("Will ignore new press\n");
+  } else {
+    Serial1.printf("[Keyboard] Button was pushed: %x\n", currentID);
+    buttons.at(currentID)->tick(true);
+    activeID = currentID;
+  }
+}
+
+class ClientCallback : public BLEClientCallbacks {
+  void onConnect(BLEClient *client) {
+    Serial.println("[Client] Connected to BLE buttons");
+    state = DEVICE_CONNECTED;
+  }
+
+  void onDisconnect(BLEClient *client) {
+    Serial.println("[Client] Disconnected from BLE buttons");
+    state = DISCONNECTED;
+  }
+};
+
+class AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+  void onResult(BLEAdvertisedDevice advertised) {
+    Serial.print(".");
+
+    if (!advertised.isAdvertisingService(hidService)) return;
+
+    auto addr = advertised.getAddress().toString();
+    if (strcmp(addr.c_str(), "f7:97:ac:1f:f8:c0") != 0) return;
+
+    auto name = advertised.getName();
+    auto rssi = advertised.getRSSI();
+    auto manu = advertised.getManufacturerData();
+    auto serv = advertised.getServiceData();
+
+    Serial.printf("[Client] Found device: %s (%s) RSSI=%d, manu=%d, serv=%d\n", name.c_str(),
+                  addr.c_str(), rssi, manu.size(), serv.size());
+
+    Serial.println("[Client] Found controller unit");
+    device = new BLEAdvertisedDevice(advertised);
+
+    Serial.println("[Client] Stopping scan");
+    advertised.getScan()->stop();
+
+    state = CONNECT_TO_DEVICE;
+
+    return;
+  }
+};
+
+// Callback function for GATT client
+void gattcEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
+                       esp_ble_gattc_cb_param_t *param) {
+  const char *error_msg = getErrorMessage(event);
+  if (error_msg) {
+    Serial.printf("EVT: %s\n", error_msg);
+  } else {
+    Serial.printf("EVT %x\n", event);
+  }
+}
+
+void my_gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
+  const char *error_msg = getErrorMessage(event);
+  if (error_msg) {
+    Serial.printf("GAP EVT: %s, PARAMS: %x\n", error_msg, param->scan_rst.search_evt);
+  } else {
+    Serial.printf("GAP EVT %x, PARAMS: %x\n", event, param->scan_rst.search_evt);
+  }
+}
+
+void my_gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if,
+                            esp_ble_gatts_cb_param_t *param) {
+  const char *error_msg = getErrorMessage(event);
+  if (error_msg) {
+    Serial.printf("GATTS EVT: %s\n", error_msg);
+  } else {
+    Serial.printf("GATTS EVT %x\n", event);
+  }
+}
+
+void setup() {
+  Serial.println("Starting ESP32 ...");
+  pinMode(0x02, OUTPUT);
+  BLEDevice::init("");
+
+  Serial.begin(SERIAL_BAUD_RATE);
+  Serial.println("[Client] Starting...");
+
+  scan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
+  scan->setInterval(SCAN_INTERVAL);
+  scan->setWindow(SCAN_WINDOW);
+  scan->setActiveScan(true);
+
+  client->setClientCallbacks(new ClientCallback());
+  client->setMTU(23);
+
+  BLEDevice::setCustomGattcHandler(gattcEventHandler);
+  BLEDevice::setCustomGattsHandler(my_gatts_event_handler);
+  BLEDevice::setCustomGapHandler(my_gap_event_handler);
+
+  setupButtons();
+}
+
+void loop() {
+  switch (state) {
+  case SCAN_DEVICE:
+    Serial.println("[Client] Scanning for buttons");
+    scan->start(10, false);
+    scan->clearResults();
+    break;
+  case CONNECT_TO_DEVICE:
+    Serial.println("[Client] Connecting to buttons");
+    client->connect(device);
+    break;
+  case DEVICE_CONNECTED:
+    if (connectToServer()) {
+      Serial.println("Everything good, connected!");
+      state = START_KEYBOARD_BROADCAST;
+    } else {
+      state = SCAN_DEVICE;
+    }
+    break;
+  case START_KEYBOARD_BROADCAST:
+    Serial.println("Start keyboard broadcast");
+    keyboard.begin();
+    state = KEYBOARD_BROADCASTING;
+    break;
+  case KEYBOARD_BROADCASTING:
+    // Everything good!
+    break;
+  case INITIALIZE:
+    state = SCAN_DEVICE;
+    break;
+  case DISCONNECTED:
+    Serial.println("Will restart as device has disconnected");
+    ESP.restart();
+  }
+
+  delay(10);
+};
+
