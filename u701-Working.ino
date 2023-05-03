@@ -1,4 +1,5 @@
 #include "keyboard.h"
+#include "watchdog.h"
 #include <BLEAdvertisedDevice.h>
 #include <BLEDevice.h>
 #include <BLEScan.h>
@@ -47,14 +48,7 @@ const char *getErrorMessage(uint8_t error_code) {
   return nullptr;
 }
 
-enum State {
-  SCAN_DEVICE,
-  CONNECT_TO_DEVICE,
-  DEVICE_CONNECTED,
-  INITIALIZE,
-  FINISHED,
-  DISCONNECTED
-};
+enum State { SCAN_DEVICE, CONNECT_TO_DEVICE, DEVICE_CONNECTED, INITIALIZE, FINISHED, DISCONNECTED };
 static State state = SCAN_DEVICE;
 
 bool connectToServer() {
@@ -112,7 +106,7 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 
   auto currentID = dataToInt(data, length);
 
-  Serial.println("[Client] Sending newly received:" +  String(currentID));
+  Serial.println("[Client] Sending newly received:" + String(currentID));
   Serial.println("X:" + String(BUTTON_A_A_BLACK == currentID));
 
   if (currentID == 0x0000) {
@@ -227,12 +221,13 @@ void setup() {
   client->setMTU(23);
 
   setupButtons();
+  setupWatchdog();
 
-  #if defined(DEBUG)
-    BLEDevice::setCustomGattcHandler(gattcEventHandler);
-    BLEDevice::setCustomGattsHandler(my_gatts_event_handler);
-    BLEDevice::setCustomGapHandler(my_gap_event_handler);
-  #endif
+#if defined(DEBUG)
+  BLEDevice::setCustomGattcHandler(gattcEventHandler);
+  BLEDevice::setCustomGattsHandler(my_gatts_event_handler);
+  BLEDevice::setCustomGapHandler(my_gap_event_handler);
+#endif
 }
 
 void loop() {
@@ -258,6 +253,7 @@ void loop() {
     Serial.println("Will restart as device has disconnected");
     ESP.restart();
   }
-
+  
+  handleWatchdog();
   delay(10);
 };

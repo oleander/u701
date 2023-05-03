@@ -12,24 +12,38 @@ std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_A_BLACK, new OneButton(
                                                {BUTTON_B_C_BLACK, new OneButton(PIN, false, false)},
                                                {BUTTON_B_D_RED, new OneButton(PIN, false, false)}};
 
-#define DEVICE_NAME "u701"
-
-#define POINTER(p) (static_cast<uint16_t>(reinterpret_cast<uintptr_t>(p)))
+#define DEVICE_NAME             "u701"
+#define RESTART_ACTIVATION_TIME 10000
+#define POINTER(p)              (static_cast<uint16_t>(reinterpret_cast<uintptr_t>(p)))
 
 typedef OneButton *Button;
 typedef u_int16_t ID;
 
 BleKeyboard keyboard(DEVICE_NAME, "701", 100);
 
-void sendNOPKey(ID id)
-{
+uint32_t restartPressStartedAt = 0;
+
+void restart() {
+  if (millis() - restartPressStartedAt < RESTART_ACTIVATION_TIME) return;
+  Serial.println("Red left button long press detected");
+
+  if (keyboard.isConnected()) {
+    Serial.println("Phone cannot be connected to Bluetooth");
+    return;
+  }
+
+  Serial.println("Restarting ESP...");
+  delay(1000);
+  ESP.restart();
+}
+
+void sendNOPKey(ID id) {
   Serial1.print("[Keyboard] ");
   Serial1.printf("[0x%x] NOP\n", id);
   keyboard.write(KEY_INVALID);
 }
 
-void sendFnKeyPress(char letter)
-{
+void sendFnKeyPress(char letter) {
   keyboard.write(KEY_ESC);
   keyboard.press(KEY_LEFT_SHIFT);
   keyboard.press(KEY_LEFT_CTRL);
@@ -38,15 +52,55 @@ void sendFnKeyPress(char letter)
   keyboard.releaseAll();
 }
 
-void doubleClickHandler(void *p)
-{
-  if (!keyboard.isConnected())
-    return;
+void clickHandler(void *p) {
+  if (!keyboard.isConnected()) return;
 
   ID id = POINTER(p);
 
-  switch (id)
-  {
+  switch (id) {
+  case BUTTON_A_A_BLACK:
+    keyboard.write(KEY_MEDIA_PLAY_PAUSE);
+    Serial.printf("[0x%x] [Click] Play/Pause\n", id);
+    break;
+  case BUTTON_A_B_BLUE:
+    keyboard.write(KEY_MEDIA_NEXT_TRACK);
+    Serial.printf("[0x%x] [Click] Next Track\n", id);
+    break;
+  case BUTTON_A_C_BLACK:
+    keyboard.write(KEY_MEDIA_VOLUME_UP);
+    Serial.printf("[0x%x] [Click] Volume Up\n", id);
+    break;
+  case BUTTON_A_D_RED:
+    sendFnKeyPress('A');
+    Serial.printf("[0x%x] [Click] Siri\n", id);
+    break;
+  case BUTTON_B_A_BLACK:
+    sendFnKeyPress('H');
+    Serial.printf("[0x%x] [Click] Help\n", id);
+    break;
+  case BUTTON_B_B_BLUE:
+    keyboard.write(KEY_ZOOM_OUT);
+    Serial.printf("[0x%x] [Click] Zoom out\n", id);
+    break;
+  case BUTTON_B_C_BLACK:
+    sendFnKeyPress('R');
+    Serial.printf("[0x%x] [Click] Play music\n", id);
+    break;
+  case BUTTON_B_D_RED:
+    sendFnKeyPress('N');
+    Serial.printf("[0x%x] [Click] Toggle noise cancelling\n", id);
+    break;
+  default:
+    sendNOPKey(id);
+  }
+}
+
+void doubleClickHandler(void *p) {
+  if (!keyboard.isConnected()) return;
+
+  ID id = POINTER(p);
+
+  switch (id) {
   case BUTTON_A_A_BLACK:
     sendNOPKey(id);
     break;
@@ -87,15 +141,12 @@ void doubleClickHandler(void *p)
 }
 
 // Triple click (🅣)
-void multiClickHandler(void *p)
-{
-  if (!keyboard.isConnected())
-    return;
+void multiClickHandler(void *p) {
+  if (!keyboard.isConnected()) return;
 
   ID id = POINTER(p);
 
-  switch (id)
-  {
+  switch (id) {
   case BUTTON_A_A_BLACK:
     keyboard.write(KEY_ESC);
     Serial1.print("[Keyboard] ");
@@ -112,7 +163,7 @@ void multiClickHandler(void *p)
     Serial1.printf("[0x%x] [Triple] Volume Up\n", id);
     break;
   case BUTTON_A_D_RED:
-    keyboard.write(KEY_MEDIA_EJECT);
+    // keyboard.write(KEY_MEDIA_EJECT);
     Serial1.print("[Keyboard] ");
     Serial1.printf("[0x%x] [Triple] Eject\n", id);
     break;
@@ -141,14 +192,65 @@ void multiClickHandler(void *p)
   }
 }
 
-void setupButtons()
-{
-  for (auto &[id, btn] : buttons)
-  {
+void longPressStartHandler(void *p) {
+  if (!keyboard.isConnected()) return;
+
+  ID id = POINTER(p);
+
+  switch (id) {
+  case BUTTON_A_A_BLACK:
+    sendNOPKey(id);
+    break;
+  case BUTTON_A_B_BLUE:
+    sendNOPKey(id);
+    break;
+  case BUTTON_A_C_BLACK:
+    sendNOPKey(id);
+    break;
+  case BUTTON_A_D_RED:
+    restartPressStartedAt = millis();
+    sendNOPKey(id);
+    break;
+  case BUTTON_B_A_BLACK:
+    sendNOPKey(id);
+    break;
+  case BUTTON_B_B_BLUE:
+    sendNOPKey(id);
+    break;
+  case BUTTON_B_C_BLACK:
+    sendNOPKey(id);
+    break;
+  case BUTTON_B_D_RED:
+    restartPressStartedAt = millis();
+    sendNOPKey(id);
+    break;
+  default:
+    sendNOPKey(id);
+  }
+}
+
+void longPressStopHandler(void *p) {
+  ID id = POINTER(p);
+  Serial.printf("Long press stop for ID: 0x%x", id);
+
+  switch (id) {
+  case BUTTON_A_D_RED:
+    restart();
+    break;
+  case BUTTON_B_D_RED:
+    restart();
+    break;
+  }
+}
+
+void setupButtons() {
+  for (auto &[id, btn]: buttons) {
     auto point = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
-    btn->attachClick(doubleClickHandler, point);
-    btn->attachDoubleClick(multiClickHandler, point);
-    btn->attachLongPressStop(doubleClickHandler, point);
+    btn->attachClick(clickHandler, point);
+    btn->attachDoubleClick(doubleClickHandler, point);
+    btn->attachMultiClick(multiClickHandler, point);
+    btn->attachLongPressStart(longPressStartHandler, point);
+    btn->attachLongPressStop(longPressStopHandler, point);
   }
 }
