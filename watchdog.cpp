@@ -1,10 +1,11 @@
 #include "watchdog.h"
+#include "print.h"
 
 unsigned long lastResetTime = 0;
 esp_timer_handle_t wdt_timer;
 
 void setupWatchdog() {
-  Serial.println("Configuring WDT...");
+  PRINTLN("Configuring WDT...");
 
   esp_timer_create_args_t wdt_timer_config;
   wdt_timer_config.callback        = wdt_isr_callback;

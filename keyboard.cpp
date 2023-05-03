@@ -1,11 +1,11 @@
 #include "keyboard.h"
+#include "print.h"
 #include <BleKeyboard.h>
 #include <OneButton.h>
 #include <unordered_map>
 
-std::unordered_map<ID, OneButton *> buttons = {
-  {0x0000, new OneButton(PIN, false, false)},
-  {BUTTON_A_A_BLACK, new OneButton(PIN, false, false)},
+std::unordered_map<ID, OneButton *> buttons = {{0x0000, new OneButton(PIN, false, false)},
+                                               {BUTTON_A_A_BLACK, new OneButton(PIN, false, false)},
                                                {BUTTON_A_B_BLUE, new OneButton(PIN, false, false)},
                                                {BUTTON_A_C_BLACK, new OneButton(PIN, false, false)},
                                                {BUTTON_A_D_RED, new OneButton(PIN, false, false)},
@@ -27,14 +27,14 @@ uint32_t restartPressStartedAt = 0;
 
 void restart() {
   if (millis() - restartPressStartedAt < RESTART_ACTIVATION_TIME) return;
-  Serial.println("Red left button long press detected");
+  PRINTLN("Red left button long press detected");
 
   if (keyboard.isConnected()) {
-    Serial.println("Phone cannot be connected to Bluetooth");
+    PRINTLN("Phone cannot be connected to Bluetooth");
     return;
   }
 
-  Serial.println("Restarting ESP...");
+  PRINTLN("Restarting ESP...");
   delay(1000);
   ESP.restart();
 }
@@ -62,35 +62,35 @@ void clickHandler(void *p) {
   switch (id) {
   case BUTTON_A_A_BLACK:
     keyboard.write(KEY_MEDIA_PLAY_PAUSE);
-    Serial.printf("[0x%x] [Click] Play/Pause\n", id);
+    PRINTF("[0x%x] [Click] Play/Pause\n", id);
     break;
   case BUTTON_A_B_BLUE:
     keyboard.write(KEY_MEDIA_NEXT_TRACK);
-    Serial.printf("[0x%x] [Click] Next Track\n", id);
+    PRINTF("[0x%x] [Click] Next Track\n", id);
     break;
   case BUTTON_A_C_BLACK:
     keyboard.write(KEY_MEDIA_VOLUME_UP);
-    Serial.printf("[0x%x] [Click] Volume Up\n", id);
+    PRINTF("[0x%x] [Click] Volume Up\n", id);
     break;
   case BUTTON_A_D_RED:
     sendFnKeyPress('A');
-    Serial.printf("[0x%x] [Click] Siri\n", id);
+    PRINTF("[0x%x] [Click] Siri\n", id);
     break;
   case BUTTON_B_A_BLACK:
     sendFnKeyPress('H');
-    Serial.printf("[0x%x] [Click] Help\n", id);
+    PRINTF("[0x%x] [Click] Help\n", id);
     break;
   case BUTTON_B_B_BLUE:
     keyboard.write(KEY_ZOOM_OUT);
-    Serial.printf("[0x%x] [Click] Zoom out\n", id);
+    PRINTF("[0x%x] [Click] Zoom out\n", id);
     break;
   case BUTTON_B_C_BLACK:
     sendFnKeyPress('R');
-    Serial.printf("[0x%x] [Click] Play music\n", id);
+    PRINTF("[0x%x] [Click] Play music\n", id);
     break;
   case BUTTON_B_D_RED:
     sendFnKeyPress('N');
-    Serial.printf("[0x%x] [Click] Toggle noise cancelling\n", id);
+    PRINTF("[0x%x] [Click] Toggle noise cancelling\n", id);
     break;
   default:
     sendNOPKey(id);
@@ -233,7 +233,7 @@ void longPressStartHandler(void *p) {
 
 void longPressStopHandler(void *p) {
   ID id = POINTER(p);
-  Serial.printf("Long press stop for ID: 0x%x", id);
+  PRINTF("Long press stop for ID: 0x%x", id);
 
   switch (id) {
   case BUTTON_A_D_RED:
