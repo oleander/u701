@@ -1,7 +1,10 @@
+#include "settings.h"
 #include <BleKeyboard.h>
 #include <OneButton.h>
 #include <unordered_map>
+#include "print.h"
 
+// This pin is never used, but it is required by the OneButton library
 #define PIN          33
 #define KEY_INVALID  0xAA
 #define KEY_SIRI     0xCF
@@ -17,18 +20,16 @@
 #define BUTTON_B_C_BLACK 0x4F00
 #define BUTTON_B_D_RED   0x2900
 
-#define DEVICE_NAME "u701"
-
 #define POINTER(p) (static_cast<uint16_t>(reinterpret_cast<uintptr_t>(p)))
 
 typedef u_int16_t ID;
 
 extern BleKeyboard keyboard;
 extern std::unordered_map<ID, OneButton *> buttons;
+extern bool useKeyboardForLogging;
 
 void sendNOPKey(ID id);
 void sendFnKeyPress(char letter);
 void doubleClickHandler(void *p);
 void multiClickHandler(void *p);
 void setupButtons();
-

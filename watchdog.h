@@ -1,8 +1,7 @@
+#include "settings.h"
 #include <Arduino.h>
 #include <esp_task_wdt.h>
-
-#define WDT_RESET_INTERVAL 2000
-#define WDT_TIMEOUT        120
+#include "keyboard.h"
 
 void handleWatchdog();
 void setupWatchdog();

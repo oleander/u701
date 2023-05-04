@@ -1,16 +1,13 @@
 #include "keyboard.h"
+#include "ota.h"
 #include "print.h"
+#include "settings.h"
 #include "watchdog.h"
 #include <BLEAdvertisedDevice.h>
 #include <BLEDevice.h>
 #include <BLEScan.h>
 #include <BLEUtils.h>
 #include <OneButton.h>
-
-#define SERIAL_BAUD_RATE 115200
-#define SCAN_INTERVAL    2000
-#define SCAN_WINDOW      1500
-#define SCAN_DURATION    5
 
 OneButton *activeButton;
 bool activeState = false;
@@ -29,7 +26,6 @@ const std::map<uint8_t, const char *> hci_error_codes = {
     {0x26, "HCI_ERROR_CODE_LINK_KEY_CAN_NOT_BE_CHANGED"},
     {0x28, "HCI_ERROR_CODE_INSTANT_PASSED"},
     {0x2e, "HCI_ERROR_CODE_CHAN_ASSESSMENT_NOT_SUPPORTED"},
-
 };
 
 static BLEUUID hidService("1812");
@@ -51,40 +47,37 @@ const char *getErrorMessage(uint8_t error_code) {
   return nullptr;
 }
 
-enum State { SCAN_DEVICE, CONNECT_TO_DEVICE, DEVICE_CONNECTED, INITIALIZE, FINISHED, DISCONNECTED };
-static State state = SCAN_DEVICE;
-
 bool connectToServer() {
   if (device == nullptr) {
-    PRINTLN("[Client] [BUG] Address is null");
+    PRINTLN("[BUG] Address is null");
     return false;
   }
 
-  PRINTLN("[Client] Discovering services ...");
+  PRINTLN("Discovering services ...");
   auto service = client->getService(hidService);
   if (!service) {
-    PRINTLN("[Client] [BUG] Service not found");
+    PRINTLN("[BUG] Service not found");
     return false;
   }
 
   auto characteristic = service->getCharacteristic(reportUUID);
   if (!characteristic->canNotify()) {
-    PRINTLN("[Client] [BUG] Characteristic cannot notify");
+    PRINTLN("[BUG] Characteristic cannot notify");
     return false;
   }
 
-  PRINTLN("[Client] Subscribing to notifications");
+  PRINTLN("Subscribing to notifications");
   characteristic->registerForNotify(onNotification);
 
   delay(50);
 
   auto descriptor = characteristic->getDescriptor(cccdUUID);
   if (!descriptor) {
-    PRINTLN("[Client] [BUG] Descriptor not found");
+    PRINTLN("[BUG] Descriptor not found");
     return false;
   }
 
-  PRINTLN("[Client] Enabling notifications");
+  PRINTLN("Enabling notifications");
   descriptor->writeValue(ON, sizeof(ON), true);
 
   return true;
@@ -107,22 +100,28 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 
   auto currentID = dataToInt(data, length);
 
+  PRINTLN("Got notification from ID: " + String(currentID));
+
   if (currentID == 0x0000) { // Button was released
     activeState = false;
   } else if (!activeState) { // Button was pressed, and another button is not already pressed
-    activeState  = true;
     activeButton = buttons.at(currentID);
+    activeState  = true;
+  }
+
+  if (activeButton) {
+    activeButton->tick(activeState);
   }
 }
 
 class ClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *client) {
-    PRINTLN("[Client] Connected to BLE buttons");
+    PRINTLN("Connected to BLE buttons");
     state = DEVICE_CONNECTED;
   }
 
   void onDisconnect(BLEClient *client) {
-    PRINTLN("[Client] Disconnected from BLE buttons");
+    PRINTLN("Disconnected from BLE buttons");
     state = DISCONNECTED;
   }
 };
@@ -134,25 +133,23 @@ class AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     if (!advertised.isAdvertisingService(hidService)) return;
 
     auto addr = advertised.getAddress().toString();
-    if (strcmp(addr.c_str(), "f7:97:ac:1f:f8:c0") != 0) return;
+    if (strcmp(addr.c_str(), DEVICE_MAC) != 0) return;
 
     auto name = advertised.getName();
     auto rssi = advertised.getRSSI();
     auto manu = advertised.getManufacturerData();
     auto serv = advertised.getServiceData();
 
-    PRINTF("[Client] Found device: %s (%s) RSSI=%d, manu=%d, serv=%d\n", name.c_str(), addr.c_str(),
-           rssi, manu.size(), serv.size());
+    PRINTF("Found device: %s (%s) RSSI=%d, manu=%d, serv=%d\n", name.c_str(), addr.c_str(), rssi,
+           manu.size(), serv.size());
 
-    PRINTLN("[Client] Found controller unit");
+    PRINTLN("Found controller unit");
     device = new BLEAdvertisedDevice(advertised);
 
-    PRINTLN("[Client] Stopping scan");
+    PRINTLN("Stopping scan");
     advertised.getScan()->stop();
 
     state = CONNECT_TO_DEVICE;
-
-    return;
   }
 };
 
@@ -196,7 +193,7 @@ void setup() {
   PRINTLN("Enable Keyboard");
   keyboard.begin();
 
-  PRINTLN("[Client] Starting...");
+  PRINTLN("Starting...");
 
   scan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   scan->setInterval(SCAN_INTERVAL);
@@ -207,6 +204,7 @@ void setup() {
 
   setupButtons();
   setupWatchdog();
+
   PRINTLN("");
 
 #if defined(DEBUG)
@@ -219,12 +217,12 @@ void setup() {
 void loop() {
   switch (state) {
   case SCAN_DEVICE:
-    PRINTLN("\n[Client] Scanning for buttons");
-    scan->start(10, false);
+    PRINTLN("\nScanning for buttons");
+    scan->start(SCAN_DURATION, false);
     scan->clearResults();
     break;
   case CONNECT_TO_DEVICE:
-    PRINTLN("[Client] Connecting to buttons");
+    PRINTLN("Connecting to buttons");
     client->connect(device);
     break;
   case DEVICE_CONNECTED:
@@ -243,8 +241,15 @@ void loop() {
       activeButton->tick(activeState);
     }
 
-    handleWatchdog();
+    break;
+  case SETUP_OTA:
+    setupOTA();
+    state = HANDLE_OTA;
+    break;
+  case HANDLE_OTA:
+    handleOTA();
     break;
   }
 
+  handleWatchdog();
 };

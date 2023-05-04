@@ -20,7 +20,7 @@ void setupWatchdog() {
 void handleWatchdog() {
   unsigned long currentTime = millis();
 
-  if (currentTime - lastResetTime < WDT_RESET_INTERVAL) return;
+  if (currentTime - lastResetTime < (WDT_RESET_INTERVAL * 1000)) return;
 
   esp_timer_stop(wdt_timer);
   esp_timer_start_periodic(wdt_timer, WDT_TIMEOUT * 1000000);
