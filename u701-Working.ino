@@ -1,5 +1,4 @@
 #include "keyboard.h"
-#include "ota.h"
 #include "print.h"
 #include "settings.h"
 #include "watchdog.h"
@@ -243,11 +242,9 @@ void loop() {
 
     break;
   case SETUP_OTA:
-    setupOTA();
     state = HANDLE_OTA;
     break;
   case HANDLE_OTA:
-    handleOTA();
     break;
   }
 
