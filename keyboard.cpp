@@ -13,6 +13,8 @@ typedef OneButton *Button;
 typedef u_int16_t ID;
 
 bool useKeyboardForLogging = false;
+bool fn                    = false;
+bool mediaFn               = false;
 
 BleKeyboard keyboard(DEVICE_NAME, "701", 100);
 
@@ -25,8 +27,22 @@ void sendFnKeyPress(char letter) {
   keyboard.press(KEY_LEFT_SHIFT);
   keyboard.press(KEY_LEFT_CTRL);
   keyboard.print(letter);
-  delay(100);
+  delay(50);
   keyboard.releaseAll();
+}
+
+void sendMediaFnKeyPress(char letter, ID id) {
+  if (!mediaFn) {
+    PRINTLN("0x%x] [BUG] MediaFn is not enabled using letter %s", id, letter);
+    return;
+  }
+
+  keyboard.press(KEY_LEFT_CTRL);
+  keyboard.print(letter);
+  delay(50);
+  keyboard.releaseAll();
+  PRINTF("[0x%x] [Click] [MediaFn] %s\n", id, letter);
+  mediaFn = false;
 }
 
 void handleDisconnectedClicks(ID id) {
@@ -48,8 +64,6 @@ void handleDisconnectedClicks(ID id) {
   }
 }
 
-bool fn = false;
-
 void clickHandler(void *p) {
   ID id = POINTER(p);
 
@@ -64,12 +78,14 @@ void clickHandler(void *p) {
       keyboard.print('C');
       PRINTF("[0x%x] [Click] [Fn] Restore map\n", id);
     } else {
-      sendFnKeyPress('R');
-      PRINTF("[0x%x] [Click] Play music\n", id);
+      mediaFn = !mediaFn;
+      PRINTF("[0x%x] [Click] Media Fn\n", id);
     }
     break;
   case BUTTON_A_B_BLUE:
-    if (fn) {
+    if (mediaFn) {
+      sendMediaFnKeyPress('1', id);
+    } else if (fn) {
       keyboard.write(KEY_ZOOM_IN);
       PRINTF("[0x%x] [Click] [Fn] Zoom In\n", id);
     } else {
@@ -78,7 +94,9 @@ void clickHandler(void *p) {
     }
     break;
   case BUTTON_A_C_BLACK:
-    if (fn) {
+    if (mediaFn) {
+      sendMediaFnKeyPress('2', id);
+    } else if (fn) {
       keyboard.write(KEY_ZOOM_OUT);
       PRINTF("[0x%x] [Click] [Fn] Zoom Out\n", id);
     } else {
@@ -103,7 +121,9 @@ void clickHandler(void *p) {
 
     break;
   case BUTTON_B_B_BLUE:
-    if (fn) {
+    if (mediaFn) {
+      sendMediaFnKeyPress('3', id);
+    } else if (fn) {
       sendFnKeyPress('A');
       PRINTF("[0x%x] [Click] [Fn] Random Music\n", id);
     } else {
@@ -112,16 +132,20 @@ void clickHandler(void *p) {
     }
     break;
   case BUTTON_B_C_BLACK:
-    if (fn) {
+    if (mediaFn) {
+      sendMediaFnKeyPress('4', id);
+    } else if (fn) {
       sendFnKeyPress('B');
       PRINTF("[0x%x] [Click] [Fn] Random Podcast\n", id);
     } else {
       keyboard.write(KEY_MEDIA_NEXT_TRACK);
-      PRINTF("[0x%x] [Click] Next Track\n", id);   
+      PRINTF("[0x%x] [Click] Next Track\n", id);
     }
     break;
   case BUTTON_B_D_RED:
-    if (fn) {
+    if (mediaFn) {
+      sendMediaFnKeyPress('5', id);
+    } else if (fn) {
       sendFnKeyPress('E');
       PRINTF("[0x%x] [Click] [Fn] Navigation\n", id);
     } else {
