@@ -73,8 +73,8 @@ void clickHandler(void *p) {
       keyboard.write(KEY_ZOOM_IN);
       PRINTF("[0x%x] [Click] [Fn] Zoom In\n", id);
     } else {
-      keyboard.write(KEY_MEDIA_PREVIOUS_TRACK);
-      PRINTF("[0x%x] [Click] Previous Track\n", id);
+      keyboard.write(KEY_MEDIA_VOLUME_DOWN);
+      PRINTF("[0x%x] [Click] Volume Down\n", id);
     }
     break;
   case BUTTON_A_C_BLACK:
@@ -82,8 +82,8 @@ void clickHandler(void *p) {
       keyboard.write(KEY_ZOOM_OUT);
       PRINTF("[0x%x] [Click] [Fn] Zoom Out\n", id);
     } else {
-      keyboard.write(KEY_MEDIA_VOLUME_DOWN);
-      PRINTF("[0x%x] [Click] Volume Down\n", id);
+      keyboard.write(KEY_MEDIA_PREVIOUS_TRACK);
+      PRINTF("[0x%x] [Click] Previous Track\n", id);
     }
     break;
   case BUTTON_A_D_RED:
@@ -107,8 +107,8 @@ void clickHandler(void *p) {
       sendFnKeyPress('A');
       PRINTF("[0x%x] [Click] [Fn] Random Music\n", id);
     } else {
-      keyboard.write(KEY_MEDIA_NEXT_TRACK);
-      PRINTF("[0x%x] [Click] Next Track\n", id);
+      keyboard.write(KEY_MEDIA_VOLUME_UP);
+      PRINTF("[0x%x] [Click] Volume UP\n", id);
     }
     break;
   case BUTTON_B_C_BLACK:
@@ -116,8 +116,8 @@ void clickHandler(void *p) {
       sendFnKeyPress('B');
       PRINTF("[0x%x] [Click] [Fn] Random Podcast\n", id);
     } else {
-      keyboard.write(KEY_MEDIA_VOLUME_UP);
-      PRINTF("[0x%x] [Click] Volume UP\n", id);
+      keyboard.write(KEY_MEDIA_NEXT_TRACK);
+      PRINTF("[0x%x] [Click] Next Track\n", id);   
     }
     break;
   case BUTTON_B_D_RED:
