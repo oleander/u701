@@ -233,20 +233,14 @@ void loop() {
     }
     break;
   case DISCONNECTED:
-    PRINTLN("Will restart as device has disconnected");
-    ESP.restart();
+    PRINTLN("Device disconnected, will rescan");
+    state = SCAN_DEVICE;
+    break;
   case FINISHED:
     if (activeButton) {
       activeButton->tick(activeState);
     }
 
     break;
-  case SETUP_OTA:
-    state = HANDLE_OTA;
-    break;
-  case HANDLE_OTA:
-    break;
   }
-
-  handleWatchdog();
 };

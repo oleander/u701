@@ -45,32 +45,8 @@ void sendMediaFnKeyPress(char letter, ID id) {
   mediaFn = false;
 }
 
-void handleDisconnectedClicks(ID id) {
-  switch (id) {
-  case BUTTON_A_D_RED:
-    PRINTLN("Will restart ESP, hold on ...");
-    ESP.restart();
-    break;
-  case BUTTON_B_D_RED:
-    PRINTLN("Enable logging over bluetooth");
-    useKeyboardForLogging = !useKeyboardForLogging;
-    break;
-  case BUTTON_B_B_BLUE:
-    PRINTLN("Enable OTA ...");
-    state = SETUP_OTA;
-    break;
-  default:
-    sendNOPKey(id);
-  }
-}
-
 void clickHandler(void *p) {
   ID id = POINTER(p);
-
-  if (!keyboard.isConnected()) {
-    handleDisconnectedClicks(id);
-    return;
-  }
 
   switch (id) {
   case BUTTON_A_A_BLACK:
