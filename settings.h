@@ -10,7 +10,6 @@
 // BLE scan settings
 #define SCAN_INTERVAL 1250 // in ms
 #define SCAN_WINDOW   650  // in ms
-#define SCAN_DURATION 10   // in seconds
 
 // Name of the broadcasted device used by the iPhone app
 #define DEVICE_NAME "u701"

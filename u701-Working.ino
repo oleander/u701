@@ -217,7 +217,7 @@ void loop() {
   switch (state) {
   case SCAN_DEVICE:
     PRINTLN("\nScanning for buttons");
-    scan->start(SCAN_DURATION, false);
+    scan->start(0, false);
     scan->clearResults();
     break;
   case CONNECT_TO_DEVICE:
