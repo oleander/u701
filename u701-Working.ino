@@ -1,7 +1,6 @@
 #include "keyboard.h"
 #include "print.h"
 #include "settings.h"
-#include "watchdog.h"
 #include <BLEAdvertisedDevice.h>
 #include <BLEDevice.h>
 #include <BLEScan.h>
@@ -203,7 +202,6 @@ void setup() {
   client->setClientCallbacks(new ClientCallback());
 
   setupButtons();
-  setupWatchdog();
 
   PRINTLN("");
 
