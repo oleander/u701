@@ -24,10 +24,10 @@ void sendNOPKey(ID id) {
 }
 
 void sendFnKeyPress(char letter) {
-  keyboard.press(KEY_LEFT_SHIFT);
+  keyboard.press(KEY_LEFT_ALT);
   keyboard.press(KEY_LEFT_CTRL);
   keyboard.print(letter);
-  delay(50);
+  delay(100);
   keyboard.releaseAll();
 }
 
@@ -39,7 +39,7 @@ void sendMediaFnKeyPress(char letter, ID id) {
 
   keyboard.press(KEY_LEFT_CTRL);
   keyboard.print(letter);
-  delay(50);
+  delay(100);
   keyboard.releaseAll();
   PRINTF("[0x%x] [Click] [MediaFn] %s\n", id, letter);
   mediaFn = false;
