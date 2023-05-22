@@ -233,14 +233,14 @@ void loop() {
     }
     break;
   case DISCONNECTED:
-    PRINTLN("Device disconnected, will rescan");
-    state = SCAN_DEVICE;
+    PRINTLN("Device disconnected, will restart");
+    delay(1000); // Give the serial monitor some time
+    ESP.restart();
     break;
   case FINISHED:
     if (activeButton) {
       activeButton->tick(activeState);
     }
-
     break;
   }
 };
