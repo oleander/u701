@@ -50,26 +50,10 @@ void clickHandler(void *p) {
 
   switch (id) {
   case BUTTON_A_A_BLACK:
-    if (fn) {
-      keyboard.print('C');
-      PRINTF("[0x%x] [Click] [Fn] Restore map\n", id);
-    } else {
-      mediaFn = !mediaFn;
-      PRINTF("[0x%x] [Click] Media Fn\n", id);
-    }
+    keyboard.write(KEY_MEDIA_PLAY_PAUSE);
+    PRINTF("[0x%x] [Click] Play/Pause\n", id);
     break;
   case BUTTON_A_B_BLUE:
-    if (mediaFn) {
-      sendMediaFnKeyPress('1', id);
-    } else if (fn) {
-      keyboard.write(KEY_ZOOM_IN);
-      PRINTF("[0x%x] [Click] [Fn] Zoom In\n", id);
-    } else {
-      keyboard.write(KEY_MEDIA_VOLUME_DOWN);
-      PRINTF("[0x%x] [Click] Volume Down\n", id);
-    }
-    break;
-  case BUTTON_A_C_BLACK:
     if (mediaFn) {
       sendMediaFnKeyPress('2', id);
     } else if (fn) {
@@ -79,35 +63,41 @@ void clickHandler(void *p) {
       keyboard.write(KEY_MEDIA_PREVIOUS_TRACK);
       PRINTF("[0x%x] [Click] Previous Track\n", id);
     }
+
+    break;
+  case BUTTON_A_C_BLACK:
+      if (mediaFn) {
+      sendMediaFnKeyPress('1', id);
+    } else if (fn) {
+      keyboard.write(KEY_ZOOM_IN);
+      PRINTF("[0x%x] [Click] [Fn] Zoom In\n", id);
+    } else {
+      keyboard.write(KEY_MEDIA_VOLUME_DOWN);
+      PRINTF("[0x%x] [Click] Volume Down\n", id);
+    }
+
     break;
   case BUTTON_A_D_RED:
-    keyboard.write(KEY_MEDIA_PLAY_PAUSE);
-    PRINTF("[0x%x] [Click] Play/Pause\n", id);
+    if (fn) {
+      keyboard.print('C');
+      PRINTF("[0x%x] [Click] [Fn] Restore map\n", id);
+    } else {
+      mediaFn = !mediaFn;
+      PRINTF("[0x%x] [Click] Media Fn\n", id);
+    }
     break;
   case BUTTON_B_A_BLACK:
-    fn = !fn;
-
-    if (fn) {
-      // sendFnKeyPress('1');
-      PRINTF("[0x%x] [Click] Fn ON\n", id);
+    if (mediaFn) {
+      sendMediaFnKeyPress('5', id);
+    } else if (fn) {
+      sendFnKeyPress('E');
+      PRINTF("[0x%x] [Click] [Fn] Navigation\n", id);
     } else {
-      // sendFnKeyPress('0');
-      PRINTF("[0x%x] [Click] Fn OFF\n", id);
+      sendFnKeyPress('N');
+      PRINTF("[0x%x] [Click] Toggle noise cancelling\n", id);
     }
-
     break;
   case BUTTON_B_B_BLUE:
-    if (mediaFn) {
-      sendMediaFnKeyPress('3', id);
-    } else if (fn) {
-      sendFnKeyPress('A');
-      PRINTF("[0x%x] [Click] [Fn] Random Music\n", id);
-    } else {
-      keyboard.write(KEY_MEDIA_VOLUME_UP);
-      PRINTF("[0x%x] [Click] Volume UP\n", id);
-    }
-    break;
-  case BUTTON_B_C_BLACK:
     if (mediaFn) {
       sendMediaFnKeyPress('4', id);
     } else if (fn) {
@@ -118,16 +108,28 @@ void clickHandler(void *p) {
       PRINTF("[0x%x] [Click] Next Track\n", id);
     }
     break;
-  case BUTTON_B_D_RED:
+  case BUTTON_B_C_BLACK:
     if (mediaFn) {
-      sendMediaFnKeyPress('5', id);
+      sendMediaFnKeyPress('3', id);
     } else if (fn) {
-      sendFnKeyPress('E');
-      PRINTF("[0x%x] [Click] [Fn] Navigation\n", id);
+      sendFnKeyPress('A');
+      PRINTF("[0x%x] [Click] [Fn] Random Music\n", id);
     } else {
-      sendFnKeyPress('N');
-      PRINTF("[0x%x] [Click] Toggle noise cancelling\n", id);
+      keyboard.write(KEY_MEDIA_VOLUME_UP);
+      PRINTF("[0x%x] [Click] Volume UP\n", id);
     }
+    break;
+  case BUTTON_B_D_RED:
+    fn = !fn;
+
+    if (fn) {
+      // sendFnKeyPress('1');
+      PRINTF("[0x%x] [Click] Fn ON\n", id);
+    } else {
+      // sendFnKeyPress('0');
+      PRINTF("[0x%x] [Click] Fn OFF\n", id);
+    }
+
     break;
   default:
     sendNOPKey(id);
