@@ -191,8 +191,9 @@ void setup() {
 
   PRINTLN("Enable Keyboard");
   keyboard.begin();
+  keyboard.setDelay(12)
 
-  PRINTLN("Starting...");
+      PRINTLN("Starting...");
 
   scan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   scan->setInterval(SCAN_INTERVAL);
