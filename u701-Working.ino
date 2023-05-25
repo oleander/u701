@@ -65,20 +65,27 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
   }
 }
 
+void restart(const char *reason) {
+  PRINTLN("Restarting ESP32 ...");
+  PRINTLN(reason);
+  delay(1000);
+  ESP.restart();
+}
+
 class ClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *client) {
     PRINTLN("Discovering services ...");
     auto service = client->getService(hidService);
     if (!service) {
-      PRINTLN("[BUG] Service not found");
-      return false;
+      restart("[BUG] Service not found");
+      return;
     }
 
     PRINTLN("Discovering characteristics ...");
     auto characteristic = service->getCharacteristic(reportUUID);
     if (!characteristic->canNotify()) {
-      PRINTLN("[BUG] Characteristic cannot notify");
-      return false;
+      restart("[BUG] Characteristic cannot notify");
+      return;
     }
 
     PRINTLN("Subscribing to notifications");
@@ -88,8 +95,8 @@ class ClientCallback : public BLEClientCallbacks {
 
     auto descriptor = characteristic->getDescriptor(cccdUUID);
     if (!descriptor) {
-      PRINTLN("[BUG] Descriptor not found");
-      return false;
+      restart("[BUG] Descriptor not found");
+      return;
     }
 
     PRINTLN("Enabling notifications ...");
@@ -97,9 +104,7 @@ class ClientCallback : public BLEClientCallbacks {
   }
 
   void onDisconnect(BLEClient *client) {
-    PRINTLN("Disconnected, restarting ESP32 ...");
-    delay(1000);
-    ESP.restart();
+    restart("Disconnected from device, restarting ESP32 ...");
   }
 };
 
