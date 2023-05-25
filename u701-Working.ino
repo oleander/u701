@@ -7,9 +7,6 @@
 #include <BLEUtils.h>
 #include <OneButton.h>
 
-OneButton *activeButton;
-bool activeState = false;
-
 const std::map<uint8_t, const char *> hci_error_codes = {
     {0x00, "HCI_SUCCESS"},
     {0x02, "HCI_ERROR_CODE_UNKNOWN_CONN_ID"},
@@ -31,8 +28,9 @@ static BLEUUID reportUUID("2A4D");
 static BLEUUID cccdUUID("2902");
 
 static uint8_t ON[] = {0x1, 0x0};
+bool activeState    = false;
 
-static BLEAdvertisedDevice *device = nullptr;
+OneButton *activeButton;
 
 int32_t dataToInt(uint8_t *pData, size_t length) {
   int32_t result = 0;
@@ -125,13 +123,14 @@ class AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     PRINTF("Found device: %s (%s) RSSI=%d, manu=%d, serv=%d\n", name.c_str(), addr.c_str(), rssi,
            manu.size(), serv.size());
 
-    PRINTLN("Found controller unit");
+    PRINTLN("Connecting to advertised device ...");
     auto device = new BLEAdvertisedDevice(advertised);
     auto client = BLEDevice::createClient();
+
     client->setClientCallbacks(new ClientCallback());
     client->connect(device);
 
-    PRINTLN("Stopping scan");
+    PRINTLN("Stopping scan ...");
     advertised.getScan()->stop();
   }
 };
