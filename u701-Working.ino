@@ -35,7 +35,6 @@ static uint8_t ON[] = {0x1, 0x0};
 static BLEAdvertisedDevice *device = nullptr;
 
 BLEClient *client = BLEDevice::createClient();
-BLEScan *scan     = BLEDevice::getScan();
 
 const char *getErrorMessage(uint8_t error_code) {
   auto it = hci_error_codes.find(error_code);
@@ -115,7 +114,7 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 class ClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *client) {
     PRINTLN("Connected to BLE buttons");
-    state = DEVICE_CONNECTED;
+    state = CONNECTED;
   }
 
   void onDisconnect(BLEClient *client) {
@@ -146,8 +145,6 @@ class AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 
     PRINTLN("Stopping scan");
     advertised.getScan()->stop();
-
-    state = CONNECT_TO_DEVICE;
   }
 };
 
@@ -194,6 +191,8 @@ void setup() {
 
   PRINTLN("Starting...");
 
+  auto scan = BLEDevice::getScan();
+
   scan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
@@ -210,36 +209,45 @@ void setup() {
   BLEDevice::setCustomGattsHandler(my_gatts_event_handler);
   BLEDevice::setCustomGapHandler(my_gap_event_handler);
 #endif
+
+  scan->start(0, false);
+  scan->clearResults();
+
+  if (device == nullptr) {
+    PRINTLN("[BUG] Device is null, will restart");
+    delay(1000); // Give the serial monitor some time
+    ESP.restart();
+  }
+
+  PRINTLN("Connecting to Terrain Command buttons");
+  client->connect(device);
 }
 
 void loop() {
   switch (state) {
-  case SCAN_DEVICE:
-    PRINTLN("\nScanning for buttons");
-    scan->start(0, false);
-    scan->clearResults();
-    break;
-  case CONNECT_TO_DEVICE:
-    PRINTLN("Connecting to buttons");
-    client->connect(device);
-    break;
-  case DEVICE_CONNECTED:
-    if (connectToServer()) {
-      PRINTLN("Everything good, connected!");
-      state = FINISHED;
-    } else {
-      state = SCAN_DEVICE;
+  case SUBSCRIBED:
+    if (activeButton) {
+      activeButton->tick(activeState);
     }
+    break;
+  case CONNECTED:
+    if (!connectToServer()) {
+      PRINTLN("Failed to connect to server, will restart");
+      delay(1000); // Give the serial monitor some time
+      ESP.restart();
+    }
+
+    state = SUBSCRIBED;
+    PRINTLN("Subscribed to notifications");
     break;
   case DISCONNECTED:
     PRINTLN("Device disconnected, will restart");
     delay(1000); // Give the serial monitor some time
     ESP.restart();
     break;
-  case FINISHED:
-    if (activeButton) {
-      activeButton->tick(activeState);
-    }
+  case CONNECTING:
+    PRINT(".");
+    delay(100);
     break;
   }
 };
