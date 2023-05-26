@@ -33,7 +33,7 @@ void sendFnKeyPress(char letter) {
 
 void sendMediaFnKeyPress(char letter, ID id) {
   if (!mediaFn) {
-    PRINTLN("0x%x] [BUG] MediaFn is not enabled using letter %s", id, letter);
+    PRINTF("0x%x] [BUG] MediaFn is not enabled using letter %s\n", id, letter);
     return;
   }
 
@@ -41,7 +41,7 @@ void sendMediaFnKeyPress(char letter, ID id) {
   keyboard.print(letter);
   delay(100);
   keyboard.releaseAll();
-  PRINTF("[0x%x] [Click] [MediaFn] %s\n", id, letter);
+  // PRINTF("[0x%x] [Click] [MediaFn] %s\n", id, letter);
   mediaFn = false;
 }
 
@@ -66,7 +66,7 @@ void clickHandler(void *p) {
 
     break;
   case BUTTON_A_C_BLACK:
-      if (mediaFn) {
+    if (mediaFn) {
       sendMediaFnKeyPress('1', id);
     } else if (fn) {
       keyboard.write(KEY_ZOOM_IN);
@@ -142,29 +142,7 @@ void doubleClickHandler(void *p) {
   ID id = POINTER(p);
 
   switch (id) {
-  case BUTTON_A_A_BLACK:
-    sendFnKeyPress('D');
-    PRINTF("[0x%x] [Double] Podcast\n", id);
-    break;
-  case BUTTON_A_B_BLUE:
-    sendNOPKey(id);
-    break;
-  case BUTTON_A_C_BLACK:
-    sendNOPKey(id);
-    break;
-  case BUTTON_A_D_RED:
-    sendNOPKey(id);
-    break;
   case BUTTON_B_A_BLACK:
-    sendNOPKey(id);
-    break;
-  case BUTTON_B_B_BLUE:
-    sendNOPKey(id);
-    break;
-  case BUTTON_B_C_BLACK:
-    sendNOPKey(id);
-    break;
-  case BUTTON_B_D_RED:
     keyboard.write(KEY_MEDIA_EJECT);
     PRINTF("[0x%x] [Double] Eject\n", id);
     break;
@@ -180,7 +158,7 @@ void setupButtons() {
     btn->attachClick(clickHandler, point);
 
     // Enable double click for some of the buttons
-    if (id == BUTTON_A_A_BLACK || id == BUTTON_B_D_RED) {
+    if (id == BUTTON_B_A_BLACK) {
       btn->attachDoubleClick(doubleClickHandler, point);
       btn->setClickTicks(CLICK_TICKS);
     }

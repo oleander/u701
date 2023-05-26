@@ -1,6 +1,7 @@
 #include "keyboard.h"
 #include "print.h"
 #include "settings.h"
+#include <Arduino.h>
 #include <BLEAdvertisedDevice.h>
 #include <BLEDevice.h>
 #include <BLEScan.h>
@@ -71,40 +72,14 @@ void restart(const char *reason) {
 }
 
 class ClientCallback : public BLEClientCallbacks {
-  void onConnect(BLEClient *client) {
-    PRINTLN("Discovering services ...");
-    auto service = client->getService(hidService);
-    if (!service) {
-      restart("[BUG] Service not found");
-      return;
-    }
-
-    PRINTLN("Discovering characteristics ...");
-    auto characteristic = service->getCharacteristic(reportUUID);
-    if (!characteristic->canNotify()) {
-      restart("[BUG] Characteristic cannot notify");
-      return;
-    }
-
-    PRINTLN("Subscribing to notifications");
-    characteristic->registerForNotify(onNotification);
-
-    delay(50);
-
-    auto descriptor = characteristic->getDescriptor(cccdUUID);
-    if (!descriptor) {
-      restart("[BUG] Descriptor not found");
-      return;
-    }
-
-    PRINTLN("Enabling notifications ...");
-    descriptor->writeValue(ON, sizeof(ON), true);
-  }
+  void onConnect(BLEClient *client) { PRINTLN("Connected to device!"); }
 
   void onDisconnect(BLEClient *client) {
     restart("Disconnected from device, restarting ESP32 ...");
   }
 };
+
+BLEAdvertisedDevice *device;
 
 class AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice advertised) {
@@ -124,11 +99,7 @@ class AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
            manu.size(), serv.size());
 
     PRINTLN("Connecting to advertised device ...");
-    auto device = new BLEAdvertisedDevice(advertised);
-    auto client = BLEDevice::createClient();
-
-    client->setClientCallbacks(new ClientCallback());
-    client->connect(device);
+    device = new BLEAdvertisedDevice(advertised);
 
     PRINTLN("Stopping scan ...");
     advertised.getScan()->stop();
@@ -159,12 +130,45 @@ void setupSerial() {
 }
 
 void setup() {
+  setupSerial();
   PRINTLN("\nStarting ESP32 ...");
 
-  setupSerial();
   setupKeyboard();
   setupButtons();
   scanForDevice();
+
+  auto client = BLEDevice::createClient();
+
+  client->setClientCallbacks(new ClientCallback());
+  client->connect(device);
+
+  PRINTLN("Discovering services ...");
+  auto service = client->getService(hidService);
+  if (!service) {
+    restart("[BUG] Service not found");
+    return;
+  }
+
+  PRINTLN("Discovering characteristics ...");
+  auto characteristic = service->getCharacteristic(reportUUID);
+  if (!characteristic->canNotify()) {
+    restart("[BUG] Characteristic cannot notify");
+    return;
+  }
+
+  PRINTLN("Subscribing to notifications");
+  characteristic->registerForNotify(onNotification);
+
+  delay(50);
+
+  auto descriptor = characteristic->getDescriptor(cccdUUID);
+  if (!descriptor) {
+    restart("[BUG] Descriptor not found");
+    return;
+  }
+
+  PRINTLN("Enabling notifications ...");
+  descriptor->writeValue(ON, sizeof(ON), true);
 }
 
 void loop() {

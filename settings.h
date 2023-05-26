@@ -4,7 +4,7 @@
 #pragma once
 
 // Enables output to the serial monitor
-// #define INFO
+//#define INFO
 // #define IOS
 
 // BLE scan settings
@@ -33,7 +33,7 @@
 #define DEBOUNCE_TICKS 0 // in ms
 
 // Timeout used to distinguish single clicks from double clicks
-#define CLICK_TICKS 600 // in ms
+#define CLICK_TICKS 500 // in ms
 
 // Duration to hold a button to trigger a long press
 #define LONG_PRESS_TICKS 800 // in ms
