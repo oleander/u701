@@ -6,15 +6,18 @@
 
 bool otaMode = false;
 
+// Toggles the OTA mode
 void toggleOTA() {
   otaMode = !otaMode;
   PRINTLN("OTA mode is " + String(otaMode ? "enabled" : "disabled"));
 }
 
+// Checks if OTA mode is enabled
 bool isOTAEnabled() { return otaMode; }
 
-void setupOTA() {
-  ArduinoOTA.setHostname("u701");
+// Sets up the OTA update functionality
+void setupOTA(const char* hostname) {
+  ArduinoOTA.setHostname(hostname);
 
   ArduinoOTA.onStart([]() {
     String type;
@@ -23,6 +26,7 @@ void setupOTA() {
       type = "sketch";
     } else {
       type = "filesystem";
+      // Ensure there is no ongoing use of LittleFS before unmounting
       LittleFS.end();
     }
 
@@ -38,21 +42,31 @@ void setupOTA() {
   ArduinoOTA.onError([](ota_error_t error) {
     PRINTF("Error[%u]: ", error);
 
-    if (error == OTA_AUTH_ERROR)
-      PRINTLN("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR)
-      PRINTLN("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR)
-      PRINTLN("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR)
-      PRINTLN("Receive Failed");
-    else if (error == OTA_END_ERROR)
-      PRINTLN("End Failed");
+    switch(error) {
+      case OTA_AUTH_ERROR:
+        PRINTLN("Auth Failed");
+        break;
+      case OTA_BEGIN_ERROR:
+        PRINTLN("Begin Failed");
+        break;
+      case OTA_CONNECT_ERROR:
+        PRINTLN("Connect Failed");
+        break;
+      case OTA_RECEIVE_ERROR:
+        PRINTLN("Receive Failed");
+        break;
+      case OTA_END_ERROR:
+        PRINTLN("End Failed");
+        break;
+      default:
+        PRINTLN("Unknown Error");
+    }
   });
 
   ArduinoOTA.begin();
 }
 
+// Handles OTA updates
 void handleOTA() {
   if (otaMode) {
     ArduinoOTA.handle();
