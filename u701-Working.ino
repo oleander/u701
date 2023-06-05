@@ -164,7 +164,7 @@ void setupClient() {
   descriptor->writeValue(ON, sizeof(ON), true);
 }
 
-void handleClickEvents() {
+void handleClickEvent() {
   if (activeButton) {
     activeButton->tick(activeState);
   }
