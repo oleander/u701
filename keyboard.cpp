@@ -13,8 +13,10 @@ typedef OneButton *Button;
 typedef u_int16_t ID;
 
 bool useKeyboardForLogging = false;
-bool fn                    = false;
-bool mediaFn               = false;
+
+enum FunctionState { NoFn, CmdFn, MediaFn };
+
+FunctionState functionState = NoFn;
 
 BleKeyboard keyboard(DEVICE_NAME, "701", 100);
 
@@ -23,7 +25,7 @@ void sendNOPKey(ID id) {
   keyboard.write(KEY_INVALID);
 }
 
-void sendFnKeyPress(char letter) {
+void sendCmdFnKeyPress(char letter) {
   keyboard.press(KEY_LEFT_ALT);
   keyboard.press(KEY_LEFT_CTRL);
   keyboard.print(letter);
@@ -32,7 +34,7 @@ void sendFnKeyPress(char letter) {
 }
 
 void sendMediaFnKeyPress(char letter, ID id) {
-  if (!mediaFn) {
+  if (functionState != MediaFn) {
     PRINTF("0x%x] [BUG] MediaFn is not enabled using letter %s\n", id, letter);
     return;
   }
@@ -42,7 +44,7 @@ void sendMediaFnKeyPress(char letter, ID id) {
   delay(100);
   keyboard.releaseAll();
   // PRINTF("[0x%x] [Click] [MediaFn] %s\n", id, letter);
-  mediaFn = false;
+  functionState = NoFn;
 }
 
 void clickHandler(void *p) {
@@ -54,11 +56,11 @@ void clickHandler(void *p) {
     PRINTF("[0x%x] [Click] Play/Pause\n", id);
     break;
   case BUTTON_A_B_BLUE:
-    if (mediaFn) {
+    if (functionState == MediaFn) {
       sendMediaFnKeyPress('2', id);
-    } else if (fn) {
+    } else if (functionState == CmdFn) {
       keyboard.write(KEY_ZOOM_OUT);
-      PRINTF("[0x%x] [Click] [Fn] Zoom Out\n", id);
+      PRINTF("[0x%x] [Click] [CmdFn] Zoom Out\n", id);
     } else {
       keyboard.write(KEY_MEDIA_PREVIOUS_TRACK);
       PRINTF("[0x%x] [Click] Previous Track\n", id);
@@ -66,11 +68,11 @@ void clickHandler(void *p) {
 
     break;
   case BUTTON_A_C_BLACK:
-    if (mediaFn) {
+    if (functionState == MediaFn) {
       sendMediaFnKeyPress('1', id);
-    } else if (fn) {
+    } else if (functionState == CmdFn) {
       keyboard.write(KEY_ZOOM_IN);
-      PRINTF("[0x%x] [Click] [Fn] Zoom In\n", id);
+      PRINTF("[0x%x] [Click] [CmdFn] Zoom In\n", id);
     } else {
       keyboard.write(KEY_MEDIA_VOLUME_DOWN);
       PRINTF("[0x%x] [Click] Volume Down\n", id);
@@ -78,56 +80,55 @@ void clickHandler(void *p) {
 
     break;
   case BUTTON_A_D_RED:
-    if (fn) {
+    if (functionState == CmdFn) {
       keyboard.print('C');
-      PRINTF("[0x%x] [Click] [Fn] Restore map\n", id);
+      PRINTF("[0x%x] [Click] [CmdFn] Restore map\n", id);
     } else {
-      mediaFn = !mediaFn;
+      functionState = MediaFn;
       PRINTF("[0x%x] [Click] Media Fn\n", id);
     }
     break;
+
   case BUTTON_B_A_BLACK:
-    if (mediaFn) {
+    if (functionState == MediaFn) {
       sendMediaFnKeyPress('5', id);
-    } else if (fn) {
-      sendFnKeyPress('E');
-      PRINTF("[0x%x] [Click] [Fn] Navigation\n", id);
+    } else if (functionState == CmdFn) {
+      sendCmdFnKeyPress('E');
+      PRINTF("[0x%x] [Click] [CmdFn] Navigation\n", id);
     } else {
-      sendFnKeyPress('N');
+      sendCmdFnKeyPress('N');
       PRINTF("[0x%x] [Click] Toggle noise cancelling\n", id);
     }
     break;
   case BUTTON_B_B_BLUE:
-    if (mediaFn) {
+    if (functionState == MediaFn) {
       sendMediaFnKeyPress('4', id);
-    } else if (fn) {
-      sendFnKeyPress('B');
-      PRINTF("[0x%x] [Click] [Fn] Random Podcast\n", id);
+    } else if (functionState == CmdFn) {
+      sendCmdFnKeyPress('B');
+      PRINTF("[0x%x] [Click] [CmdFn] Random Podcast\n", id);
     } else {
       keyboard.write(KEY_MEDIA_NEXT_TRACK);
       PRINTF("[0x%x] [Click] Next Track\n", id);
     }
     break;
   case BUTTON_B_C_BLACK:
-    if (mediaFn) {
+    if (functionState == MediaFn) {
       sendMediaFnKeyPress('3', id);
-    } else if (fn) {
-      sendFnKeyPress('A');
-      PRINTF("[0x%x] [Click] [Fn] Random Music\n", id);
+    } else if (functionState == CmdFn) {
+      sendCmdFnKeyPress('A');
+      PRINTF("[0x%x] [Click] [CmdFn] Random Music\n", id);
     } else {
       keyboard.write(KEY_MEDIA_VOLUME_UP);
       PRINTF("[0x%x] [Click] Volume UP\n", id);
     }
     break;
   case BUTTON_B_D_RED:
-    fn = !fn;
+    functionState = (functionState == CmdFn) ? NoFn : CmdFn;
 
-    if (fn) {
-      // sendFnKeyPress('1');
-      PRINTF("[0x%x] [Click] Fn ON\n", id);
+    if (functionState == CmdFn) {
+      PRINTF("[0x%x] [Click] CmdFn ON\n", id);
     } else {
-      // sendFnKeyPress('0');
-      PRINTF("[0x%x] [Click] Fn OFF\n", id);
+      PRINTF("[0x%x] [Click] CmdFn OFF\n", id);
     }
 
     break;
