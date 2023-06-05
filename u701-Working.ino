@@ -164,6 +164,12 @@ void setupClient() {
   descriptor->writeValue(ON, sizeof(ON), true);
 }
 
+void handleClickEvents() {
+  if (activeButton) {
+    activeButton->tick(activeState);
+  }
+}
+
 void setup() {
   setupSerial();
   PRINTLN("\nStarting ESP32 ...");
@@ -172,10 +178,10 @@ void setup() {
   setupButtons();
   scanForDevice();
   setupClient();
+  setupOTA();
 }
 
 void loop() {
-  if (activeButton) {
-    activeButton->tick(activeState);
-  }
+  handleOTA();
+  handleClickEvent();
 };
