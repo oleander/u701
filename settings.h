@@ -30,7 +30,7 @@
 #define WDT_RESET_INTERVAL 60 // in seconds
 
 // Period of time in which to ignore additional level changes
-#define DEBOUNCE_TICKS 50 // in ms
+#define DEBOUNCE_TICKS 30 // in ms
 
 // Timeout used to distinguish single clicks from double clicks
 #define CLICK_TICKS 500 // in ms
