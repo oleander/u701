@@ -27,11 +27,7 @@ void sendNOPKey(ID id) {
 }
 
 void sendCmdFnKeyPress(char letter) {
-  keyboard.press(KEY_LEFT_ALT);
-  keyboard.press(KEY_LEFT_CTRL);
   keyboard.print(letter);
-  delay(100);
-  keyboard.releaseAll();
 }
 
 void sendMediaFnKeyPress(char letter, ID id) {
@@ -40,10 +36,7 @@ void sendMediaFnKeyPress(char letter, ID id) {
     return;
   }
 
-  keyboard.press(KEY_LEFT_CTRL);
   keyboard.print(letter);
-  delay(100);
-  keyboard.releaseAll();
   functionState = NoFn;
 }
 

@@ -16,9 +16,7 @@ void toggleOTA() {
 bool isOTAEnabled() { return otaMode; }
 
 // Sets up the OTA update functionality
-void setupOTA(const char* hostname) {
-  ArduinoOTA.setHostname(hostname);
-
+void setupOTA() {
   ArduinoOTA.onStart([]() {
     String type;
 
@@ -42,24 +40,24 @@ void setupOTA(const char* hostname) {
   ArduinoOTA.onError([](ota_error_t error) {
     PRINTF("Error[%u]: ", error);
 
-    switch(error) {
-      case OTA_AUTH_ERROR:
-        PRINTLN("Auth Failed");
-        break;
-      case OTA_BEGIN_ERROR:
-        PRINTLN("Begin Failed");
-        break;
-      case OTA_CONNECT_ERROR:
-        PRINTLN("Connect Failed");
-        break;
-      case OTA_RECEIVE_ERROR:
-        PRINTLN("Receive Failed");
-        break;
-      case OTA_END_ERROR:
-        PRINTLN("End Failed");
-        break;
-      default:
-        PRINTLN("Unknown Error");
+    switch (error) {
+    case OTA_AUTH_ERROR:
+      PRINTLN("Auth Failed");
+      break;
+    case OTA_BEGIN_ERROR:
+      PRINTLN("Begin Failed");
+      break;
+    case OTA_CONNECT_ERROR:
+      PRINTLN("Connect Failed");
+      break;
+    case OTA_RECEIVE_ERROR:
+      PRINTLN("Receive Failed");
+      break;
+    case OTA_END_ERROR:
+      PRINTLN("End Failed");
+      break;
+    default:
+      PRINTLN("Unknown Error");
     }
   });
 

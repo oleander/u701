@@ -4,7 +4,7 @@
 #pragma once
 
 // Enables output to the serial monitor
-// #define INFO
+#define INFO
 // #define IOS
 
 // BLE scan settings

@@ -50,7 +50,7 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 
   auto currentID = dataToInt(data, length);
 
-  PRINTLN("Got notification from ID: " + String(currentID));
+  PRINTF("Got notification from ID 0x%x\n", currentID);
 
   if (currentID == 0x0000) { // Button was released
     activeState = false;
@@ -178,10 +178,10 @@ void setup() {
   setupButtons();
   scanForDevice();
   setupClient();
-  setupOTA();
+  // setupOTA();
 }
 
 void loop() {
-  handleOTA();
+  // handleOTA();
   handleClickEvent();
 };
