@@ -1,8 +1,8 @@
+#include "print.h"
 #include "settings.h"
 #include <BleKeyboard.h>
 #include <OneButton.h>
 #include <unordered_map>
-#include "print.h"
 
 // This pin is never used, but it is required by the OneButton library
 #define PIN          33
@@ -11,14 +11,14 @@
 #define KEY_ZOOM_OUT KEY_NUM_MINUS
 #define KEY_ZOOM_IN  KEY_NUM_PLUS
 
-#define BUTTON_A_A_BLACK 0x5200
-#define BUTTON_A_B_BLUE  0x5100
-#define BUTTON_A_C_BLACK 0x5000
-#define BUTTON_A_D_RED   0x0400
-#define BUTTON_B_A_BLACK 0x2800
-#define BUTTON_B_B_BLUE  0x0500
-#define BUTTON_B_C_BLACK 0x4F00
-#define BUTTON_B_D_RED   0x2900
+#define BUTTON_A_D_BLACK 0x5200
+#define BUTTON_A_C_BLUE  0x5100
+#define BUTTON_A_B_BLACK 0x5000
+#define BUTTON_A_A_RED   0x0400
+#define BUTTON_B_D_BLACK 0x2800
+#define BUTTON_B_C_BLUE  0x0500
+#define BUTTON_B_B_BLACK 0x4F00
+#define BUTTON_B_A_RED   0x2900
 
 #define POINTER(p) (static_cast<uint16_t>(reinterpret_cast<uintptr_t>(p)))
 

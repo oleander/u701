@@ -1,13 +1,13 @@
 #include "keyboard.h"
 
-std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_A_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_A_B_BLUE, new OneButton(PIN, false, false)},
-                                               {BUTTON_A_C_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_A_D_RED, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_A_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_B_BLUE, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_C_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_D_RED, new OneButton(PIN, false, false)}};
+std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_D_BLACK, new OneButton(PIN, false, false)},
+                                               {BUTTON_A_C_BLUE, new OneButton(PIN, false, false)},
+                                               {BUTTON_A_B_BLACK, new OneButton(PIN, false, false)},
+                                               {BUTTON_A_A_RED, new OneButton(PIN, false, false)},
+                                               {BUTTON_B_D_BLACK, new OneButton(PIN, false, false)},
+                                               {BUTTON_B_C_BLUE, new OneButton(PIN, false, false)},
+                                               {BUTTON_B_B_BLACK, new OneButton(PIN, false, false)},
+                                               {BUTTON_B_A_RED, new OneButton(PIN, false, false)}};
 
 typedef OneButton *Button;
 typedef u_int16_t ID;
@@ -43,7 +43,6 @@ void sendMediaFnKeyPress(char letter, ID id) {
   keyboard.print(letter);
   delay(100);
   keyboard.releaseAll();
-  // PRINTF("[0x%x] [Click] [MediaFn] %s\n", id, letter);
   functionState = NoFn;
 }
 
@@ -51,11 +50,11 @@ void clickHandler(void *p) {
   ID id = POINTER(p);
 
   switch (id) {
-  case BUTTON_A_A_BLACK:
+  case BUTTON_A_D_BLACK:
     keyboard.write(KEY_MEDIA_PLAY_PAUSE);
     PRINTF("[0x%x] [Click] Play/Pause\n", id);
     break;
-  case BUTTON_A_B_BLUE:
+  case BUTTON_A_C_BLUE:
     if (functionState == MediaFn) {
       sendMediaFnKeyPress('2', id);
     } else if (functionState == CmdFn) {
@@ -67,7 +66,7 @@ void clickHandler(void *p) {
     }
 
     break;
-  case BUTTON_A_C_BLACK:
+  case BUTTON_A_B_BLACK:
     if (functionState == MediaFn) {
       sendMediaFnKeyPress('1', id);
     } else if (functionState == CmdFn) {
@@ -79,7 +78,7 @@ void clickHandler(void *p) {
     }
 
     break;
-  case BUTTON_A_D_RED:
+  case BUTTON_A_A_RED:
     if (functionState == CmdFn) {
       keyboard.print('C');
       PRINTF("[0x%x] [Click] [CmdFn] Restore map\n", id);
@@ -88,19 +87,19 @@ void clickHandler(void *p) {
       PRINTF("[0x%x] [Click] Media Fn\n", id);
     }
     break;
-
-  case BUTTON_B_A_BLACK:
+  case BUTTON_B_D_BLACK:
     if (functionState == MediaFn) {
       sendMediaFnKeyPress('5', id);
     } else if (functionState == CmdFn) {
       sendCmdFnKeyPress('E');
+      PRINTF("[0x%x] [Click] [CmdFn] Navigation");
       PRINTF("[0x%x] [Click] [CmdFn] Navigation\n", id);
     } else {
       sendCmdFnKeyPress('N');
       PRINTF("[0x%x] [Click] Toggle noise cancelling\n", id);
     }
     break;
-  case BUTTON_B_B_BLUE:
+  case BUTTON_B_C_BLUE:
     if (functionState == MediaFn) {
       sendMediaFnKeyPress('4', id);
     } else if (functionState == CmdFn) {
@@ -111,7 +110,7 @@ void clickHandler(void *p) {
       PRINTF("[0x%x] [Click] Next Track\n", id);
     }
     break;
-  case BUTTON_B_C_BLACK:
+  case BUTTON_B_B_BLACK:
     if (functionState == MediaFn) {
       sendMediaFnKeyPress('3', id);
     } else if (functionState == CmdFn) {
@@ -122,7 +121,7 @@ void clickHandler(void *p) {
       PRINTF("[0x%x] [Click] Volume UP\n", id);
     }
     break;
-  case BUTTON_B_D_RED:
+  case BUTTON_B_A_RED:
     functionState = (functionState == CmdFn) ? NoFn : CmdFn;
 
     if (functionState == CmdFn) {
@@ -143,7 +142,7 @@ void doubleClickHandler(void *p) {
   ID id = POINTER(p);
 
   switch (id) {
-  case BUTTON_B_A_BLACK:
+  case BUTTON_B_D_BLACK:
     keyboard.write(KEY_MEDIA_EJECT);
     PRINTF("[0x%x] [Double] Eject\n", id);
     break;
@@ -159,7 +158,7 @@ void setupButtons() {
     btn->attachClick(clickHandler, point);
 
     // Enable double click for some of the buttons
-    if (id == BUTTON_B_A_BLACK) {
+    if (id == BUTTON_B_D_BLACK) {
       btn->attachDoubleClick(doubleClickHandler, point);
       btn->setClickTicks(CLICK_TICKS);
     }
