@@ -1,6 +1,8 @@
 #include "ota.h"
 #include "print.h"
 #include <ArduinoOTA.h>
+#include <FS.h>
+#include <LittleFS.h>
 
 bool otaMode = false;
 
@@ -16,12 +18,14 @@ void setupOTA() {
 
   ArduinoOTA.onStart([]() {
     String type;
-    if (ArduinoOTA.getCommand() == U_FLASH)
-      type = "sketch";
-    else // U_SPIFFS
-      type = "filesystem";
 
-    // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else {
+      type = "filesystem";
+      LittleFS.end();
+    }
+
     PRINTLN("Start updating " + type);
   });
 
