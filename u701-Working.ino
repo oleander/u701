@@ -129,14 +129,7 @@ void setupSerial() {
 #endif
 }
 
-void setup() {
-  setupSerial();
-  PRINTLN("\nStarting ESP32 ...");
-
-  setupKeyboard();
-  setupButtons();
-  scanForDevice();
-
+void setupClient() {
   auto client = BLEDevice::createClient();
 
   client->setClientCallbacks(new ClientCallback());
@@ -169,6 +162,16 @@ void setup() {
 
   PRINTLN("Enabling notifications ...");
   descriptor->writeValue(ON, sizeof(ON), true);
+}
+
+void setup() {
+  setupSerial();
+  PRINTLN("\nStarting ESP32 ...");
+
+  setupKeyboard();
+  setupButtons();
+  scanForDevice();
+  setupClient();
 }
 
 void loop() {
