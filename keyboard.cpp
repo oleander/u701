@@ -26,9 +26,7 @@ void sendNOPKey(ID id) {
   keyboard.write(KEY_INVALID);
 }
 
-void sendCmdFnKeyPress(char letter) {
-  keyboard.print(letter);
-}
+void sendCmdFnKeyPress(char letter) { keyboard.print(letter); }
 
 void sendMediaFnKeyPress(char letter, ID id) {
   if (functionState != MediaFn) {
@@ -82,6 +80,21 @@ void clickHandler(void *p) {
     }
     break;
   case BUTTON_B_D_BLACK:
+    if (!keyboard.isConnected()) {
+      toggleOTA();
+
+      if (isOTAEnabled()) {
+        PRINTF("[0x%x] [Click] OTA Mode ON\n", id);
+      } else {
+        PRINTF("[0x%x] [Click] OTA Mode OFF\n", id);
+        PRINTF("[0x%x] [Click] Restarting ESP\n", id);
+        delay(1000);
+        ESP.restart();
+      }
+
+      return;
+    }
+
     if (functionState == MediaFn) {
       sendMediaFnKeyPress('5', id);
     } else if (functionState == CmdFn) {
@@ -146,6 +159,7 @@ void doubleClickHandler(void *p) {
 }
 
 void longPressHandler(void *p) {
+  PRINTLN("longPressHandler");
   switch (POINTER(p)) {
   case BUTTON_B_D_BLACK:
     if (keyboard.isConnected()) return;
@@ -165,6 +179,8 @@ void longPressHandler(void *p) {
   }
 }
 
+void longPressStopHandler(void *p) { PRINTLN("longPressStopHandler"); }
+
 void setupButtons() {
   for (auto &[id, btn]: buttons) {
     auto point = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
@@ -175,6 +191,7 @@ void setupButtons() {
     if (id == BUTTON_B_D_BLACK) {
       btn->attachDoubleClick(doubleClickHandler, point);
       btn->attachLongPressStart(longPressHandler, point);
+      btn->attachLongPressStop(longPressStopHandler, point);
       btn->setClickTicks(CLICK_TICKS);
     }
 

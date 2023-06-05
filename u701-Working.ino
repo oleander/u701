@@ -178,10 +178,11 @@ void setup() {
   setupButtons();
   scanForDevice();
   setupClient();
-  // setupOTA();
+  setupOTA();
 }
 
+bool otaLoaded = false;
 void loop() {
-  // handleOTA();
   handleClickEvent();
+  handleOTA();
 };
