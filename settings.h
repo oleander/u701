@@ -4,7 +4,7 @@
 #pragma once
 
 // Enables output to the serial monitor
-//#define INFO
+// #define INFO
 // #define IOS
 
 // BLE scan settings
@@ -30,7 +30,7 @@
 #define WDT_RESET_INTERVAL 60 // in seconds
 
 // Period of time in which to ignore additional level changes
-#define DEBOUNCE_TICKS 0 // in ms
+#define DEBOUNCE_TICKS 50 // in ms
 
 // Timeout used to distinguish single clicks from double clicks
 #define CLICK_TICKS 500 // in ms
