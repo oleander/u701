@@ -1,13 +1,23 @@
 #include "keyboard.h"
 
-std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_D_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_A_C_BLUE, new OneButton(PIN, false, false)},
-                                               {BUTTON_A_B_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_A_A_RED, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_D_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_C_BLUE, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_B_BLACK, new OneButton(PIN, false, false)},
-                                               {BUTTON_B_A_RED, new OneButton(PIN, false, false)}};
+// https://cdn-learn.adafruit.com/assets/assets/000/111/179/original/wireless_Adafruit_HUZZAH32_ESP32_Feather_Pinout.png?1651089809
+// GPIO 4 (A5)
+// GPIO 13
+// GPIO 14
+// GPIO 15
+// GPIO 21
+// GPIO 27
+// GPIO 32
+// GPIO 33
+
+std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_D_BLACK, new OneButton(4, false, false)},
+                                               {BUTTON_A_C_BLUE, new OneButton(13, false, false)},
+                                               {BUTTON_A_B_BLACK, new OneButton(14, false, false)},
+                                               {BUTTON_A_A_RED, new OneButton(15, false, false)},
+                                               {BUTTON_B_D_BLACK, new OneButton(21, false, false)},
+                                               {BUTTON_B_C_BLUE, new OneButton(27, false, false)},
+                                               {BUTTON_B_B_BLACK, new OneButton(32, false, false)},
+                                               {BUTTON_B_A_RED, new OneButton(33, false, false)}};
 
 typedef OneButton *Button;
 typedef u_int16_t ID;
