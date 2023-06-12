@@ -1,5 +1,4 @@
 #include "keyboard.h"
-#include "ota.h"
 
 std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_D_BLACK, new OneButton(PIN, false, false)},
                                                {BUTTON_A_C_BLUE, new OneButton(PIN, false, false)},
@@ -80,21 +79,6 @@ void clickHandler(void *p) {
     }
     break;
   case BUTTON_B_D_BLACK:
-    if (!keyboard.isConnected()) {
-      toggleOTA();
-
-      if (isOTAEnabled()) {
-        PRINTF("[0x%x] [Click] OTA Mode ON\n", id);
-      } else {
-        PRINTF("[0x%x] [Click] OTA Mode OFF\n", id);
-        PRINTF("[0x%x] [Click] Restarting ESP\n", id);
-        delay(1000);
-        ESP.restart();
-      }
-
-      return;
-    }
-
     if (functionState == MediaFn) {
       sendMediaFnKeyPress('5', id);
     } else if (functionState == CmdFn) {
@@ -150,36 +134,13 @@ void doubleClickHandler(void *p) {
 
   switch (id) {
   case BUTTON_B_D_BLACK:
-    keyboard.write(KEY_MEDIA_EJECT);
+    // keyboard.write(KEY_MEDIA_EJECT);
     PRINTF("[0x%x] [Double] Eject\n", id);
     break;
   default:
     sendNOPKey(id);
   }
 }
-
-void longPressHandler(void *p) {
-  PRINTLN("longPressHandler");
-  switch (POINTER(p)) {
-  case BUTTON_B_D_BLACK:
-    if (keyboard.isConnected()) return;
-
-    toggleOTA();
-
-    if (isOTAEnabled()) {
-      PRINTF("[0x%x] [Click] OTA Mode ON\n", id);
-    } else {
-      PRINTF("[0x%x] [Click] OTA Mode OFF\n", id);
-      PRINTF("[0x%x] [Click] Restarting ESP\n", id);
-      delay(1000);
-      ESP.restart();
-    }
-
-    break;
-  }
-}
-
-void longPressStopHandler(void *p) { PRINTLN("longPressStopHandler"); }
 
 void setupButtons() {
   for (auto &[id, btn]: buttons) {
@@ -190,8 +151,6 @@ void setupButtons() {
     // Enable double click & hold for some of the buttons
     if (id == BUTTON_B_D_BLACK) {
       btn->attachDoubleClick(doubleClickHandler, point);
-      btn->attachLongPressStart(longPressHandler, point);
-      btn->attachLongPressStop(longPressStopHandler, point);
       btn->setClickTicks(CLICK_TICKS);
     }
 

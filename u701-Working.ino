@@ -2,10 +2,10 @@
 #include "print.h"
 #include "settings.h"
 #include <Arduino.h>
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
-#include <BLEUtils.h>
+#include <NimBLEAdvertisedDevice.h>
+#include <NimBLEDevice.h>
+#include <NimBLEScan.h>
+#include <NimBLEUtils.h>
 #include <OneButton.h>
 
 const std::map<uint8_t, const char *> hci_error_codes = {
@@ -24,9 +24,9 @@ const std::map<uint8_t, const char *> hci_error_codes = {
     {0x2e, "HCI_ERROR_CODE_CHAN_ASSESSMENT_NOT_SUPPORTED"},
 };
 
-static BLEUUID hidService("1812");
-static BLEUUID reportUUID("2A4D");
-static BLEUUID cccdUUID("2902");
+static NimBLEUUID hidService("1812");
+static NimBLEUUID reportUUID("2A4D");
+static NimBLEUUID cccdUUID("2902");
 
 static uint8_t ON[] = {0x1, 0x0};
 bool activeState    = false;
@@ -42,6 +42,14 @@ int32_t dataToInt(uint8_t *pData, size_t length) {
 
   return result;
 }
+
+// const char *getErrorMessage(uint8_t error_code) {
+//   auto it = hci_error_codes.find(error_code);
+//   if (it != hci_error_codes.end()) {
+//     return it->second;
+//   }
+//   return nullptr;
+// }
 
 static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length,
                            bool isNotify) {
@@ -67,49 +75,52 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 void restart(const char *reason) {
   PRINTLN("Restarting ESP32 ...");
   PRINTLN(reason);
-  delay(1000);
+  delay(5000);
   ESP.restart();
 }
 
-class ClientCallback : public BLEClientCallbacks {
-  void onConnect(BLEClient *client) { PRINTLN("Connected to device!"); }
+class ClientCallback : public NimBLEClientCallbacks {
+  void onConnect(BLEServer *pServer) { PRINTLN("Connected to device!"); }
 
-  void onDisconnect(BLEClient *client) {
+  void onDisconnect(NimBLEClient *client) {
     restart("Disconnected from device, restarting ESP32 ...");
   }
 };
 
-BLEAdvertisedDevice *device;
+NimBLEAdvertisedDevice *device;
 
-class AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertised) {
+class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
+public:
+  void onResult(NimBLEAdvertisedDevice *advertised) {
     PRINT(".");
 
-    if (!advertised.isAdvertisingService(hidService)) return;
+    if (!advertised->isAdvertisingService(hidService)) return;
+    
+    // if (!advertised->isConnectable()) return;
 
-    auto addr = advertised.getAddress().toString();
+    auto addr = advertised->getAddress().toString();
     if (strcmp(addr.c_str(), DEVICE_MAC) != 0) return;
 
-    auto name = advertised.getName();
-    auto rssi = advertised.getRSSI();
-    auto manu = advertised.getManufacturerData();
-    auto serv = advertised.getServiceData();
+    auto name = advertised->getName();
+    auto rssi = advertised->getRSSI();
+    auto manu = advertised->getManufacturerData();
+    auto serv = advertised->getServiceData();
 
     PRINTF("Found device: %s (%s) RSSI=%d, manu=%d, serv=%d\n", name.c_str(), addr.c_str(), rssi,
            manu.size(), serv.size());
 
     PRINTLN("Connecting to advertised device ...");
-    device = new BLEAdvertisedDevice(advertised);
+    device = advertised;
 
     PRINTLN("Stopping scan ...");
-    advertised.getScan()->stop();
+    advertised->getScan()->stop();
   }
 };
 
 void scanForDevice() {
-  auto scan = BLEDevice::getScan();
+  auto scan = NimBLEDevice::getScan();
 
-  scan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
+  scan->setAdvertisedDeviceCallbacks(new Callbacks());
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
@@ -121,6 +132,12 @@ void setupKeyboard() {
   PRINTLN("Enable Keyboard");
   keyboard.begin();
   keyboard.setDelay(12);
+  // while (!keyboard.isConnected()) {
+  //   PRINT(".");
+  //   delay(300);
+  // }
+
+  // PRINT("\n");
 }
 
 void setupSerial() {
@@ -129,39 +146,78 @@ void setupSerial() {
 #endif
 }
 
+NimBLEClient* client;
+
 void setupClient() {
-  auto client = BLEDevice::createClient();
+  client = NimBLEDevice::createClient();
 
   client->setClientCallbacks(new ClientCallback());
   client->connect(device);
 
+  // delay(150);
+
+  // PRINTLN("Waiting to be connected to buttons");
+  // while (!client->isConnected()) {
+  //   sleep(500);
+  //   PRINT(".");
+  // }
+
+  // PRINTLN("Phone buttons");
+  // return;
   PRINTLN("Discovering services ...");
-  auto service = client->getService(hidService);
-  if (!service) {
-    restart("[BUG] Service not found");
+  // auto service = client->getService(hidService);
+  // delay(5000);
+  auto sx = client->getServices(true);
+
+  if (sx->empty()) {
+    client->disconnect();
+    restart("No services found, will retry");
     return;
   }
 
-  PRINTLN("Discovering characteristics ...");
-  auto characteristic = service->getCharacteristic(reportUUID);
-  if (!characteristic->canNotify()) {
-    restart("[BUG] Characteristic cannot notify");
-    return;
+  for (auto &service: *sx) {
+    if (service->getUUID().equals(hidService)) {
+      PRINTLN("Discovering characteristics ...");
+      // auto characteristic;
+      auto cx = service->getCharacteristics(true);
+
+      for (auto &characteristic: *cx) {
+        if (characteristic->getUUID().equals(reportUUID)) {
+          if (characteristic->canNotify()) {
+            PRINTLN("Found notification characteristic");
+            // delay(150);
+
+            PRINTLN("Subscribing to notifications");
+            characteristic->registerForNotify(onNotification);
+
+            // delay(150);
+
+            auto descriptor = characteristic->getDescriptor(cccdUUID);
+            if (!descriptor) {
+              client->disconnect();
+              restart("[BUG] Descriptor not found");
+              return;
+            }
+
+            PRINTLN("Enabling notifications ...");
+            descriptor->writeValue(ON, sizeof(ON), true);
+
+            PRINTLN("Ready to receive notifications from buttons!");
+
+            return;
+          } else {
+            PRINTLN("[BUG] Could not subscribe");
+          }
+        } else {
+          PRINTLN("Wrong UUID for char");
+        }
+      }
+    } else {
+      PRINTLN("Invalid service, skip to next");
+    }
   }
 
-  PRINTLN("Subscribing to notifications");
-  characteristic->registerForNotify(onNotification);
-
-  delay(50);
-
-  auto descriptor = characteristic->getDescriptor(cccdUUID);
-  if (!descriptor) {
-    restart("[BUG] Descriptor not found");
-    return;
-  }
-
-  PRINTLN("Enabling notifications ...");
-  descriptor->writeValue(ON, sizeof(ON), true);
+  PRINTLN("Finished connecting to service?");
 }
 
 void handleClickEvent() {
@@ -170,19 +226,50 @@ void handleClickEvent() {
   }
 }
 
+// void gattcEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
+//                        esp_ble_gattc_cb_param_t *param) {
+//   const char *error_msg = getErrorMessage(event);
+//   if (error_msg) {
+//     PRINTF("EVT: %s\n", error_msg);
+//   } else {
+//     PRINTF("EVT %x\n", event);
+//   }
+// }
+
+// void my_gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
+//   const char *error_msg = getErrorMessage(event);
+//   if (error_msg) {
+//     PRINTF("GAP EVT: %s, PARAMS: %x\n", error_msg, param->scan_rst.search_evt);
+//   } else {
+//     PRINTF("GAP EVT %x, PARAMS: %x\n", event, param->scan_rst.search_evt);
+//   }
+// }
+
+// void my_gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if,
+//                             esp_ble_gatts_cb_param_t *param) {
+//   const char *error_msg = getErrorMessage(event);
+//   if (error_msg) {
+//     PRINTF("GATTS EVT: %s\n", error_msg);
+//   } else {
+//     PRINTF("GATTS EVT %x\n", event);
+//   }
+// }
+
 void setup() {
   setupSerial();
   PRINTLN("\nStarting ESP32 ...");
 
-  setupKeyboard();
+  // BLEDevice::setCustomGattcHandler(gattcEventHandler);
+  // BLEDevice::setCustomGattsHandler(my_gatts_event_handler);
+  // BLEDevice::setCustomGapHandler(my_gap_event_handler);
+
   setupButtons();
+  setupKeyboard();
+  delay(1000);
   scanForDevice();
   setupClient();
-  setupOTA();
+  PRINTLN("COmplete setup!");
 }
 
 bool otaLoaded = false;
-void loop() {
-  handleClickEvent();
-  handleOTA();
-};
+void loop() { handleClickEvent(); };
