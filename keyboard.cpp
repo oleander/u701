@@ -1,6 +1,7 @@
 #include "keyboard.h"
 
 // https://cdn-learn.adafruit.com/assets/assets/000/111/179/original/wireless_Adafruit_HUZZAH32_ESP32_Feather_Pinout.png?1651089809
+// https://chat.openai.com/share/40fcc231-e8e7-40ff-a378-54aa85d7b761
 // GPIO 4 (A5)
 // GPIO 13
 // GPIO 14
