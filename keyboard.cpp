@@ -134,7 +134,7 @@ void doubleClickHandler(void *p) {
 
   switch (id) {
   case BUTTON_B_D_BLACK:
-    // keyboard.write(KEY_MEDIA_EJECT);
+    keyboard.write(KEY_MEDIA_EJECT);
     PRINTF("[0x%x] [Double] Eject\n", id);
     break;
   default:
