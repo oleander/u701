@@ -81,7 +81,7 @@ void clickHandler(void *p) {
     break;
   case BUTTON_B_B_BLACK:
     if (functionState == MediaFn) {
-      sendKeyPress('5', id);
+      sendKeyPress('6', id);
     } else if (functionState == CmdFn) {
       sendKeyPress('F', id);
     } else {
