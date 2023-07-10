@@ -58,7 +58,7 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
 
   auto currentID = dataToInt(data, length);
 
-  PRINTF("Got notification from ID 0x%x\n", currentID);
+  Log.noticeln("Got notification from ID 0x%x\n", currentID);
 
   if (currentID == 0x0000) { // Button was released
     activeState = false;
@@ -106,8 +106,8 @@ public:
     auto manu = advertised->getManufacturerData();
     auto serv = advertised->getServiceData();
 
-    PRINTF("Found device: %s (%s) RSSI=%d, manu=%d, serv=%d\n", name.c_str(), addr.c_str(), rssi,
-           manu.size(), serv.size());
+    Log.noticeln("Found device: %s (%s) RSSI=%d, manu=%d, serv=%d\n", name.c_str(), addr.c_str(),
+                 rssi, manu.size(), serv.size());
 
     Log.noticeln("Connecting to advertised device ...");
     device = advertised;
@@ -230,18 +230,18 @@ void handleClickEvent() {
 //                        esp_ble_gattc_cb_param_t *param) {
 //   const char *error_msg = getErrorMessage(event);
 //   if (error_msg) {
-//     PRINTF("EVT: %s\n", error_msg);
+//     Log.noticeln("EVT: %s\n", error_msg);
 //   } else {
-//     PRINTF("EVT %x\n", event);
+//     Log.noticeln("EVT %x\n", event);
 //   }
 // }
 
 // void my_gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
 //   const char *error_msg = getErrorMessage(event);
 //   if (error_msg) {
-//     PRINTF("GAP EVT: %s, PARAMS: %x\n", error_msg, param->scan_rst.search_evt);
+//     Log.noticeln("GAP EVT: %s, PARAMS: %x\n", error_msg, param->scan_rst.search_evt);
 //   } else {
-//     PRINTF("GAP EVT %x, PARAMS: %x\n", event, param->scan_rst.search_evt);
+//     Log.noticeln("GAP EVT %x, PARAMS: %x\n", event, param->scan_rst.search_evt);
 //   }
 // }
 
@@ -249,9 +249,9 @@ void handleClickEvent() {
 //                             esp_ble_gatts_cb_param_t *param) {
 //   const char *error_msg = getErrorMessage(event);
 //   if (error_msg) {
-//     PRINTF("GATTS EVT: %s\n", error_msg);
+//     Log.noticeln("GATTS EVT: %s\n", error_msg);
 //   } else {
-//     PRINTF("GATTS EVT %x\n", event);
+//     Log.noticeln("GATTS EVT %x\n", event);
 //   }
 // }
 

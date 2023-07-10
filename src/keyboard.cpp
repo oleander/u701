@@ -21,13 +21,13 @@ FunctionState functionState = NoFn;
 BleKeyboard keyboard(DEVICE_NAME, "701", 100);
 
 void sendNOPKey(ID id) {
-  PRINTF("[0x%x] NOP\n", id);
+  Log.noticeln("[0x%x] NOP\n", id);
   keyboard.write(KEY_INVALID);
 }
 
 void sendKeyPress(char letter, ID id) {
-  PRINTF("[%sFn] Sending letter %s", functionState == CmdFn ? "Cmd" : "Media",
-         String(letter).c_str());
+  Log.noticeln("[%sFn] Sending letter %s", functionState == CmdFn ? "Cmd" : "Media",
+               String(letter).c_str());
 
   keyboard.print(letter);
   functionState = NoFn;
@@ -39,7 +39,7 @@ void clickHandler(void *p) {
   switch (id) {
   case BUTTON_A_A_RED:
     functionState = MediaFn;
-    PRINTF("[0x%x] [Click] Media Fn\n", id);
+    Log.noticeln("[0x%x] [Click] Media Fn\n", id);
 
     break;
   case BUTTON_A_B_BLACK:
@@ -47,10 +47,10 @@ void clickHandler(void *p) {
       sendKeyPress('2', id);
     } else if (functionState == CmdFn) {
       keyboard.write(KEY_ZOOM_IN);
-      PRINTF("[0x%x] [Click] [CmdFn] Zoom In\n", id);
+      Log.noticeln("[0x%x] [Click] [CmdFn] Zoom In\n", id);
     } else {
       keyboard.write(KEY_MEDIA_VOLUME_DOWN);
-      PRINTF("[0x%x] [Click] Volume Down\n", id);
+      Log.noticeln("[0x%x] [Click] Volume Down\n", id);
     }
 
     break;
@@ -59,23 +59,23 @@ void clickHandler(void *p) {
       sendKeyPress('3', id);
     } else if (functionState == CmdFn) {
       keyboard.write(KEY_ZOOM_OUT);
-      PRINTF("[0x%x] [Click] [CmdFn] Zoom Out\n", id);
+      Log.noticeln("[0x%x] [Click] [CmdFn] Zoom Out\n", id);
     } else {
       keyboard.write(KEY_MEDIA_PREVIOUS_TRACK);
-      PRINTF("[0x%x] [Click] Previous Track\n", id);
+      Log.noticeln("[0x%x] [Click] Previous Track\n", id);
     }
 
     break;
   case BUTTON_A_D_BLACK:
     keyboard.write(KEY_MEDIA_PLAY_PAUSE);
-    PRINTF("[0x%x] [Click] Play/Pause\n", id);
+    Log.noticeln("[0x%x] [Click] Play/Pause\n", id);
     break;
   case BUTTON_B_A_RED:
     functionState = (functionState == CmdFn) ? NoFn : CmdFn;
     if (functionState == CmdFn) {
-      PRINTF("[0x%x] [Click] CmdFn ON\n", id);
+      Log.noticeln("[0x%x] [Click] CmdFn ON\n", id);
     } else {
-      PRINTF("[0x%x] [Click] CmdFn OFF\n", id);
+      Log.noticeln("[0x%x] [Click] CmdFn OFF\n", id);
     }
 
     break;
@@ -86,7 +86,7 @@ void clickHandler(void *p) {
       sendKeyPress('F', id);
     } else {
       keyboard.write(KEY_MEDIA_VOLUME_UP);
-      PRINTF("[0x%x] [Click] Volume UP\n", id);
+      Log.noticeln("[0x%x] [Click] Volume UP\n", id);
     }
 
     break;
@@ -97,7 +97,7 @@ void clickHandler(void *p) {
       sendKeyPress('G', id);
     } else {
       keyboard.write(KEY_MEDIA_NEXT_TRACK);
-      PRINTF("[0x%x] [Click] Next Track\n", id);
+      Log.noticeln("[0x%x] [Click] Next Track\n", id);
     }
 
     break;
@@ -124,7 +124,7 @@ void doubleClickHandler(void *p) {
   switch (id) {
   case BUTTON_B_D_BLACK:
     keyboard.write(KEY_MEDIA_EJECT);
-    PRINTF("[0x%x] [Double] Eject\n", id);
+    Log.noticeln("[0x%x] [Double] Eject\n", id);
 
     break;
   default:
