@@ -95,7 +95,7 @@ public:
     PRINT(".");
 
     if (!advertised->isAdvertisingService(hidService)) return;
-    
+
     // if (!advertised->isConnectable()) return;
 
     auto addr = advertised->getAddress().toString();
@@ -141,12 +141,11 @@ void setupKeyboard() {
 }
 
 void setupSerial() {
-#if defined(INFO)
   Serial.begin(SERIAL_BAUD_RATE);
-#endif
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
 }
 
-NimBLEClient* client;
+NimBLEClient *client;
 
 void setupClient() {
   client = NimBLEDevice::createClient();
