@@ -1,5 +1,5 @@
-#include "print.h"
 #include "settings.h"
+#include <ArduinoLog.h>
 #include <BleKeyboard.h>
 #include <OneButton.h>
 #include <unordered_map>

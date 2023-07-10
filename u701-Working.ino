@@ -1,7 +1,7 @@
 #include "keyboard.h"
-#include "print.h"
 #include "settings.h"
 #include <Arduino.h>
+#include <ArduinoLog.h>
 #include <NimBLEAdvertisedDevice.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
@@ -92,7 +92,7 @@ NimBLEAdvertisedDevice *device;
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
 public:
   void onResult(NimBLEAdvertisedDevice *advertised) {
-    Log.notice(".");
+    PRINT(".");
 
     if (!advertised->isAdvertisingService(hidService)) return;
 
@@ -133,11 +133,11 @@ void setupKeyboard() {
   keyboard.begin();
   keyboard.setDelay(12);
   // while (!keyboard.isConnected()) {
-  //   Log.notice(".");
+  //   PRINT(".");
   //   delay(300);
   // }
 
-  // Log.notice("\n");
+  // PRINT("\n");
 }
 
 void setupSerial() {
@@ -159,7 +159,7 @@ void setupClient() {
   // Log.noticeln("Waiting to be connected to buttons");
   // while (!client->isConnected()) {
   //   sleep(500);
-  //   Log.notice(".");
+  //   PRINT(".");
   // }
 
   // Log.noticeln("Phone buttons");
