@@ -92,7 +92,7 @@ NimBLEAdvertisedDevice *device;
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
 public:
   void onResult(NimBLEAdvertisedDevice *advertised) {
-    PRINT(".");
+    Log.notice(".");
 
     if (!advertised->isAdvertisingService(hidService)) return;
 
@@ -133,11 +133,11 @@ void setupKeyboard() {
   keyboard.begin();
   keyboard.setDelay(12);
   // while (!keyboard.isConnected()) {
-  //   PRINT(".");
+  //   Log.notice(".");
   //   delay(300);
   // }
 
-  // PRINT("\n");
+  // Log.notice("\n");
 }
 
 void setupSerial() {
@@ -158,7 +158,7 @@ void setupClient() {
   // Log.noticeln("Waiting to be connected to buttons");
   // while (!client->isConnected()) {
   //   sleep(500);
-  //   PRINT(".");
+  //   Log.notice(".");
   // }
 
   // Log.noticeln("Phone buttons");
