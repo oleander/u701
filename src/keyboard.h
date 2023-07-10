@@ -1,5 +1,10 @@
-#include "settings.h"
 #include <ArduinoLog.h>
+
+/* Removes warnings */
+#undef LOG_LEVEL_INFO
+#undef LOG_LEVEL_ERROR
+
+#include "settings.h"
 #include <BleKeyboard.h>
 #include <OneButton.h>
 #include <unordered_map>
