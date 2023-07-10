@@ -41,5 +41,4 @@
 #define WIFI_SSID     "u701"
 #define WIFI_PASSWORD "11111111"
 
-enum State { CONNECTING, CONNECTED, SUBSCRIBED, DISCONNECTED };
-static State state = CONNECTING;
+#define MAC_ADRESS "f7:97:ac:1f:f8:c0"

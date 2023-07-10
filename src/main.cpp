@@ -5,7 +5,6 @@
 #undef LOG_LEVEL_ERROR
 
 #include "ClientCallback.h"
-#include "ScanCallback.h"
 #include "keyboard.h"
 #include "ota.h"
 #include "settings.h"
@@ -18,7 +17,7 @@
 #include <NimBLEUtils.h>
 #include <OneButton.h>
 
-static int TEN_MINUTES  = 10 * 60 * 1000;
+const int TEN_MINUTES   = 10 * 60 * 1000;
 static bool activeState = false;
 static OneButton *activeButton;
 
@@ -40,16 +39,6 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
   }
 }
 
-void scanForDevice() {
-  auto scan = NimBLEDevice::getScan();
-
-  scan->setAdvertisedDeviceCallbacks(new ScanCallback());
-  scan->setInterval(SCAN_INTERVAL);
-  scan->setWindow(SCAN_WINDOW);
-  scan->start(0, false);
-  scan->clearResults();
-}
-
 void setupKeyboard() {
   Log.noticeln("Enable Keyboard");
   keyboard.begin();
@@ -68,40 +57,34 @@ void setupSerial() {
 }
 
 void setupClient() {
-  client = NimBLEDevice::createClient();
+  auto address = NimBLEAddress(MAC_ADRESS, 1);
+  client       = NimBLEDevice::createClient(address);
 
   client->setClientCallbacks(new ClientCallback());
-  client->connect(device);
+  client->setConnectTimeout(15);
 
-  Log.noticeln("Discovering services ...");
-  auto services = client->getServices(true);
-  if (services->empty()) {
-    restart("No services found, will retry", false);
+  if (!client->connect()) {
+    restart("Timeout connecting to the device", false);
   }
 
-  for (auto &service: *services) {
-    if (!service->getUUID().equals(hidService)) continue;
-
-    Log.noticeln("Discovering characteristics ...");
-    auto characteristics = service->getCharacteristics(true);
-
-    if (characteristics->empty()) {
-      restart("[BUG] No characteristics found", false);
-    }
-
-    for (auto &characteristic: *characteristics) {
-      if (!characteristic->getUUID().equals(reportUUID)) continue;
-      if (!characteristic->canNotify()) continue;
-
-      Log.noticeln("Trying to subscribe to notifications ...");
-      auto status = characteristic->subscribe(true, onNotification, true);
-      if (!status) {
-        restart("Could not subscribe to notifications", false);
-      }
-
-      Log.noticeln("Ready to receive notifications from buttons!");
-    }
+  Log.noticeln("Connecting to the service ...");
+  auto service = client->getService(hidService);
+  if (!service) {
+    restart("Service not found, will retry", false);
   }
+
+  Log.noticeln("Getting the characteristic ...");
+  auto characteristic = service->getCharacteristic(reportUUID);
+  if (!characteristic) {
+    restart("Characteristic not found, will retry", false);
+  }
+
+  auto status = characteristic->subscribe(true, onNotification, true);
+  if (!status) {
+    restart("Could not subscribe to notifications", false);
+  }
+
+  Log.noticeln("Connected to the service");
 }
 
 void handleClickEvent() {
@@ -116,14 +99,9 @@ void handleClickEvent() {
 }
 
 void setupOTAStatus() {
-  esp_reset_reason_t reason = esp_reset_reason();
-
-  if (reason == ESP_RST_POWERON || reason == ESP_RST_SW || reason == ESP_RST_BROWNOUT) {
-    otaStatus = 0;
-  } else if (otaStatus) {
-    Log.noticeln("Enable OTA");
-    setupOTA();
-  }
+  if (otaStatus != 1) return;
+  Log.noticeln("Enable OTA");
+  setupOTA();
 }
 
 void setup() {
@@ -131,8 +109,6 @@ void setup() {
   setupOTAStatus();
   setupButtons();
   setupKeyboard();
-  delay(1000);
-  scanForDevice();
   setupClient();
 }
 
