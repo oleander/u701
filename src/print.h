@@ -1,13 +1,14 @@
 #include <Arduino.h>
+#include <ArduinoLog.h>
 
 #if defined(INFO)
 #define PRINT(...)   Serial.print(__VA_ARGS__)
-#define Log.noticeln(...) Serial.Log.noticeln(__VA_ARGS__)
+#define PRINTLN(...) Serial.println(__VA_ARGS__)
 #define PRINTF(...)  Serial.printf(__VA_ARGS__)
 #elif defined(IOS)
 #define PRINT(...)                                                                                 \
   if (useKeyboardForLogging) keyboard.print(__VA_ARGS__);
-#define Log.noticeln(...)                                                                               \
+#define PRINTLN(...)                                                                               \
   {                                                                                                \
     char _buf_ln[256];                                                                             \
     snprintf(_buf_ln, sizeof(_buf_ln), "%s\n", __VA_ARGS__);                                       \
@@ -21,6 +22,6 @@
   }
 #else
 #define PRINT(...)
-#define Log.noticeln(...)
+#define PRINTLN(...)
 #define PRINTF(...)
 #endif
