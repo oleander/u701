@@ -7,10 +7,7 @@ void setupOTA() {
   WiFi.softAP(WIFI_SSID, WIFI_PASSWORD);
 
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Log.noticeln("Connection Failed! Rebooting...");
-    EEPROM.write(0, 0);
-    delay(5000);
-    ESP.restart();
+    restart("Connection Failed! Rebooting...", false);
   }
 
   ArduinoOTA.setPassword(WIFI_PASSWORD);
@@ -25,18 +22,10 @@ void setupOTA() {
           type = "filesystem";
         }
 
-        // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
         Log.noticeln("Start updating %s", type);
       })
-      .onEnd([]() {
-        Log.noticeln("\nEnd");
-        EEPROM.write(0, 0);
-        delay(5000);
-        ESP.restart();
-      })
-      .onProgress([](unsigned int progress, unsigned int total) {
-        Log.noticeln("Progress: %u%%\r", (progress / (total / 100)));
-      })
+      .onEnd([]() { restart("\nEnd", false); })
+      .onProgress([](unsigned int progress, unsigned int total) { Log.noticeln("Progress: %u%%\r", (progress / (total / 100))); })
       .onError([](ota_error_t error) {
         Log.noticeln("Error[%u]: ", error);
         if (error == OTA_AUTH_ERROR)
@@ -55,4 +44,6 @@ void setupOTA() {
   Log.noticeln("IP address: %s", WiFi.localIP());
 }
 
-void handleOTA() { ArduinoOTA.handle(); }
+void handleOTA() {
+  ArduinoOTA.handle();
+}

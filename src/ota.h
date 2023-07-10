@@ -1,7 +1,12 @@
-#include "settings.h"
 #include <ArduinoLog.h>
+
+/* Removes warnings */
+#undef LOG_LEVEL_INFO
+#undef LOG_LEVEL_ERROR
+
+#include "settings.h"
+#include "utility.h"
 #include <ArduinoOTA.h>
-#include <EEPROM.h>
 #include <ESPmDNS.h>
 #include <SPIFFS.h>
 #include <WiFi.h>

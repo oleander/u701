@@ -12,7 +12,8 @@ SpaceBeforeRangeBasedForLoopColon: false
 SpaceInEmptyParentheses: false
 SpaceAfterCStyleCast: true
 AlignOperands: true
-ColumnLimit: 100
+ColumnLimit: 200
 BinPackParameters: true
 BinPackArguments: true
+AllowShortFunctionsOnASingleLine: None
 
