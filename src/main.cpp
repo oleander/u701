@@ -92,7 +92,7 @@ NimBLEAdvertisedDevice *device;
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
 public:
   void onResult(NimBLEAdvertisedDevice *advertised) {
-    PRINT(".");
+    Log.notice(".");
 
     if (!advertised->isAdvertisingService(hidService)) return;
 
