@@ -141,8 +141,9 @@ void setupKeyboard() {
 }
 
 void setupSerial() {
+#if defined(INFO)
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+#endif
 }
 
 NimBLEClient *client;
