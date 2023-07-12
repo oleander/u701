@@ -69,7 +69,6 @@ void setupSerial() {
 
 void setupClient() {
   client = NimBLEDevice::createClient();
-
   client->setClientCallbacks(new ClientCallback());
   client->connect(device);
 
@@ -84,7 +83,6 @@ void setupClient() {
 
     Log.noticeln("Discovering characteristics ...");
     auto characteristics = service->getCharacteristics(true);
-
     if (characteristics->empty()) {
       restart("[BUG] No characteristics found", false);
     }
@@ -100,8 +98,12 @@ void setupClient() {
       }
 
       Log.noticeln("Ready to receive notifications from buttons!");
+
+      return;
     }
   }
+
+  restart("[BUG] Could not find report characteristic", false);
 }
 
 void handleClickEvent() {
