@@ -5,26 +5,30 @@
 #undef LOG_LEVEL_ERROR
 
 #include "ClientCallback.h"
-#include "ScanCallback.h"
 #include "keyboard.h"
-#include "ota.h"
 #include "settings.h"
 #include "shared.h"
 #include "utility.h"
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 #include <NimBLEAdvertisedDevice.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
 #include <OneButton.h>
 
-static int TEN_MINUTES  = 10 * 60 * 1000;
+const auto address      = NimBLEAddress(MAC_ADRESS, 1);
+const int SEVEN_MINUTES = 420000000;
 static bool activeState = false;
 static OneButton *activeButton;
+static bool otaEnabled = false;
+hw_timer_t *timer      = NULL;
 
+/* Called when a notification is received from the BLE device, i.e a button press/release  */
 static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
-  if (!isNotify) return;
+  if (characteristic->getUUID() != reportUUID) return;
   if (length != 4) return;
+  if (!isNotify) return;
 
   auto currentID = dataToInt(data, length);
 
@@ -35,25 +39,24 @@ static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *dat
     activeState  = true;
   }
 
+  /* Ensure that the button callbacks are fired at least once */
   if (activeButton) {
     activeButton->tick(activeState);
   }
-}
 
-void scanForDevice() {
-  auto scan = NimBLEDevice::getScan();
-
-  scan->setAdvertisedDeviceCallbacks(new ScanCallback());
-  scan->setInterval(SCAN_INTERVAL);
-  scan->setWindow(SCAN_WINDOW);
-  scan->start(0, false);
-  scan->clearResults();
+#ifdef DEBUG
+  Log.noticeln("Event %i received", characteristic->getUUID().toString().c_str());
+#endif
 }
 
 void setupKeyboard() {
   Log.noticeln("Enable Keyboard");
   keyboard.begin();
-  keyboard.setDelay(12);
+}
+
+/* True if OTA should be activated */
+bool willActivateOTA() {
+  return activeState && !keyboard.isConnected() && !otaEnabled;
 }
 
 void setupSerial() {
@@ -67,15 +70,23 @@ void setupSerial() {
   Log.noticeln("Starting ESP32 ...");
 }
 
+/**
+ * Sets up the client to connect to the BLE device with the specified MAC address.
+ * If the connection fails or no services/characteristics are found, the device will restart.
+ */
 void setupClient() {
-  client = NimBLEDevice::createClient();
+  client = NimBLEDevice::createClient(address);
   client->setClientCallbacks(new ClientCallback());
-  client->connect(device);
+
+  Log.noticeln("Connecting to %s ...", address.toString().c_str());
+  if (!client->connect()) {
+    restart("Timeout connecting to the device");
+  }
 
   Log.noticeln("Discovering services ...");
   auto services = client->getServices(true);
   if (services->empty()) {
-    restart("No services found, will retry", false);
+    restart("[BUG] No services found, will retry");
   }
 
   for (auto &service: *services) {
@@ -84,66 +95,103 @@ void setupClient() {
     Log.noticeln("Discovering characteristics ...");
     auto characteristics = service->getCharacteristics(true);
     if (characteristics->empty()) {
-      restart("[BUG] No characteristics found", false);
+      restart("[BUG] No characteristics found");
     }
 
     for (auto &characteristic: *characteristics) {
       if (!characteristic->getUUID().equals(reportUUID)) continue;
-      if (!characteristic->canNotify()) continue;
 
-      Log.noticeln("Trying to subscribe to notifications ...");
-      auto status = characteristic->subscribe(true, onNotification, true);
-      if (!status) {
-        restart("Could not subscribe to notifications", false);
+      if (!characteristic->canNotify()) {
+        restart("[BUG] Characteristic cannot notify");
       }
 
-      Log.noticeln("Ready to receive notifications from buttons!");
+      auto status = characteristic->subscribe(true, onNotification, true);
+      if (!status) {
+        restart("[BUG] Failed to subscribe to notifications");
+      }
 
+      Log.noticeln("Subscribed to notifications");
       return;
     }
   }
 
-  restart("[BUG] Could not find report characteristic", false);
+  restart("[BUG] No report characteristic found");
 }
 
-void handleClickEvent() {
-  if (activeButton) {
-    activeButton->tick(activeState);
-  }
-
-  /* Toggle OTA mode */
-  if (activeState && !keyboard.isConnected()) {
-    restart("Toggle OTA", true);
-  }
+/**
+ * Interrupt service routine that is triggered by a timer after seven minutes.
+ * Calls the restart function with the message "OTA update failed" and false as the second argument.
+ */
+void IRAM_ATTR onTimer() {
+  restart("OTA update failed");
 }
 
-void setupOTAStatus() {
-  esp_reset_reason_t reason = esp_reset_reason();
+/**
+ * Sets up a timer to trigger an interrupt after seven minutes.
+ * The interrupt will call the onTimer function.
+ * Used to reboot the ESP32 after seven minutes of OTA.
+ */
+void setupTimer() {
+  timer = timerBegin(0, 40, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, SEVEN_MINUTES, false);
+}
 
-  if (reason == ESP_RST_POWERON || reason == ESP_RST_SW || reason == ESP_RST_BROWNOUT) {
-    otaStatus = 0;
-  } else if (otaStatus) {
-    Log.noticeln("Enable OTA");
-    setupOTA();
+class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
+  void onResult(NimBLEAdvertisedDevice *advertised) {
+    if (advertised->getAddress() == address) {
+#ifdef DEBUG
+      Log.noticeln("Found device device");
+#endif
+
+      advertised->getScan()->stop();
+    }
   }
+};
+
+/**
+ * Sets up the BLE scan to search for the device with the specified MAC address.
+ * If the device is found, the scan will stop and the client will be set up.
+ * The scan interval is set high to save power
+ */
+void setupScan() {
+  Log.noticeln("Starting BLE scan ...");
+
+  auto scan = NimBLEDevice::getScan();
+  scan->setAdvertisedDeviceCallbacks(new Callbacks());
+  scan->setInterval(SCAN_INTERVAL);
+  scan->setWindow(SCAN_WINDOW);
+  scan->setActiveScan(true);
+  scan->start(0, false);
+
+  Log.noticeln("Scan finished");
 }
 
 void setup() {
   setupSerial();
-  setupOTAStatus();
   setupButtons();
   setupKeyboard();
-  delay(1000);
-  scanForDevice();
+  setupScan();
   setupClient();
+  setupTimer();
 }
 
 void loop() {
-  if (otaStatus && millis() < TEN_MINUTES) {
-    handleOTA();
-  } else if (otaStatus) {
-    restart("OTA mode enabled for more 10 minutes, will restart", false);
-  } else {
-    handleClickEvent();
+  if (willActivateOTA()) { /* Handle OTA */
+    Log.noticeln("Activating OTA");
+
+    WiFi.softAP(WIFI_SSID, WIFI_PASSWORD);
+    ArduinoOTA.setRebootOnSuccess(true);
+    ArduinoOTA.begin();
+    otaEnabled = true;
+
+    /* Will reboot the ESP32 after 7 minutes */
+    timerAlarmEnable(timer);
+  } else if (otaEnabled) {
+    ArduinoOTA.handle();
+  } else if (activeButton) { /* Handle button presses */
+    activeButton->tick(activeState);
   }
+
+  delay(20);
 };

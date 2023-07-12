@@ -1,6 +1,6 @@
 #include "utility.h"
 
-void restart(const char *reason, bool _otaStatus) {
+void restart(const char *reason) {
   Log.noticeln(reason);
 
   if (client && client->isConnected()) {
@@ -12,7 +12,10 @@ void restart(const char *reason, bool _otaStatus) {
     }
   }
 
-  otaStatus = _otaStatus;
+  Log.noticeln("Restarting ESP32 ...");
+
+  /* Ensures serial output is flushed */
+  delay(1000);
 
   ESP.restart();
 }
