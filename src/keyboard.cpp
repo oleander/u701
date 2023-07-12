@@ -1,10 +1,9 @@
 #include "keyboard.h"
 
-std::unordered_map<ID, OneButton *> buttons = {
-    {BUTTON_A_A_RED, new OneButton(PIN, false, false)},   {BUTTON_A_B_BLACK, new OneButton(PIN, false, false)}, {BUTTON_A_C_BLUE, new OneButton(PIN, false, false)},
-    {BUTTON_A_D_BLACK, new OneButton(PIN, false, false)}, {BUTTON_B_A_RED, new OneButton(PIN, false, false)},   {BUTTON_B_B_BLACK, new OneButton(PIN, false, false)},
-    {BUTTON_B_C_BLUE, new OneButton(PIN, false, false)},  {BUTTON_B_D_BLACK, new OneButton(PIN, false, false)}, {BUTTON_DUMMY, new OneButton(PIN, false, false)},
-};
+std::unordered_map<ID, OneButton *> buttons = {{BUTTON_A_A_RED, new OneButton(PIN, false, false)},  {BUTTON_A_B_BLACK, new OneButton(PIN, false, false)},
+                                               {BUTTON_A_C_BLUE, new OneButton(PIN, false, false)}, {BUTTON_A_D_BLACK, new OneButton(PIN, false, false)},
+                                               {BUTTON_B_A_RED, new OneButton(PIN, false, false)},  {BUTTON_B_B_BLACK, new OneButton(PIN, false, false)},
+                                               {BUTTON_B_C_BLUE, new OneButton(PIN, false, false)}, {BUTTON_B_D_BLACK, new OneButton(PIN, false, false)}};
 
 typedef OneButton *Button;
 typedef u_int16_t ID;
