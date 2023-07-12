@@ -17,36 +17,73 @@
 #include <NimBLEUtils.h>
 #include <OneButton.h>
 
-const auto address      = NimBLEAddress(MAC_ADRESS, 1);
-const int SEVEN_MINUTES = 420000000;
-static bool activeState = false;
-static OneButton *activeButton;
-static bool otaEnabled = false;
-hw_timer_t *timer      = NULL;
+const auto address             = NimBLEAddress(MAC_ADRESS, 1);
+const int SEVEN_MINUTES        = 420000000;
+static OneButton *activeButton = nullptr;
+const int RELEASED             = 0x0000;
+static bool activeState        = false;
+static bool otaEnabled         = false;
+static hw_timer_t *timer       = NULL;
 
 /* Called when a notification is received from the BLE device, i.e a button press/release  */
-static void onNotification(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
-  if (characteristic->getUUID() != reportUUID) return;
+/*
+  * When a button is pushed:
+    * No other button is pushed (OK):
+      1. Set active state to true (used by the loop)
+      2. Set active button to currently pressed button
+      3. Push button (tick)
+    * Another button is already pushed (NOT OK):
+      2. Ignore the new button
+  * When a button is released:
+    * When a button is already pressed (OK):
+      1. Set active state to false (used by the loop)
+      2. Release button (tick)
+    * When no button is pressed (NOT OK):
+      1. Ignore the release
+*/
+static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
+  // if (characteristic->getUUID() != reportUUID) return;
   if (length != 4) return;
   if (!isNotify) return;
 
+  /* ID for currently pressed button, 0 if no button is pressed */
   auto currentID = dataToInt(data, length);
 
-  if (currentID == 0x0000) { // Button was released
+  Log.noticeln("Button %x set to %d", currentID, activeState);
+
+  /* Ignore: Two buttons are pressed at the same time, ignore the new button */
+  if (activeState && currentID != RELEASED) {
+    Log.noticeln("Button pressed, but another button is already pressed");
+    Log.noticeln("State: %d, ID: %x", activeState, currentID);
+    return;
+  }
+
+  /* Ignore: A button is released but never pressed */
+  /* Can happend when buttons are double pushed */
+  if (!activeState && currentID == RELEASED) {
+    Log.noticeln("Button released, but no button is pressed");
+    Log.noticeln("State: %d, ID: %x", activeState, currentID);
+    return;
+  }
+
+  /* Ok: A button was released after being pushed */
+  if (activeState && currentID == RELEASED) {
+    Log.noticeln("Button released after being pressed");
+    Log.noticeln("State: %d, ID: %x", activeState, currentID);
     activeState = false;
-  } else if (!activeState) { // Button was pressed, and another button is not already pressed
-    activeButton = buttons.at(currentID);
-    activeState  = true;
+    return;
   }
 
-  /* Ensure that the button callbacks are fired at least once */
-  if (activeButton) {
-    activeButton->tick(activeState);
+  /* Ok: A button was pushed */
+  auto it = buttons.find(currentID);
+  if (it == buttons.end()) {
+    Log.noticeln("[BUG] Button %x not found", currentID);
+    return;
   }
 
-#ifdef DEBUG
-  Log.noticeln("Event %i received", characteristic->getUUID().toString().c_str());
-#endif
+  /* Activate the button */
+  activeButton = it->second;
+  activeState  = true;
 }
 
 void setupKeyboard() {
@@ -105,7 +142,7 @@ void setupClient() {
         restart("[BUG] Characteristic cannot notify");
       }
 
-      auto status = characteristic->subscribe(true, onNotification, true);
+      auto status = characteristic->subscribe(true, onEvent, true);
       if (!status) {
         restart("[BUG] Failed to subscribe to notifications");
       }
@@ -189,9 +226,7 @@ void loop() {
     timerAlarmEnable(timer);
   } else if (otaEnabled) {
     ArduinoOTA.handle();
-  } else if (activeButton) { /* Handle button presses */
+  } else if (activeButton) {
     activeButton->tick(activeState);
   }
-
-  delay(20);
 };
