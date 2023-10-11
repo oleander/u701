@@ -2,7 +2,7 @@
 authors = ["Linus Oleander <linus.oleander@clark.de>"]
 version = "0.1.0"
 edition = "2021"
-name = "u701"
+name = "u701hybrid"
 
 [dependencies]
 tokio = { version = "1.33.0", features = ["rt-multi-thread", "macros", "time"] }
@@ -14,6 +14,7 @@ esp-idf-hal = "0.41.2"
 [lib]
 crate-type = ["staticlib"]
 path = "src/lib.rs"
+name = "u701hybrid"
 
 [package.metadata.esp-idf-sys]
 esp_idf_version = "tag:v4.4.6"
