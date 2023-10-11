@@ -19,7 +19,7 @@ rpath = false
 
 [profile.dev]
 opt-level = "z"
-# lto = true
+lto = true
 codegen-units = 1
 panic = "abort"
 debug = false
