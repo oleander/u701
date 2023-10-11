@@ -1,9 +1,5 @@
 #include <ArduinoLog.h>
 #include <WiFi.h>
-/* Removes warnings */
-#undef LOG_LEVEL_INFO
-#undef LOG_LEVEL_ERROR
-#define WDT_TIMEOUT 10 * 60
 
 #include "ClientCallback.h"
 #include "ffi.h"
@@ -20,6 +16,11 @@
 IPAddress ip(192, 168, 4, 1);
 IPAddress gateway(192, 168, 4, 1);
 IPAddress subnet(255, 255, 255, 0);
+
+/* Removes warnings */
+#undef LOG_LEVEL_INFO
+#undef LOG_LEVEL_ERROR
+#define WDT_TIMEOUT 10 * 60
 
 constexpr auto COMMAND_MAP_SERVICE_UUID = "19B10010-E8F2-537E-4F6C-D104768A1214";
 constexpr auto COMMAND_MAP_CHAR_UUID    = "19B10011-E8F2-537E-4F6C-D104768A1214";
