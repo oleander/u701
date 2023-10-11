@@ -10,6 +10,8 @@ clean:
 	rm -rf target .embuild build .pio
 upload:
 	cargo pio exec -- run --target upload --monitor-port $(PORT) -e release
+upload_ota:
+	cargo pio exec -- run --target upload -e ota
 monitor:
 	espflash monitor -p $(PORT)
 default: upload monitor
