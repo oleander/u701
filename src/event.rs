@@ -11,7 +11,8 @@ extern crate log;
 use log::info;
 
 use libc::uint8_t;
-use std::sync::Mutex;
+extern crate spin;
+use spin::Mutex;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct MediaKeyReport(u8, u8);
