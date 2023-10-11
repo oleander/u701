@@ -7,6 +7,7 @@
 
 #include "ClientCallback.h"
 #include "keyboard.h"
+#include "keyboard_ffi.h"
 #include "ota.h"
 #include "rust_interface.h"
 #include "settings.h"
@@ -225,7 +226,6 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW);
 
   setupSerial();
-  setupButtons();
   setupBLE();
   setup_rust();
   setupKeyboard();
@@ -262,13 +262,6 @@ void loop() {
       state.action = Action::TICK;
     }
   case Action::TICK:
-    for (auto &[id, btn]: buttons) {
-      if (id == state.id && state.isActive()) {
-        btn->tick(true);
-      } else {
-        btn->tick(false);
-      }
-    }
     break;
   default:
     Log.infoln("Wrong action: %s", state.action);
