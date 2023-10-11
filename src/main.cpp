@@ -43,28 +43,6 @@ extern "C" bool ble_keyboard_is_connected() {
   return keyboard.isConnected();
 }
 
-const auto RESTART_CMD = "restart";
-const auto UPDATE_CMD  = "update";
-
-class MyCallbacks : public NimBLECharacteristicCallbacks {
-  void onWrite(NimBLECharacteristic *characteristic) override {
-    std::string cmd = characteristic->getValue();
-    if (cmd.length() == 0) return;
-    Log.noticeln("Received value: %s\n", cmd.c_str());
-
-    if (cmd == RESTART_CMD) {
-      restart("Restart command received");
-    } else if (cmd == UPDATE_CMD) {
-      characteristic->setValue("Toggle OTA");
-      // state.action = Action::INIT_OTA;
-      auto scan = NimBLEDevice::getScan();
-      if (scan->isScanning()) scan->stop();
-    } else {
-      characteristic->setValue("Unknown command");
-    }
-  }
-};
-
 /* Add function isActive to the State struct */
 static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
   Log.noticeln("Received data: %s\n", data);
@@ -173,32 +151,9 @@ void setupScan() {
   Log.noticeln("Scan finished");
 }
 
-void setupBLE() {
-  Log.noticeln("Starting BLE server...");
-
-  NimBLEDevice::init(DEVICE_NAME);
-
-  server   = NimBLEDevice::createServer();
-  service1 = server->createService(COMMAND_SERVICE_UUID);
-  char1    = service1->createCharacteristic(COMMAND_CHAR_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE);
-
-  char1->setCallbacks(new MyCallbacks());
-  service1->start();
-
-  service2 = server->createService(COMMAND_MAP_SERVICE_UUID);
-  char2    = service2->createCharacteristic(COMMAND_MAP_CHAR_UUID, NIMBLE_PROPERTY::READ);
-  char2->setValue("Available commands:restart update");
-  service2->start();
-
-  advert = NimBLEDevice::getAdvertising();
-  advert->addServiceUUID(COMMAND_SERVICE_UUID);
-  advert->addServiceUUID(COMMAND_MAP_SERVICE_UUID);
-  advert->start();
-}
-
 void setup() {
+  NimBLEDevice::init(DEVICE_NAME);
   setupSerial();
-  setupBLE();
   setup_rust();
   setupKeyboard();
   setupScan();
