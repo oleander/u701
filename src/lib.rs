@@ -10,8 +10,7 @@ use hashbrown::HashMap;
 extern crate log;
 use log::{info, warn};
 
-extern crate spin;
-use spin::Mutex;
+use std::sync::Mutex;
 
 extern crate esp_idf_svc;
 
@@ -173,21 +172,18 @@ pub extern "C" fn setup_rust() {
 }
 
 #[no_mangle]
-pub extern "C" fn transition_from_cpp(event: *const u8) {
-  info!("Received event from C++: {:?}", event);
-
-  let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, 4) };
-  let mut click_event = [0u8; 4];
-  click_event.copy_from_slice(event_slice);
-
-  info!("Transitioning from C++ event");
-  transition(&click_event);
+pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
+    println!("Received event from C++");
+    let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
+    let mut click_event = [0u8; 4];
+    click_event.copy_from_slice(event_slice);
+    transition(&click_event);
 }
 
 fn transition(curr_event: &ClickEvent) {
-  info!("Received event: {:?}", curr_event);
+  println!("Received event: {:?}", curr_event);
 
-  let mut active_state = ACTIVE_STATE.lock();
+  let mut active_state = ACTIVE_STATE.lock().unwrap();
   let (next_state, next_event) = active_state.transition(&curr_event);
   *active_state = next_state;
 

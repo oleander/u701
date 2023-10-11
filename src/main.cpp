@@ -78,7 +78,7 @@ static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size
   Log.noticeln("Received length: %d\n", length);
   Log.noticeln("Received isNotify: %d\n", isNotify);
 
-  transition_from_cpp(data);
+  transition_from_cpp(data, length);
   // if (length != 4)
   //   return;
   // if (!isNotify)
