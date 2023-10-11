@@ -9,7 +9,6 @@
 #include "ffi.h"
 #include "keyboard.h"
 #include "settings.h"
-#include "shared.h"
 #include "utility.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>

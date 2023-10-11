@@ -7,7 +7,6 @@
 #pragma once
 
 #include "settings.h"
-#include "shared.h"
 #include "state.h"
 #include <BleKeyboard.h>
 
