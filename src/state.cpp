@@ -1,23 +1,23 @@
-#include "state.h"
+// #include "state.h"
 
-bool State::isActive() const {
-  return active;
-};
+// bool State::isActive() const {
+//   return active;
+// };
 
-void State::reset(){};
+// void State::reset(){};
 
-void State::tick() {
-}
+// void State::tick() {
+// }
 
-void State::setActive() {
-  pushedAt = millis();
-  active   = true;
-}
+// void State::setActive() {
+//   pushedAt = millis();
+//   active   = true;
+// }
 
-void State::setInactive() {
-  active = false;
-}
+// void State::setInactive() {
+//   active = false;
+// }
 
-int State::ranAgoInMillis() const {
-  return millis() - pushedAt;
-}
+// int State::ranAgoInMillis() const {
+//   return millis() - pushedAt;
+// }
