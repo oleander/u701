@@ -158,7 +158,7 @@ impl PushState {
   }
 }
 extern "C" {
-  fn ble_keyboard_write(report: MediaKeyReport);
+  fn ble_keyboard_write(xs: *const u8);
   fn ble_keyboard_is_connected() -> bool;
 }
 
@@ -193,7 +193,8 @@ fn transition(curr_event: &ClickEvent) {
     match event {
       BLEEvent::MediaKey(report) => {
         println!("Sending media key report: {:?}", report);
-        unsafe { ble_keyboard_write(report) };
+        let xs: [u8; 2] = [report.0, report.1];
+        unsafe { ble_keyboard_write(xs.as_ptr()) };
       },
       BLEEvent::Letter(letter) => {
         println!("Sending letter: {:?}", letter);
