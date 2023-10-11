@@ -150,6 +150,7 @@ pub extern "C" fn transition_from_cpp(event: *const u8) {
 }
 
 fn transition(curr_event: &ClickEvent) {
+  info!("Received event: {:?}", curr_event);
   let mut active_state = ACTIVE_STATE.lock();
   let (next_state, next_event) = active_state.transition(curr_event);
   *active_state = next_state;
