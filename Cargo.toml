@@ -11,6 +11,10 @@ esp-idf-svc = "0.46.2"
 log = "0.4.20"
 esp-idf-hal = "0.41.2"
 
+[lib]
+crate-type = ["staticlib"]
+path = "src/lib.rs"
+
 [package.metadata.esp-idf-sys]
 esp_idf_version = "tag:v4.4.6"
 esp_idf_tools_install_dir = "global"
