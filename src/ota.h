@@ -1,3 +1,3 @@
 #pragma once
 
-enum class OTA { IDLE, INIT, ACTIVE };
+// enum class OTA { IDLE, INIT, ACTIVE };
