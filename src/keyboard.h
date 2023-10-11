@@ -10,7 +10,6 @@
 #include "shared.h"
 #include "state.h"
 #include <BleKeyboard.h>
-#include <unordered_map>
 
 // This pin is never used, but it is required by the OneButton library
 #define KEY_INVALID  0xAA
