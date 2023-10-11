@@ -8,6 +8,7 @@
 
 #include "ClientCallback.h"
 #include "keyboard.h"
+#include "rust_interface.h"
 #include "ota.h"
 #include "settings.h"
 #include "shared.h"
@@ -18,11 +19,6 @@
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
 #include <OneButton.h>
-
-extern "C"
-{
-  void hello();
-}
 
 constexpr auto COMMAND_MAP_SERVICE_UUID = "19B10010-E8F2-537E-4F6C-D104768A1214";
 constexpr auto COMMAND_MAP_CHAR_UUID = "19B10011-E8F2-537E-4F6C-D104768A1214";
@@ -77,45 +73,47 @@ static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size
     return;
   if (characteristic->getUUID() != reportUUID)
     return;
-  if (length != 4)
-    return;
-  if (!isNotify)
-    return;
 
-  auto newID = dataToInt(data, length);
-  auto oldState = state.isActive();
-  auto newState = !!newID;
+  transition_from_cpp(data);
+  // if (length != 4)
+  //   return;
+  // if (!isNotify)
+  //   return;
 
-  Log.noticeln("Button %x set from %d -> %d", newID, oldState, newState);
-  /* Button is pressed */
-  if (!oldState && newState)
-  {
-    Log.noticeln("Button was pressed");
-    digitalWrite(LED_BUILTIN, HIGH);
+  // auto newID = dataToInt(data, length);
+  // auto oldState = state.isActive();
+  // auto newState = !!newID;
 
-    auto it = buttons.find(newID);
-    if (it != buttons.end())
-    {
-      state.button = it->second;
-      state.id = newID;
-      state.setActive();
-    }
-    else
-    {
-      Log.noticeln("[BUG] Unknown button ID: %x", newID);
-    }
-    /* Button is released */
-  }
-  else if (oldState && !newState)
-  {
-    Log.noticeln("Button was released");
-    state.setInactive();
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-  else
-  {
-    Log.noticeln("[BUG] Unknown old state: %d, new state %d, ID: %x", oldState, newState, newID);
-  }
+  // Log.noticeln("Button %x set from %d -> %d", newID, oldState, newState);
+  // /* Button is pressed */
+  // if (!oldState && newState)
+  // {
+  //   Log.noticeln("Button was pressed");
+  //   digitalWrite(LED_BUILTIN, HIGH);
+
+  //   auto it = buttons.find(newID);
+  //   if (it != buttons.end())
+  //   {
+  //     state.button = it->second;
+  //     state.id = newID;
+  //     state.setActive();
+  //   }
+  //   else
+  //   {
+  //     Log.noticeln("[BUG] Unknown button ID: %x", newID);
+  //   }
+  //   /* Button is released */
+  // }
+  // else if (oldState && !newState)
+  // {
+  //   Log.noticeln("Button was released");
+  //   state.setInactive();
+  //   digitalWrite(LED_BUILTIN, LOW);
+  // }
+  // else
+  // {
+  //   Log.noticeln("[BUG] Unknown old state: %d, new state %d, ID: %x", oldState, newState, newID);
+  // }
 }
 
 void setupKeyboard()
@@ -292,7 +290,6 @@ void setupBLE()
 void setup()
 {
 
-  hello();
   connectedAt = millis();
 
   pinMode(LED_BUILTIN, OUTPUT);
