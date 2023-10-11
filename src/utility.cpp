@@ -16,13 +16,3 @@ void restart(const char *reason) {
 
   ESP.restart();
 }
-
-int32_t dataToInt(uint8_t *pData, size_t length) {
-  int32_t result = 0;
-
-  for (size_t i = 0; i < length; ++i) {
-    result = (result << 8) | pData[i];
-  }
-
-  return result;
-}
