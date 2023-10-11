@@ -17,6 +17,13 @@ panic = "abort"
 debug = false
 rpath = false
 
+[profile]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+debug = false
+rpath = false
 # [env]
 # ESP_IDF_VERSION = { value = "release/v5.0" }
 # ESP_IDF_TOOLS_INSTALL_DIR = { value = "fromenv" }
