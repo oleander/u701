@@ -1,34 +1,33 @@
-
 # Wi-Fi Configuration
-CONFIG_ESP_WIFI_CONNECT_AP_BY_SIGNAL=1
-CONFIG_ESP_WIFI_PASSWORD="11111111"
-CONFIG_ESP_WIFI_TX_BUFFER_TYPE=1
-CONFIG_ESP_WIFI_RX_BUFFER_TYPE=1
-CONFIG_ESP_WIFI_SCAN_METHOD=1
-CONFIG_ESP_WIFI_SSID="u701"
+CONFIG_ESP_WIFI_CONNECT_AP_BY_SIGNAL=1  # Automatically connect to the AP with the strongest signal.
+CONFIG_ESP_WIFI_PASSWORD="11111111"      # Wi-Fi network password (replace with your actual password).
+CONFIG_ESP_WIFI_TX_BUFFER_TYPE=1         # Use a static transmit (TX) buffer type.
+CONFIG_ESP_WIFI_RX_BUFFER_TYPE=1         # Use a static receive (RX) buffer type.
+CONFIG_ESP_WIFI_SCAN_METHOD=1            # Use active scanning method.
+CONFIG_ESP_WIFI_SSID="u701"             # SSID of the Wi-Fi network to connect to.
 
 # BLE Configuration (NimBLE)
-CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME="ESP32"
-CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=255
-CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY=n
-CONFIG_BT_NIMBLE_MAX_CONNECTIONS=3
-CONFIG_BTDM_CTRL_MODE_BLE_ONLY=y
-CONFIG_BT_BLUEDROID_ENABLED=n
-CONFIG_BT_NIMBLE_MAX_BONDS=3
-CONFIG_BT_NIMBLE_MAX_CCCDS=8
-CONFIG_BTDM_CTRL_MODE_BTDM=n
-CONFIG_NIMBLE_NVS_PERSIST=y
-CONFIG_BT_NIMBLE_EXT_ADV=n
-CONFIG_BT_NIMBLE_ENABLED=y
-CONFIG_BT_BLE_ENABLED=y
-CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME="ESP32"     # BLE device name.
+CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=255          # Preferred MTU size for BLE attributes.
+CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY=n             # Disable Bluetooth Classic (BR/EDR) mode.
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=3              # Maximum number of simultaneous BLE connections.
+CONFIG_BTDM_CTRL_MODE_BLE_ONLY=y                # Enable BLE-only mode.
+CONFIG_BT_BLUEDROID_ENABLED=n                   # Disable the legacy Bluedroid stack.
+CONFIG_BT_NIMBLE_MAX_BONDS=3                    # Maximum number of bonded devices.
+CONFIG_BT_NIMBLE_MAX_CCCDS=8                    # Maximum number of Client Characteristic Configuration Descriptors (CCCDs).
+CONFIG_BTDM_CTRL_MODE_BTDM=n                    # Disable Bluetooth Device Manager (BTDM).
+CONFIG_NIMBLE_NVS_PERSIST=y                     # Enable NVS storage for NimBLE settings.
+CONFIG_BT_NIMBLE_EXT_ADV=n                      # Disable extended advertising.
+CONFIG_BT_NIMBLE_ENABLED=y                      # Enable NimBLE stack.
+CONFIG_BT_BLE_ENABLED=y                         # Enable BLE functionality.
+CONFIG_BT_ENABLED=y                             # Enable Bluetooth functionality.
 
 # NVS Storage Configuration
-CONFIG_BT_NIMBLE_NVS_PERSIST=1
+CONFIG_BT_NIMBLE_NVS_PERSIST=1                  # Enable NVS storage for NimBLE settings.
 
 # Debugging and Logging
-CONFIG_ESP_MAIN_TASK_STACK_SIZE=7000
-CONFIG_BT_NIMBLE_LOG_LEVEL=3
-CONFIG_BT_NIMBLE_LOG_COLOR=y
-CONFIG_LOG_DEFAULT_LEVEL=4
-CONFIG_BT_LOG=y
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=7000            # Set the stack size for the main ESP-IDF task.
+CONFIG_BT_NIMBLE_LOG_LEVEL=3                    # Set NimBLE log level to INFO.
+CONFIG_BT_NIMBLE_LOG_COLOR=y                    # Enable colored logs.
+CONFIG_LOG_DEFAULT_LEVEL=4                      # Set the default log level for ESP-IDF.
+CONFIG_BT_LOG=y                                  # Enable Bluetooth log output.
