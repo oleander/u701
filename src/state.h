@@ -1,4 +1,3 @@
-#include "ota.h"
 #include "shared.h"
 
 enum class Action { TICK, RESTART, INIT_OTA, LOOP_OTA, WAIT_FOR_PHONE };

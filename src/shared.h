@@ -1,4 +1,3 @@
-#include "ota.h"
 #include <NimBLEDevice.h>
 
 #pragma once
