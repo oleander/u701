@@ -55,8 +55,8 @@ class MyCallbacks : public NimBLECharacteristicCallbacks {
       restart("Restart command received");
     } else if (cmd == UPDATE_CMD) {
       characteristic->setValue("Toggle OTA");
-      state.action = Action::INIT_OTA;
-      auto scan    = NimBLEDevice::getScan();
+      // state.action = Action::INIT_OTA;
+      auto scan = NimBLEDevice::getScan();
       if (scan->isScanning()) scan->stop();
     } else {
       characteristic->setValue("Unknown command");
