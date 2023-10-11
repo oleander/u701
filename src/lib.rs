@@ -1,18 +1,14 @@
 #![allow(dead_code)]
 #![feature(assert_matches)]
 
-extern crate lazy_static;
-use lazy_static::lazy_static;
-
-extern crate hashbrown;
-use hashbrown::HashMap;
-
-extern crate log;
-use log::{info, warn};
-
-use std::sync::Mutex;
-
 extern crate esp_idf_svc;
+extern crate hashbrown;
+extern crate lazy_static;
+extern crate log;
+
+use hashbrown::HashMap;
+use lazy_static::lazy_static;
+use std::sync::Mutex;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
@@ -38,22 +34,24 @@ pub enum PushState {
   Up(ID),
 }
 
+const KEY_MEDIA_VOLUME_DOWN: MediaKeyReport = MediaKeyReport(64, 0);
 const KEY_MEDIA_NEXT_TRACK: MediaKeyReport = MediaKeyReport(1, 0);
 const KEY_MEDIA_PREV_TRACK: MediaKeyReport = MediaKeyReport(2, 0);
-const KEY_MEDIA_STOP: MediaKeyReport = MediaKeyReport(4, 0);
 const KEY_MEDIA_PLAY_PAUSE: MediaKeyReport = MediaKeyReport(8, 0);
-const KEY_MEDIA_EJECT: MediaKeyReport = MediaKeyReport(16, 0);
 const KEY_MEDIA_VOLUME_UP: MediaKeyReport = MediaKeyReport(32, 0);
-const KEY_MEDIA_VOLUME_DOWN: MediaKeyReport = MediaKeyReport(64, 0);
-const KEY_MEDIA_WWW_HOME: MediaKeyReport = MediaKeyReport(128, 0);
+
+const KEY_MEDIA_EJECT: MediaKeyReport = MediaKeyReport(16, 0);
+
+const KEY_MEDIA_CONSUMER_CONTROL_CONFIGURATION: MediaKeyReport = MediaKeyReport(0, 64);
 const KEY_MEDIA_LOCAL_MACHINE_BROWSER: MediaKeyReport = MediaKeyReport(0, 1);
-const KEY_MEDIA_CALCULATOR: MediaKeyReport = MediaKeyReport(0, 2);
+const KEY_MEDIA_EMAIL_READER: MediaKeyReport = MediaKeyReport(0, 128);
 const KEY_MEDIA_WWW_BOOKMARKS: MediaKeyReport = MediaKeyReport(0, 4);
+const KEY_MEDIA_WWW_HOME: MediaKeyReport = MediaKeyReport(128, 0);
+const KEY_MEDIA_CALCULATOR: MediaKeyReport = MediaKeyReport(0, 2);
 const KEY_MEDIA_WWW_SEARCH: MediaKeyReport = MediaKeyReport(0, 8);
 const KEY_MEDIA_WWW_STOP: MediaKeyReport = MediaKeyReport(0, 16);
 const KEY_MEDIA_WWW_BACK: MediaKeyReport = MediaKeyReport(0, 32);
-const KEY_MEDIA_CONSUMER_CONTROL_CONFIGURATION: MediaKeyReport = MediaKeyReport(0, 64);
-const KEY_MEDIA_EMAIL_READER: MediaKeyReport = MediaKeyReport(0, 128);
+const KEY_MEDIA_STOP: MediaKeyReport = MediaKeyReport(4, 0);
 
 const BUTTON_1: u8 = 0x04; // Red (Meta)
 const BUTTON_2: u8 = 0x50; // Black (Volume down)
@@ -168,37 +166,41 @@ extern "C" {
 pub extern "C" fn setup_rust() {
   esp_idf_sys::link_patches();
   esp_idf_svc::log::EspLogger::initialize_default();
-  warn!("Rust setup complete");
+  println!("Rust setup complete");
 }
 
 #[no_mangle]
 pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
-    println!("Received event from C++");
-    let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
-    let mut click_event = [0u8; 4];
-    click_event.copy_from_slice(event_slice);
-    transition(&click_event);
+  println!("Received event from C++");
+  let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
+  let mut click_event = [0u8; 4];
+  click_event.copy_from_slice(event_slice);
+  transition(&click_event);
 }
 
 fn transition(curr_event: &ClickEvent) {
   println!("Received event: {:?}", curr_event);
 
-  let mut active_state = ACTIVE_STATE.lock().unwrap();
+  let Ok(mut active_state) = ACTIVE_STATE.lock() else {
+    return println!("Failed to lock mutex");
+  };
+
+  println!("Current state: {:?}", active_state);
   let (next_state, next_event) = active_state.transition(&curr_event);
   *active_state = next_state;
 
   if let Some(event) = next_event {
     match event {
       BLEEvent::MediaKey(report) => {
-        info!("Sending media key report: {:?}", report);
+        println!("Sending media key report: {:?}", report);
         unsafe { ble_keyboard_write(report) };
       },
       BLEEvent::Letter(letter) => {
-        info!("Sending letter: {:?}", letter);
+        println!("Sending letter: {:?}", letter);
       },
     }
   } else {
-    info!("No event to send to host");
+    println!("No event to send to host");
   }
 }
 
