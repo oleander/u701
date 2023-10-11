@@ -64,11 +64,8 @@ use log::{error, info};
 //   // };
 // }
 
-
-fn hello() {
-  log!("Hello from rust!");
+#[no_mangle]
+extern "C" fn hello() {
+  info!("Hello from rust!");
 }
 
-extern "C" {
-  fn hello();
-}
