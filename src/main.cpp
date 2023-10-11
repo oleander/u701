@@ -6,10 +6,9 @@
 #define WDT_TIMEOUT 10 * 60
 
 #include "ClientCallback.h"
+#include "ffi.h"
 #include "keyboard.h"
-#include "keyboard_ffi.h"
 #include "ota.h"
-#include "rust_interface.h"
 #include "settings.h"
 #include "shared.h"
 #include "utility.h"
@@ -28,6 +27,20 @@ constexpr auto COMMAND_CHAR_UUID = "19B10001-E8F2-537E-4F6C-D104768A1214";
 const auto address = NimBLEAddress(DEVICE_MAC, 1);
 const int SEVEN_MINUTES = 420000000;
 static hw_timer_t *timer = NULL;
+
+BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
+
+extern "C" void ble_keyboard_write(uint8_t c[2]) {
+  keyboard.write(c);
+}
+
+extern "C" void ble_keyboard_print(const char *format) {
+  keyboard.print(format);
+}
+
+extern "C" bool ble_keyboard_is_connected() {
+  return keyboard.isConnected();
+}
 
 const auto RESTART_CMD = "restart";
 const auto UPDATE_CMD = "update";

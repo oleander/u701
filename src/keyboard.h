@@ -4,6 +4,8 @@
 #undef LOG_LEVEL_INFO
 #undef LOG_LEVEL_ERROR
 
+#pragma once
+
 #include "settings.h"
 #include "shared.h"
 #include "state.h"
@@ -28,5 +30,3 @@ void sendFnKeyPress(char letter);
 void doubleClickHandler(void *p);
 void multiClickHandler(void *p);
 void setupButtons();
-
-BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
