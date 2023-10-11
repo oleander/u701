@@ -1,8 +1,5 @@
-#include <ArduinoLog.h>
-
-#pragma once
-
 #include "settings.h"
+#include <ArduinoLog.h>
 #include <BleKeyboard.h>
 
 void sendFnKeyPress(char letter);
