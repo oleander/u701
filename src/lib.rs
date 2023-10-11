@@ -10,7 +10,6 @@ use hashbrown::HashMap;
 extern crate log;
 use log::info;
 
-use libc::uint8_t;
 extern crate spin;
 use spin::Mutex;
 
@@ -144,7 +143,7 @@ impl PushState {
 // void transition_from_cpp(uint8_t *event);
 
 #[no_mangle]
-pub extern "C" fn transition_from_cpp(event: *const uint8_t) {
+pub extern "C" fn transition_from_cpp(event: *const u8) {
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, 4) };
   let mut click_event = [0u8; 4];
   click_event.copy_from_slice(event_slice);
