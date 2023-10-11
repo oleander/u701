@@ -1,5 +1,3 @@
-#include <NimBLEDevice.h>
-
 #pragma once
 
 #define OTA_STATUS_ADDRESS 0
