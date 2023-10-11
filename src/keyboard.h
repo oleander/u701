@@ -19,7 +19,6 @@
 
 extern BleKeyboard keyboard;
 extern bool useKeyboardForLogging;
-extern State state;
 
 // void sendNOPKey(ID id);
 void sendFnKeyPress(char letter);
