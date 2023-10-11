@@ -1,5 +1,4 @@
 #include "state.h"
-#include <OneButton.h>
 
 bool State::isActive() const {
   return active;
