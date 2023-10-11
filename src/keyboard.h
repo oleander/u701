@@ -7,7 +7,6 @@
 #pragma once
 
 #include "settings.h"
-#include "state.h"
 #include <BleKeyboard.h>
 
 // This pin is never used, but it is required by the OneButton library
