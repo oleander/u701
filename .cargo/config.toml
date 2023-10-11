@@ -1,0 +1,23 @@
+[build]
+target = "riscv32imc-esp-espidf"
+
+[target.riscv32imc-esp-espidf]
+linker = "ldproxy"
+runner = "espflash flash --baud 921600 --port /dev/cu.usbserial-110 --monitor"
+rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
+
+[unstable]
+build-std = ["std", "panic_abort"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+debug = false
+rpath = false
+
+# [env]
+# ESP_IDF_VERSION = { value = "release/v5.0" }
+# ESP_IDF_TOOLS_INSTALL_DIR = { value = "fromenv" }
+# IDF_PATH = { value = "/Users/linus/esp/esp-idf" }
