@@ -1,7 +1,3 @@
-# Docs: https://github.com/esp-rs/esp-idf-sys/blob/master/BUILD-OPTIONS.md
-[workspace]
-members = ["blenvs", "keyboard", "receiver", "config", "button"]
-
 [package]
 authors = ["Linus Oleander <linus.oleander@clark.de>"]
 version = "0.1.0"
@@ -10,18 +6,10 @@ name = "u701"
 
 [dependencies]
 tokio = { version = "1.33.0", features = ["rt-multi-thread", "macros", "time"] }
-keyboard = { path = "./keyboard" }
-receiver = { path = "./receiver" }
-config = { path = "./config" }
-blenvs = { path = "./blenvs" }
-button = { path = "./button" }
 esp-idf-sys = "0.33.2"
 esp-idf-svc = "0.46.2"
 log = "0.4.20"
 esp-idf-hal = "0.41.2"
-
-# [patch.crates-io]
-# esp32-nimble = { path = "../esp32-nimble" }
 
 [package.metadata.esp-idf-sys]
 esp_idf_version = "tag:v4.4.6"
