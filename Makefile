@@ -16,5 +16,5 @@ upload_ota:
 	# m wifi connect u701 11111111
 	cargo pio exec -- run --target upload -e ota
 	# m wifi connect boat
-	# espflash monitor -p $(PORT)
+	# espflash montor -p $(PORT)
 default: upload monitor
