@@ -158,7 +158,6 @@ impl PushState {
   }
 }
 
-#[no_mangle]
 extern "C" {
   fn ble_keyboard_print(xs: *const u8);
   fn ble_keyboard_write(xs: *const u8);
