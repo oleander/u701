@@ -3,7 +3,6 @@
 /* Removes warnings */
 #undef LOG_LEVEL_INFO
 #undef LOG_LEVEL_ERROR
-#define LED_BUILTIN 2
 #define WDT_TIMEOUT 10 * 60
 
 #include "ClientCallback.h"
@@ -74,6 +73,7 @@ static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size
   if (characteristic->getUUID() != reportUUID)
     return;
 
+  Log.noticeln("Received data: %s\n", data);
   transition_from_cpp(data);
   // if (length != 4)
   //   return;

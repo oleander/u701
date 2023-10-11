@@ -53,14 +53,14 @@ const KEY_MEDIA_WWW_BACK: MediaKeyReport = MediaKeyReport(0, 32);
 const KEY_MEDIA_CONSUMER_CONTROL_CONFIGURATION: MediaKeyReport = MediaKeyReport(0, 64);
 const KEY_MEDIA_EMAIL_READER: MediaKeyReport = MediaKeyReport(0, 128);
 
-const BUTTON_1: u8 = 5; // Red (Meta)
-const BUTTON_2: u8 = 4; // Black
-const BUTTON_3: u8 = 1; // Blue
-const BUTTON_4: u8 = 6; // Black
-const BUTTON_5: u8 = 2; // Red (Meta)
-const BUTTON_6: u8 = 7; // Black
-const BUTTON_7: u8 = 3; // Blue
-const BUTTON_8: u8 = 8; // Black
+const BUTTON_1: u8 = 0x04; // Red (Meta)
+const BUTTON_2: u8 = 0x50; // Black (Volume down)
+const BUTTON_3: u8 = 0x51; // Blue (Prev track)
+const BUTTON_4: u8 = 0x52; // Black (Play/Pause)
+const BUTTON_5: u8 = 0x29; // Red (Meta)
+const BUTTON_6: u8 = 0x4F; // Black (Volume up)
+const BUTTON_7: u8 = 0x05; // Blue (Next track)
+const BUTTON_8: u8 = 0x28; // Black (Toggle AC)
 
 // Meta keys, much like the shift key on a regular keyboard
 const META_1: u8 = BUTTON_1;
@@ -70,24 +70,42 @@ lazy_static! {
   // Button 2-4 & 6-8
    static ref REGULAR_LOOKUP: HashMap<u8, BLEEvent> = {
     let mut table = HashMap::new();
-    table.insert(BUTTON_2, BLEEvent::MediaKey(KEY_MEDIA_PREV_TRACK));
-    table.insert(BUTTON_3, BLEEvent::Letter(1));
+    // BUTTON_1 is a meta key
+    table.insert(BUTTON_2, BLEEvent::MediaKey(KEY_MEDIA_VOLUME_DOWN));
+    table.insert(BUTTON_3, BLEEvent::MediaKey(KEY_MEDIA_PREV_TRACK));
+    table.insert(BUTTON_4, BLEEvent::MediaKey(KEY_MEDIA_PLAY_PAUSE));
+    // BUTTON_5 is a meta key
+    table.insert(BUTTON_6, BLEEvent::MediaKey(KEY_MEDIA_VOLUME_UP));
+    table.insert(BUTTON_7, BLEEvent::MediaKey(KEY_MEDIA_NEXT_TRACK));
+    table.insert(BUTTON_8, BLEEvent::Letter(1));
     table
   };
 
   // Button 1
    static ref META_LOOKUP_1: HashMap<u8, BLEEvent> = {
     let mut table = HashMap::new();
-    table.insert(BUTTON_2, BLEEvent::MediaKey(KEY_MEDIA_PREV_TRACK));
-    table.insert(BUTTON_3, BLEEvent::MediaKey(KEY_MEDIA_NEXT_TRACK));
+    // BUTTON_1 is a meta key
+    table.insert(BUTTON_2, BLEEvent::Letter(2));
+    table.insert(BUTTON_3, BLEEvent::Letter(3));
+    table.insert(BUTTON_4, BLEEvent::Letter(4));
+    // BUTTON_5 is a meta key
+    table.insert(BUTTON_6, BLEEvent::Letter(6));
+    table.insert(BUTTON_7, BLEEvent::Letter(7));
+    table.insert(BUTTON_8, BLEEvent::Letter(8));
     table
   };
 
   // Button 6
   static ref META_LOOKUP_2: HashMap<u8, BLEEvent> = {
     let mut table = HashMap::new();
-    table.insert(BUTTON_2, BLEEvent::MediaKey(KEY_MEDIA_PREV_TRACK));
-    table.insert(BUTTON_2, BLEEvent::MediaKey(KEY_MEDIA_NEXT_TRACK));
+    // BUTTON_1 is a meta key
+    table.insert(BUTTON_2, BLEEvent::Letter(9));
+    table.insert(BUTTON_3, BLEEvent::Letter(10));
+    table.insert(BUTTON_4, BLEEvent::Letter(11));
+    // BUTTON_5 is a meta key
+    table.insert(BUTTON_6, BLEEvent::Letter(12));
+    table.insert(BUTTON_7, BLEEvent::Letter(13));
+    table.insert(BUTTON_8, BLEEvent::Letter(14));
     table
   };
 
@@ -142,10 +160,12 @@ impl PushState {
 
 #[no_mangle]
 pub extern "C" fn transition_from_cpp(event: *const u8) {
+  info!("Received event from C++: {:?}", event);
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, 4) };
   let mut click_event = [0u8; 4];
   click_event.copy_from_slice(event_slice);
 
+  info!("Transitioning from C++ event");
   transition(&click_event);
 }
 
