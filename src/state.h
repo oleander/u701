@@ -5,7 +5,6 @@ enum class Action { TICK, RESTART, INIT_OTA, LOOP_OTA, WAIT_FOR_PHONE };
 
 struct State {
   int pushedAt;
-  OTA ota;
   ID id;
   bool active;
   Action action;
