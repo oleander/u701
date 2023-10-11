@@ -68,12 +68,16 @@ class MyCallbacks : public NimBLECharacteristicCallbacks
 /* Add function isActive to the State struct */
 static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify)
 {
-  if (!canProcessEvents())
-    return;
-  if (characteristic->getUUID() != reportUUID)
-    return;
+  // if (!canProcessEvents())
+  //   return;
+  // if (characteristic->getUUID() != reportUUID)
+  //   return;
 
+  // an array of uint8_t
   Log.noticeln("Received data: %s\n", data);
+  Log.noticeln("Received length: %d\n", length);
+  Log.noticeln("Received isNotify: %d\n", isNotify);
+
   transition_from_cpp(data);
   // if (length != 4)
   //   return;

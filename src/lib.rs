@@ -161,6 +161,7 @@ impl PushState {
 #[no_mangle]
 pub extern "C" fn transition_from_cpp(event: *const u8) {
   info!("Received event from C++: {:?}", event);
+
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, 4) };
   let mut click_event = [0u8; 4];
   click_event.copy_from_slice(event_slice);
@@ -171,21 +172,22 @@ pub extern "C" fn transition_from_cpp(event: *const u8) {
 
 fn transition(curr_event: &ClickEvent) {
   info!("Received event: {:?}", curr_event);
+
   let mut active_state = ACTIVE_STATE.lock();
-  let (next_state, next_event) = active_state.transition(curr_event);
+  let (next_state, next_event) = active_state.transition(&curr_event);
   *active_state = next_state;
 
-  let Some(event) = next_event else {
-    return info!("No event to send to host");
-  };
-
-  match event {
-    BLEEvent::MediaKey(report) => {
-      info!("Sending media key report: {:?}", report);
-    },
-    BLEEvent::Letter(letter) => {
-      info!("Sending letter: {:?}", letter);
-    },
+  if let Some(event) = next_event {
+    match event {
+      BLEEvent::MediaKey(report) => {
+        info!("Sending media key report: {:?}", report);
+      },
+      BLEEvent::Letter(letter) => {
+        info!("Sending letter: {:?}", letter);
+      },
+    }
+  } else {
+    info!("No event to send to host");
   }
 }
 
