@@ -1,6 +1,6 @@
 .PHONY: build clean upload monitor default
 
-PORT := $(shell ls /dev/cu.usbserial-* | head -n 1)
+PORT := $(shell ls /dev/cu.usbserial-* | head -n 1 || echo "/dev/cu.usbserial-110")
 
 build:
 	cargo pio build && ~/Code/git-ai/target/release/git-ai --all
