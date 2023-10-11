@@ -158,6 +158,7 @@ impl PushState {
   }
 }
 extern "C" {
+  fn ble_keyboard_print(xs: const u8);
   fn ble_keyboard_write(xs: *const u8);
   fn ble_keyboard_is_connected() -> bool;
 }
@@ -196,8 +197,11 @@ fn transition(curr_event: &ClickEvent) {
         let xs: [u8; 2] = [report.0, report.1];
         unsafe { ble_keyboard_write(xs.as_ptr()) };
       },
-      BLEEvent::Letter(letter) => {
-        println!("Sending letter: {:?}", letter);
+      BLEEvent::Letter(index) => {
+        println!("Sending letter: {:?}", index);
+        let base_letter = 'a' as u8;
+        let curr_letter = base_letter + index - 1;
+        unsafe { ble_keyboard_print(curr_letter.as_ptr()) };
       },
     }
   } else {
