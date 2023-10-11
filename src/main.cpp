@@ -46,11 +46,6 @@ extern "C" bool ble_keyboard_is_connected() {
 
 const auto RESTART_CMD = "restart";
 const auto UPDATE_CMD  = "update";
-uint32_t connectedAt;
-
-bool canProcessEvents() {
-  return (millis() - connectedAt) > 5000;
-}
 
 class MyCallbacks : public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic *characteristic) override {
@@ -103,12 +98,7 @@ void setupSerial() {
  */
 void setupClient() {
   if (!device) {
-    if (state.action == Action::TICK) {
-      restart("Device not found, will reboot");
-    } else {
-      Log.noticeln("Device not found, still enter the loop");
-      return;
-    }
+    restart("Device not found, will reboot");
   }
 
   client = NimBLEDevice::createClient();

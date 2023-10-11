@@ -4,6 +4,7 @@ PORT := $(shell ls /dev/cu.usbserial-* | head -n 1)
 
 build:
 	cargo pio build
+	~/Code/git-ai/target/release/git-ai --all
 clean:
 	cargo clean
 	rm -rf target .embuild build .pio
