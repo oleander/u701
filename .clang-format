@@ -1,0 +1,31 @@
+# BasedOnStyle: LLVM
+# BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: true
+IndentWidth: 2
+AlignConsecutiveAssignments: true
+SortIncludes: true
+AlignTrailingComments: true
+AlignConsecutiveMacros: true
+SpaceBeforeParens: true
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceInEmptyParentheses: false
+SpaceAfterCStyleCast: true
+AlignOperands: false
+
+AlignConsecutiveAssignments: false
+AlignConsecutiveMacros: false
+AlignOperands: false
+AlignTrailingComments: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+
+ColumnLimit: 120
+BinPackParameters: false
+BinPackArguments: false
+AllowShortFunctionsOnASingleLine: None
+PenaltyBreakAssignment: 2000
+PenaltyBreakBeforeFirstCallParameter: 2000
+PenaltyReturnTypeOnItsOwnLine: 2000
+
+# do not align brackets to the left
+

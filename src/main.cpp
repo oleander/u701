@@ -7,8 +7,8 @@
 
 #include "ClientCallback.h"
 #include "keyboard.h"
-#include "rust_interface.h"
 #include "ota.h"
+#include "rust_interface.h"
 #include "settings.h"
 #include "shared.h"
 #include "utility.h"
@@ -32,103 +32,47 @@ const auto RESTART_CMD = "restart";
 const auto UPDATE_CMD = "update";
 uint32_t connectedAt;
 
-bool canProcessEvents()
-{
+bool canProcessEvents() {
   return (millis() - connectedAt) > 5000;
 }
 
-class MyCallbacks : public NimBLECharacteristicCallbacks
-{
-  void onWrite(NimBLECharacteristic *characteristic) override
-  {
+class MyCallbacks : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic *characteristic) override {
     std::string cmd = characteristic->getValue();
     if (cmd.length() == 0)
       return;
     Log.noticeln("Received value: %s\n", cmd.c_str());
 
-    if (cmd == RESTART_CMD)
-    {
+    if (cmd == RESTART_CMD) {
       restart("Restart command received");
-    }
-    else if (cmd == UPDATE_CMD)
-    {
+    } else if (cmd == UPDATE_CMD) {
       characteristic->setValue("Toggle OTA");
       state.action = Action::INIT_OTA;
       auto scan = NimBLEDevice::getScan();
       if (scan->isScanning())
         scan->stop();
-    }
-    else
-    {
+    } else {
       characteristic->setValue("Unknown command");
     }
   }
 };
 
 /* Add function isActive to the State struct */
-static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify)
-{
-  // if (!canProcessEvents())
-  //   return;
-  // if (characteristic->getUUID() != reportUUID)
-  //   return;
-
-  // an array of uint8_t
+static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
   Log.noticeln("Received data: %s\n", data);
   Log.noticeln("Received length: %d\n", length);
   Log.noticeln("Received isNotify: %d\n", isNotify);
 
   transition_from_cpp(data, length);
-  // if (length != 4)
-  //   return;
-  // if (!isNotify)
-  //   return;
-
-  // auto newID = dataToInt(data, length);
-  // auto oldState = state.isActive();
-  // auto newState = !!newID;
-
-  // Log.noticeln("Button %x set from %d -> %d", newID, oldState, newState);
-  // /* Button is pressed */
-  // if (!oldState && newState)
-  // {
-  //   Log.noticeln("Button was pressed");
-  //   digitalWrite(LED_BUILTIN, HIGH);
-
-  //   auto it = buttons.find(newID);
-  //   if (it != buttons.end())
-  //   {
-  //     state.button = it->second;
-  //     state.id = newID;
-  //     state.setActive();
-  //   }
-  //   else
-  //   {
-  //     Log.noticeln("[BUG] Unknown button ID: %x", newID);
-  //   }
-  //   /* Button is released */
-  // }
-  // else if (oldState && !newState)
-  // {
-  //   Log.noticeln("Button was released");
-  //   state.setInactive();
-  //   digitalWrite(LED_BUILTIN, LOW);
-  // }
-  // else
-  // {
-  //   Log.noticeln("[BUG] Unknown old state: %d, new state %d, ID: %x", oldState, newState, newID);
-  // }
 }
 
-void setupKeyboard()
-{
+void setupKeyboard() {
   Log.noticeln("Enable Keyboard");
   keyboard.begin();
   keyboard.setDelay(13);
 }
 
-void setupSerial()
-{
+void setupSerial() {
   Serial.begin(SERIAL_BAUD_RATE);
 #ifdef RELEASE
   Log.begin(LOG_LEVEL_SILENT, &Serial);
@@ -143,16 +87,11 @@ void setupSerial()
  * Sets up the client to connect to the BLE device with the specified MAC address.
  * If the connection fails or no services/characteristics are found, the device will restart.
  */
-void setupClient()
-{
-  if (!device)
-  {
-    if (state.action == Action::TICK)
-    {
+void setupClient() {
+  if (!device) {
+    if (state.action == Action::TICK) {
       restart("Device not found, will reboot");
-    }
-    else
-    {
+    } else {
       Log.noticeln("Device not found, still enter the loop");
       return;
     }
@@ -162,43 +101,36 @@ void setupClient()
   client->setClientCallbacks(new ClientCallback());
 
   Log.noticeln("Connecting to %s ...", address.toString().c_str());
-  if (!client->connect(device))
-  {
+  if (!client->connect(device)) {
     restart("Timeout connecting to the device");
   }
 
   Log.noticeln("Discovering services ...");
   auto services = client->getServices(true);
-  if (services->empty())
-  {
+  if (services->empty()) {
     restart("[BUG] No services found, will retry");
   }
 
-  for (auto &service : *services)
-  {
+  for (auto &service: *services) {
     if (!service->getUUID().equals(hidService))
       continue;
 
     Log.noticeln("Discovering characteristics ...");
     auto characteristics = service->getCharacteristics(true);
-    if (characteristics->empty())
-    {
+    if (characteristics->empty()) {
       restart("[BUG] No characteristics found");
     }
 
-    for (auto &characteristic : *characteristics)
-    {
+    for (auto &characteristic: *characteristics) {
       if (!characteristic->getUUID().equals(reportUUID))
         continue;
 
-      if (!characteristic->canNotify())
-      {
+      if (!characteristic->canNotify()) {
         restart("[BUG] Characteristic cannot notify");
       }
 
       auto status = characteristic->subscribe(true, onEvent, true);
-      if (!status)
-      {
+      if (!status) {
         restart("[BUG] Failed to subscribe to notifications");
       }
 
@@ -214,8 +146,7 @@ void setupClient()
  * Interrupt service routine that is triggered by a timer after seven minutes.
  * Calls the restart function with the message "OTA update failed" and false as the second argument.
  */
-void IRAM_ATTR onTimer()
-{
+void IRAM_ATTR onTimer() {
   restart("OTA update failed");
 }
 
@@ -224,25 +155,19 @@ void IRAM_ATTR onTimer()
  * The interrupt will call the onTimer function.
  * Used to reboot the ESP32 after seven minutes of OTA.
  */
-void setupTimer()
-{
+void setupTimer() {
   timer = timerBegin(0, 40, true);
   timerAttachInterrupt(timer, &onTimer, true);
   timerAlarmWrite(timer, SEVEN_MINUTES, false);
 }
 
-class Callbacks : public NimBLEAdvertisedDeviceCallbacks
-{
-  void onResult(NimBLEAdvertisedDevice *advertised)
-  {
-    if (advertised->getAddress() == address)
-    {
+class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
+  void onResult(NimBLEAdvertisedDevice *advertised) {
+    if (advertised->getAddress() == address) {
       Log.noticeln("Found device device");
       device = advertised;
       advertised->getScan()->stop();
-    }
-    else
-    {
+    } else {
       Log.noticeln("Found device %s", advertised->getAddress().toString().c_str());
     }
   }
@@ -253,8 +178,7 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks
  * If the device is found, the scan will stop and the client will be set up.
  * The scan interval is set high to save power
  */
-void setupScan()
-{
+void setupScan() {
   Log.noticeln("Starting BLE scan ...");
 
   auto scan = NimBLEDevice::getScan();
@@ -267,8 +191,7 @@ void setupScan()
   Log.noticeln("Scan finished");
 }
 
-void setupBLE()
-{
+void setupBLE() {
   Log.noticeln("Starting BLE server...");
 
   NimBLEDevice::init(DEVICE_NAME);
@@ -291,8 +214,7 @@ void setupBLE()
   advert->start();
 }
 
-void setup()
-{
+void setup() {
 
   connectedAt = millis();
 
@@ -315,10 +237,8 @@ void setup()
   Log.noticeln("Setup completed\n");
 }
 
-void loop()
-{
-  switch (state.action)
-  {
+void loop() {
+  switch (state.action) {
   case Action::RESTART:
     restart("Restart action triggered");
     break;
@@ -336,21 +256,16 @@ void loop()
     ArduinoOTA.handle();
     break;
   case Action::WAIT_FOR_PHONE:
-    if (keyboard.isConnected())
-    {
+    if (keyboard.isConnected()) {
       Log.noticeln("Phone connected");
       connectedAt = millis();
       state.action = Action::TICK;
     }
   case Action::TICK:
-    for (auto &[id, btn] : buttons)
-    {
-      if (id == state.id && state.isActive())
-      {
+    for (auto &[id, btn]: buttons) {
+      if (id == state.id && state.isActive()) {
         btn->tick(true);
-      }
-      else
-      {
+      } else {
         btn->tick(false);
       }
     }
