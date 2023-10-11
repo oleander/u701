@@ -10,22 +10,18 @@ SpaceBeforeParens: true
 SpaceBeforeRangeBasedForLoopColon: false
 SpaceInEmptyParentheses: false
 SpaceAfterCStyleCast: true
-AlignOperands: false
+# AlignOperands: false
 
-AlignConsecutiveAssignments: false
-AlignConsecutiveMacros: false
+# AlignConsecutiveMacros: false
 AlignOperands: false
-AlignTrailingComments: false
+# AlignTrailingComments: false
 AllowShortFunctionsOnASingleLine: false
-AllowShortIfStatementsOnASingleLine: false
+# AllowShortIfStatementsOnASingleLine: false
 
 ColumnLimit: 120
 BinPackParameters: false
 BinPackArguments: false
-AllowShortFunctionsOnASingleLine: None
+# AllowShortFunctionsOnASingleLine: None
 PenaltyBreakAssignment: 2000
 PenaltyBreakBeforeFirstCallParameter: 2000
 PenaltyReturnTypeOnItsOwnLine: 2000
-
-# do not align brackets to the left
-

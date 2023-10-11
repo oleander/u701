@@ -1,5 +1,5 @@
 #include <ArduinoLog.h>
-
+#include <WiFi.h>
 /* Removes warnings */
 #undef LOG_LEVEL_INFO
 #undef LOG_LEVEL_ERROR
@@ -19,13 +19,17 @@
 #include <NimBLEUtils.h>
 #include <OneButton.h>
 
-constexpr auto COMMAND_MAP_SERVICE_UUID = "19B10010-E8F2-537E-4F6C-D104768A1214";
-constexpr auto COMMAND_MAP_CHAR_UUID = "19B10011-E8F2-537E-4F6C-D104768A1214";
-constexpr auto COMMAND_SERVICE_UUID = "19B10000-E8F2-537E-4F6C-D104768A1214";
-constexpr auto COMMAND_CHAR_UUID = "19B10001-E8F2-537E-4F6C-D104768A1214";
+IPAddress ip(192, 168, 4, 1);
+IPAddress gateway(192, 168, 4, 1);
+IPAddress subnet(255, 255, 255, 0);
 
-const auto address = NimBLEAddress(DEVICE_MAC, 1);
-const int SEVEN_MINUTES = 420000000;
+constexpr auto COMMAND_MAP_SERVICE_UUID = "19B10010-E8F2-537E-4F6C-D104768A1214";
+constexpr auto COMMAND_MAP_CHAR_UUID    = "19B10011-E8F2-537E-4F6C-D104768A1214";
+constexpr auto COMMAND_SERVICE_UUID     = "19B10000-E8F2-537E-4F6C-D104768A1214";
+constexpr auto COMMAND_CHAR_UUID        = "19B10001-E8F2-537E-4F6C-D104768A1214";
+
+const auto address       = NimBLEAddress(DEVICE_MAC, 1);
+const int SEVEN_MINUTES  = 420000000;
 static hw_timer_t *timer = NULL;
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
@@ -43,7 +47,7 @@ extern "C" bool ble_keyboard_is_connected() {
 }
 
 const auto RESTART_CMD = "restart";
-const auto UPDATE_CMD = "update";
+const auto UPDATE_CMD  = "update";
 uint32_t connectedAt;
 
 bool canProcessEvents() {
@@ -53,8 +57,7 @@ bool canProcessEvents() {
 class MyCallbacks : public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic *characteristic) override {
     std::string cmd = characteristic->getValue();
-    if (cmd.length() == 0)
-      return;
+    if (cmd.length() == 0) return;
     Log.noticeln("Received value: %s\n", cmd.c_str());
 
     if (cmd == RESTART_CMD) {
@@ -62,9 +65,8 @@ class MyCallbacks : public NimBLECharacteristicCallbacks {
     } else if (cmd == UPDATE_CMD) {
       characteristic->setValue("Toggle OTA");
       state.action = Action::INIT_OTA;
-      auto scan = NimBLEDevice::getScan();
-      if (scan->isScanning())
-        scan->stop();
+      auto scan    = NimBLEDevice::getScan();
+      if (scan->isScanning()) scan->stop();
     } else {
       characteristic->setValue("Unknown command");
     }
@@ -126,8 +128,7 @@ void setupClient() {
   }
 
   for (auto &service: *services) {
-    if (!service->getUUID().equals(hidService))
-      continue;
+    if (!service->getUUID().equals(hidService)) continue;
 
     Log.noticeln("Discovering characteristics ...");
     auto characteristics = service->getCharacteristics(true);
@@ -136,8 +137,7 @@ void setupClient() {
     }
 
     for (auto &characteristic: *characteristics) {
-      if (!characteristic->getUUID().equals(reportUUID))
-        continue;
+      if (!characteristic->getUUID().equals(reportUUID)) continue;
 
       if (!characteristic->canNotify()) {
         restart("[BUG] Characteristic cannot notify");
@@ -210,15 +210,15 @@ void setupBLE() {
 
   NimBLEDevice::init(DEVICE_NAME);
 
-  server = NimBLEDevice::createServer();
+  server   = NimBLEDevice::createServer();
   service1 = server->createService(COMMAND_SERVICE_UUID);
-  char1 = service1->createCharacteristic(COMMAND_CHAR_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE);
+  char1    = service1->createCharacteristic(COMMAND_CHAR_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE);
 
   char1->setCallbacks(new MyCallbacks());
   service1->start();
 
   service2 = server->createService(COMMAND_MAP_SERVICE_UUID);
-  char2 = service2->createCharacteristic(COMMAND_MAP_CHAR_UUID, NIMBLE_PROPERTY::READ);
+  char2    = service2->createCharacteristic(COMMAND_MAP_CHAR_UUID, NIMBLE_PROPERTY::READ);
   char2->setValue("Available commands:restart update");
   service2->start();
 
@@ -229,15 +229,6 @@ void setupBLE() {
 }
 
 void setup() {
-
-  connectedAt = millis();
-
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(3000);
-  digitalWrite(LED_BUILTIN, LOW);
-
   setupSerial();
   setupBLE();
   setup_rust();
@@ -246,38 +237,20 @@ void setup() {
   setupClient();
   setupTimer();
 
-  state.action = Action::WAIT_FOR_PHONE;
-  Log.noticeln("Setup completed\n");
+  WiFi.config(ip, gateway, subnet);
+  WiFi.setTxPower(WIFI_POWER_11dBm);
+  WiFi.softAP(WIFI_SSID, WIFI_PASSWORD, 1, true);
+
+  ArduinoOTA.setPassword(WIFI_PASSWORD);
+  ArduinoOTA.begin();
 }
 
 void loop() {
-  switch (state.action) {
-  case Action::RESTART:
-    restart("Restart action triggered");
-    break;
-  case Action::INIT_OTA:
-    Log.noticeln("Enabling OTA from BLE cmd...");
-    WiFi.softAP(WIFI_SSID, WIFI_PASSWORD);
-    Log.noticeln("IP address: %s", WiFi.softAPIP().toString().c_str());
-    ArduinoOTA.begin();
-    Log.noticeln("OTA enabled");
-    timerAlarmEnable(timer);
-    Log.noticeln("Timer enabled");
-    state.action = Action::LOOP_OTA;
-    break;
-  case Action::LOOP_OTA:
-    ArduinoOTA.handle();
-    break;
-  case Action::WAIT_FOR_PHONE:
-    if (keyboard.isConnected()) {
-      Log.noticeln("Phone connected");
-      connectedAt = millis();
-      state.action = Action::TICK;
-    }
-  case Action::TICK:
-    break;
-  default:
-    Log.infoln("Wrong action: %s", state.action);
-    break;
+  if (WiFi.status() == WL_CONNECTED) {
+    Log.error("WiFi disconnected, restarting...");
+    delay(1000);
+    ESP.restart();
   }
+
+  ArduinoOTA.handle();
 }
