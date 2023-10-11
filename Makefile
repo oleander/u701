@@ -4,9 +4,9 @@
 PORT := "/dev/cu.usbserial-110"
 
 build:
-	cargo pio build && ~/Code/git-ai/target/release/git-ai --all
+	cargo pio build
 build_tiny:
-	cargo pio build -r && ~/Code/git-ai/target/release/git-ai --all
+	cargo pio build -r
 clean:
 	cargo clean
 	rm -rf target .embuild build .pio
