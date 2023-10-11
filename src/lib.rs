@@ -39,7 +39,6 @@ const KEY_MEDIA_NEXT_TRACK: MediaKeyReport = MediaKeyReport(1, 0);
 const KEY_MEDIA_PREV_TRACK: MediaKeyReport = MediaKeyReport(2, 0);
 const KEY_MEDIA_PLAY_PAUSE: MediaKeyReport = MediaKeyReport(8, 0);
 const KEY_MEDIA_VOLUME_UP: MediaKeyReport = MediaKeyReport(32, 0);
-
 const KEY_MEDIA_EJECT: MediaKeyReport = MediaKeyReport(16, 0);
 
 const KEY_MEDIA_CONSUMER_CONTROL_CONFIGURATION: MediaKeyReport = MediaKeyReport(0, 64);
@@ -77,18 +76,18 @@ lazy_static! {
     // BUTTON_5 is a meta key
     table.insert(BUTTON_6, BLEEvent::MediaKey(KEY_MEDIA_VOLUME_UP));
     table.insert(BUTTON_7, BLEEvent::MediaKey(KEY_MEDIA_NEXT_TRACK));
-    table.insert(BUTTON_8, BLEEvent::Letter(1));
+    table.insert(BUTTON_8, BLEEvent::MediaKey(KEY_MEDIA_EJECT));
     table
   };
 
   // Button 1
    static ref META_LOOKUP_1: HashMap<u8, BLEEvent> = {
     let mut table = HashMap::new();
-    // BUTTON_1 is a meta key
+    // table.insert(BUTTON_1, BLEEvent::Letter(1));
     table.insert(BUTTON_2, BLEEvent::Letter(2));
     table.insert(BUTTON_3, BLEEvent::Letter(3));
     table.insert(BUTTON_4, BLEEvent::Letter(4));
-    // BUTTON_5 is a meta key
+    // table.insert(BUTTON_5, BLEEvent::Letter(5));
     table.insert(BUTTON_6, BLEEvent::Letter(6));
     table.insert(BUTTON_7, BLEEvent::Letter(7));
     table.insert(BUTTON_8, BLEEvent::Letter(8));
@@ -99,13 +98,14 @@ lazy_static! {
   static ref META_LOOKUP_2: HashMap<u8, BLEEvent> = {
     let mut table = HashMap::new();
     // BUTTON_1 is a meta key
-    table.insert(BUTTON_2, BLEEvent::Letter(9));
-    table.insert(BUTTON_3, BLEEvent::Letter(10));
-    table.insert(BUTTON_4, BLEEvent::Letter(11));
-    // BUTTON_5 is a meta key
-    table.insert(BUTTON_6, BLEEvent::Letter(12));
-    table.insert(BUTTON_7, BLEEvent::Letter(13));
-    table.insert(BUTTON_8, BLEEvent::Letter(14));
+    // table.insert(BUTTON_1, BLEEvent::Letter(9));
+    table.insert(BUTTON_2, BLEEvent::Letter(10));
+    table.insert(BUTTON_3, BLEEvent::Letter(11));
+    table.insert(BUTTON_4, BLEEvent::Letter(12));
+    // table.insert(BUTTON_5, BLEEvent::Letter(13));
+    table.insert(BUTTON_6, BLEEvent::Letter(14));
+    table.insert(BUTTON_7, BLEEvent::Letter(15));
+    table.insert(BUTTON_8, BLEEvent::Letter(16));
     table
   };
 
@@ -201,7 +201,8 @@ fn transition(curr_event: &ClickEvent) {
         println!("Sending letter: {:?}", index);
         let base_letter = 'a' as u8;
         let curr_letter = base_letter + index - 1;
-        unsafe { ble_keyboard_print(curr_letter.to_string().as_ptr()) };
+        let printable_char = format!("{}", curr_letter as char);
+        unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
       },
     }
   } else {
