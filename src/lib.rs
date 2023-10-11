@@ -141,6 +141,8 @@ impl PushState {
   }
 }
 
+// void transition_from_cpp(uint8_t *event);
+
 #[no_mangle]
 pub extern "C" fn transition_from_cpp(event: *const uint8_t) {
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, 4) };
@@ -150,7 +152,6 @@ pub extern "C" fn transition_from_cpp(event: *const uint8_t) {
   transition(&click_event);
 }
 
-#[no_mangle]
 fn transition(curr_event: &ClickEvent) {
   let mut active_state = ACTIVE_STATE.lock();
   let (next_state, next_event) = active_state.transition(curr_event);
