@@ -305,6 +305,7 @@ void setup()
   setupSerial();
   setupButtons();
   setupBLE();
+  setup_rust();
   setupKeyboard();
   setupScan();
   setupClient();

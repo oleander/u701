@@ -8,10 +8,12 @@ extern crate hashbrown;
 use hashbrown::HashMap;
 
 extern crate log;
-use log::info;
+use log::{debug, error, info, trace, warn};
 
 extern crate spin;
 use spin::Mutex;
+
+extern crate esp_idf_svc;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct MediaKeyReport(u8, u8);
@@ -34,6 +36,13 @@ type ClickEvent = [u8; 4];
 pub enum PushState {
   Down(ID),
   Up(ID),
+}
+
+extern crate libc;
+
+extern {
+    fn ble_keyboard_write(c: u8) -> libc::size_t;
+    fn ble_keyboard_is_connected() -> bool;
 }
 
 const KEY_MEDIA_NEXT_TRACK: MediaKeyReport = MediaKeyReport(1, 0);
@@ -159,6 +168,13 @@ impl PushState {
 }
 
 #[no_mangle]
+pub extern "C" fn setup_rust() {
+  esp_idf_sys::link_patches();
+  esp_idf_svc::log::EspLogger::initialize_default();
+  warn!("Rust setup complete");
+}
+
+#[no_mangle]
 pub extern "C" fn transition_from_cpp(event: *const u8) {
   info!("Received event from C++: {:?}", event);
 
@@ -181,6 +197,7 @@ fn transition(curr_event: &ClickEvent) {
     match event {
       BLEEvent::MediaKey(report) => {
         info!("Sending media key report: {:?}", report);
+        unsafe { ble_keyboard_write(report.0) };
       },
       BLEEvent::Letter(letter) => {
         info!("Sending letter: {:?}", letter);
