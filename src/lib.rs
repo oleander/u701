@@ -140,8 +140,6 @@ impl PushState {
   }
 }
 
-// void transition_from_cpp(uint8_t *event);
-
 #[no_mangle]
 pub extern "C" fn transition_from_cpp(event: *const u8) {
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, 4) };
