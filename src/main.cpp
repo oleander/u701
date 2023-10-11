@@ -28,9 +28,7 @@ constexpr auto COMMAND_MAP_CHAR_UUID    = "19B10011-E8F2-537E-4F6C-D104768A1214"
 constexpr auto COMMAND_SERVICE_UUID     = "19B10000-E8F2-537E-4F6C-D104768A1214";
 constexpr auto COMMAND_CHAR_UUID        = "19B10001-E8F2-537E-4F6C-D104768A1214";
 
-const auto address       = NimBLEAddress(DEVICE_MAC, 1);
-const int SEVEN_MINUTES  = 420000000;
-static hw_timer_t *timer = NULL;
+const auto address = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
@@ -156,25 +154,6 @@ void setupClient() {
   restart("[BUG] No report characteristic found");
 }
 
-/**
- * Interrupt service routine that is triggered by a timer after seven minutes.
- * Calls the restart function with the message "OTA update failed" and false as the second argument.
- */
-void IRAM_ATTR onTimer() {
-  restart("OTA update failed");
-}
-
-/**
- * Sets up a timer to trigger an interrupt after seven minutes.
- * The interrupt will call the onTimer function.
- * Used to reboot the ESP32 after seven minutes of OTA.
- */
-void setupTimer() {
-  timer = timerBegin(0, 40, true);
-  timerAttachInterrupt(timer, &onTimer, true);
-  timerAlarmWrite(timer, SEVEN_MINUTES, false);
-}
-
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     if (advertised->getAddress() == address) {
@@ -235,7 +214,6 @@ void setup() {
   setupKeyboard();
   setupScan();
   setupClient();
-  setupTimer();
 
   WiFi.config(ip, gateway, subnet);
   WiFi.setTxPower(WIFI_POWER_11dBm);
