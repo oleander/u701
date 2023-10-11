@@ -5,12 +5,12 @@ edition = "2021"
 name = "u701hybrid"
 
 [dependencies]
-tokio = { version = "1.33.0", features = ["rt-multi-thread", "macros", "time"] }
-esp-idf-sys = "0.33.2"
-esp-idf-svc = "0.46.2"
+# tokio = { version = "1.33.0", features = ["rt-multi-thread", "macros", "time"] }
+# esp-idf-sys = "0.33.2"
+# esp-idf-svc = "0.46.2"
 log = "0.4.20"
-esp-idf-hal = "0.41.2"
-esp32-nimble = "0.2.1"
+# esp-idf-hal = "0.41.2"
+# esp32-nimble = "0.2.1"
 
 [lib]
 crate-type = ["staticlib"]
