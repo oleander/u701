@@ -7,9 +7,9 @@ void ble_keyboard_write(uint8_t c[2])
   keyboard.write(c);
 }
 
-void ble_keyboard_print(uint8_t c)
+void ble_keyboard_print(const char *format)
 {
-  keyboard.print(c);
+  keyboard.print(format);
 }
 
 bool ble_keyboard_is_connected()
