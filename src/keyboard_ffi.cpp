@@ -1,9 +1,10 @@
 #include "keyboard_ffi.h"
 #include "keyboard.h"
 
-size_t ble_keyboard_write(uint8_t c)
+// fixed size array (2) of uint8_t
+void ble_keyboard_write(uint8_t c[2])
 {
-  return keyboard.write(c);
+  keyboard.write(c);
 }
 
 bool ble_keyboard_is_connected()

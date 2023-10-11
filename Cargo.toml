@@ -27,3 +27,5 @@ esp_idf_tools_install_dir = "global"
 
 [build-dependencies]
 embuild = "0.31.2"
+bindgen = "0.65.1"
+

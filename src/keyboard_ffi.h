@@ -1,5 +1,4 @@
-extern "C"
-{
-  size_t ble_keyboard_write(uint8_t c);
-  bool ble_keyboard_is_connected();
-}
+#include <stdint.h>
+
+extern "C" void ble_keyboard_write(uint8_t c[2]);
+extern "C" bool ble_keyboard_is_connected();
