@@ -7,6 +7,7 @@
 
 #include <ArduinoLog.h>
 #include <ArduinoOTA.h>
+#include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
