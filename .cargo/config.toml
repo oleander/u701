@@ -4,7 +4,7 @@ target = "riscv32imc-esp-espidf"
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
 runner = "espflash flash --baud 921600 --port /dev/cu.usbserial-110 --monitor"
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
+rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace", "--cfg", "espidf_time64"]
 
 [unstable]
 build-std = ["std", "panic_abort"]

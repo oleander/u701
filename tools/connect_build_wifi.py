@@ -1,7 +1,7 @@
 import os
 import time
 
-Import("env", "projenv")
+Import("env")
 config = env.GetProjectConfig()
 
 password = config.get("custom", "esp_wifi_password")

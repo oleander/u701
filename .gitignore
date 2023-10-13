@@ -6,3 +6,5 @@
 .pio
 CMakeFiles/
 .env
+sdkconfig*
+!sdkconfig.defaults
