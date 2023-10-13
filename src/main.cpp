@@ -2,7 +2,6 @@
 #include "ClientCallback.h"
 #include "ffi.h"
 #include "settings.h"
-#include "shared.h"
 #include "utility.h"
 
 #include <ArduinoLog.h>
@@ -12,6 +11,8 @@
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
 #include <WiFi.h>
+
+#include "shared.h"
 
 IPAddress ip(192, 168, 4, 1);
 IPAddress gateway(192, 168, 4, 1);
