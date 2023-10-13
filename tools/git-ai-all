@@ -1,3 +1,0 @@
-import subprocess
-
-subprocess.call(['/Users/linusoleander/Code/git-ai/target/release/git-ai', '--all'])

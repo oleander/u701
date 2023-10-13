@@ -8,7 +8,17 @@
 #define LONG_PRESS_TICKS 800 // in ms
 
 #define SERIAL_BAUD_RATE 115200
-#define SCAN_INTERVAL    3000 // in ms
-#define SCAN_WINDOW      100  // in ms
-#define WIFI_PASSWORD    "11111111"
-#define WIFI_SSID        "u701"
+#define SCAN_INTERVAL    500 // in ms
+#define SCAN_WINDOW      450 // in ms
+
+#ifndef ESP_OTA_PASSWORD
+#define ESP_OTA_PASSWORD "something"
+#endif
+
+#ifndef ESP_WIFI_SSID
+#define ESP_WIFI_SSID "something"
+#endif
+
+#ifndef ESP_OTA_PASSWORD
+#define ESP_OTA_PASSWORD "something"
+#endif

@@ -156,9 +156,9 @@ void setup() {
 
   WiFi.config(ip, gateway, subnet);
   WiFi.setTxPower(WIFI_POWER_11dBm);
-  WiFi.softAP(WIFI_SSID, WIFI_PASSWORD, 1, true);
+  WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
 
-  ArduinoOTA.setPassword(WIFI_PASSWORD);
+  ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
   ArduinoOTA.begin();
 }
 

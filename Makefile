@@ -13,8 +13,5 @@ clean:
 upload:
 	cargo pio exec -- run --target upload -e release
 upload_ota:
-	# m wifi connect u701 11111111
 	cargo pio exec -- run --target upload -e ota
-	# m wifi connect boat
-	# espflash montor -p $(PORT)
 default: upload monitor

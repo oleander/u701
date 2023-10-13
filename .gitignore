@@ -5,3 +5,4 @@
 /build
 .pio
 CMakeFiles/
+.env
