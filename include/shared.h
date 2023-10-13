@@ -1,4 +1,5 @@
 #pragma once
+#include <BLEKeyboard.h>
 
 #define OTA_STATUS_ADDRESS 0
 #define PIN                33
