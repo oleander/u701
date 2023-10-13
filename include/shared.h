@@ -14,6 +14,5 @@ static NimBLEAdvertising *advert;
 static NimBLEService *service1;
 static NimBLEService *service2;
 static NimBLEClient *client;
-static NimBLEServer *server;
 
 typedef u_int16_t ID;

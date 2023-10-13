@@ -9,7 +9,7 @@ build_tiny:
 	cargo pio build -r
 clean:
 	cargo clean
-	rm -rf target .embuild build .pio
+	pio run --target clean
 upload:
 	cargo pio exec -- run --target upload -e release
 upload_ota:
