@@ -5,18 +5,18 @@
 #include "utility.h"
 
 #include <ArduinoLog.h>
-#include <ArduinoOTA.h>
+// #include <ArduinoOTA.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
-#include <WiFi.h>
+// #include <WiFi.h>
 
 #include "shared.h"
 
-IPAddress ip(192, 168, 4, 1);
-IPAddress gateway(192, 168, 4, 1);
-IPAddress subnet(255, 255, 255, 0);
+// IPAddress ip(192, 168, 4, 1);
+// IPAddress gateway(192, 168, 4, 1);
+// IPAddress subnet(255, 255, 255, 0);
 
 /* Removes warnings */
 #undef LOG_LEVEL_INFO
@@ -154,20 +154,22 @@ void setup() {
   setupScan();
   setupClient();
 
-  WiFi.config(ip, gateway, subnet);
-  WiFi.setTxPower(WIFI_POWER_11dBm);
-  WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
+  // WiFi.config(ip, gateway, subnet);
+  // WiFi.setTxPower(WIFI_POWER_11dBm);
+  // WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
 
-  ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
-  ArduinoOTA.begin();
+  // ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
+  // ArduinoOTA.begin();
 }
 
 void loop() {
-  if (WiFi.status() == WL_CONNECTED) {
-    Log.error("WiFi disconnected, restarting...");
-    delay(1000);
-    ESP.restart();
-  }
+  delay(500);
 
-  ArduinoOTA.handle();
+  // if (WiFi.status() == WL_CONNECTED) {
+  //   Log.error("WiFi disconnected, restarting...");
+  //   delay(1000);
+  //   ESP.restart();
+  // }
+
+  // ArduinoOTA.handle();
 }
