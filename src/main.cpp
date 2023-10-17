@@ -22,7 +22,7 @@ IPAddress subnet(255, 255, 255, 0);
 #undef LOG_LEVEL_INFO
 #undef LOG_LEVEL_ERROR
 
-const auto address = NimBLEAddress(DEVICE_MAC, 1);
+const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
@@ -76,7 +76,7 @@ void setupClient() {
   client = NimBLEDevice::createClient();
   client->setClientCallbacks(new ClientCallback());
 
-  Log.noticeln("Connecting to %s ...", address.toString().c_str());
+  Log.noticeln("[Connecting] %s", device->getAddress());
   if (!client->connect(device)) {
     restart("Timeout connecting to the device");
   }
@@ -118,13 +118,16 @@ void setupClient() {
 
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
-    if (advertised->getAddress() == address) {
-      Log.noticeln("Found device device");
-      device = advertised;
-      advertised->getScan()->stop();
-    } else {
-      Log.noticeln("Found device %s", advertised->getAddress().toString().c_str());
+    auto deviceMacAddress = advertised->getAddress();
+    auto deviceMacAsString = deviceMacAddress.toString().c_str();
+    if (deviceMacAddress != buttonMacAddress) {
+      return Log.noticeln("[WRONG] %s", deviceMacAsString);
     }
+
+    Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, advertised->getName().c_str());
+
+    device = advertised;
+    advertised->getScan()->stop();
   }
 };
 
