@@ -41,16 +41,17 @@ extern "C" bool ble_keyboard_is_connected() {
 /* Add function isActive to the State struct */
 static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
   if (length != 4) {
-    return Log.traceln("Received invalid length: %d (data=%s) (expected 4)", length, data);
+    Log.traceln("Received length should be 4, got %d (will continue anyway)", length);
   }
 
   if (!isNotify) {
     return Log.traceln("Received invalid isNotify: %d (data=%s) (expected true)", isNotify, data);
   }
 
-  Log.traceln("[Click] Received data: %s\n", data);
-  Log.traceln("[Click] Received length: %d\n", length);
-  Log.traceln("[Click] Received isNotify: %d\n", isNotify);
+  Log.traceln("[Click] Received characteristic: %s", characteristic->getUUID().toString().c_str());
+  Log.traceln("[Click] Received data: %s", data);
+  Log.traceln("[Click] Received length: %d", length);
+  Log.traceln("[Click] Received isNotify: %d", isNotify);
 
   transition_from_cpp(data, length);
 }

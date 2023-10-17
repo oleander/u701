@@ -176,7 +176,16 @@ pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
   println!("Received event from C++");
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
   let mut click_event = [0u8; 4];
-  click_event.copy_from_slice(event_slice);
+
+  if len > 4 {
+    println!("Event too long, truncating");
+    click_event.copy_from_slice(event_slice[0..4].as_ref());
+  } else if len < 4 {
+    return println!("[BUG] Event too short, abort");
+  } else {
+    click_event.copy_from_slice(event_slice);
+  }
+
   transition(&click_event);
 }
 
