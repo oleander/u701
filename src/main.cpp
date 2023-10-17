@@ -40,9 +40,17 @@ extern "C" bool ble_keyboard_is_connected() {
 
 /* Add function isActive to the State struct */
 static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
-  Log.noticeln("Received data: %s\n", data);
-  Log.noticeln("Received length: %d\n", length);
-  Log.noticeln("Received isNotify: %d\n", isNotify);
+  if (length != 4) {
+    return Log.traceln("Received invalid length: %d (data=%s) (expected 4)", length, data);
+  }
+
+  if (!isNotify) {
+    return Log.traceln("Received invalid isNotify: %d (data=%s) (expected true)", isNotify, data);
+  }
+
+  Log.traceln("[Click] Received data: %s\n", data);
+  Log.traceln("[Click] Received length: %d\n", length);
+  Log.traceln("[Click] Received isNotify: %d\n", isNotify);
 
   transition_from_cpp(data, length);
 }
@@ -69,15 +77,16 @@ void setupSerial() {
  * If the connection fails or no services/characteristics are found, the device will restart.
  */
 void setupClient() {
-  if (!device) {
-    restart("Device not found, will reboot");
+  Log.noticeln("Connecting to");
+  if (!client) {
+    restart("[BUG] Device not found, will reboot");
   }
 
-  client = NimBLEDevice::createClient();
+  Log.noticeln("Setting client callbacks ...");
   client->setClientCallbacks(new ClientCallback());
 
-  Log.noticeln("[Connecting] %s", device->getAddress());
-  if (!client->connect(device)) {
+  Log.noticeln("[Connecting]");
+  if (!client->connect()) {
     restart("Timeout connecting to the device");
   }
 
@@ -120,13 +129,15 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto deviceMacAddress = advertised->getAddress();
     auto deviceMacAsString = deviceMacAddress.toString().c_str();
+    auto deviceName = advertised->getName().c_str();
+
     if (deviceMacAddress != buttonMacAddress) {
       return Log.noticeln("[WRONG] %s", deviceMacAsString);
     }
 
-    Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, advertised->getName().c_str());
+    Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
 
-    device = advertised;
+    client = NimBLEDevice::createClient(deviceMacAddress);
     advertised->getScan()->stop();
   }
 };
@@ -154,24 +165,27 @@ void setup() {
   setupSerial();
   setup_rust();
 
+
+  setupKeyboard();
+  setupScan();
+  Log.noticeln("Setup done");
+  setupClient();
+  Log.noticeln("Setup done");
+
   WiFi.config(ip, gateway, subnet);
   WiFi.setTxPower(WIFI_POWER_11dBm);
   WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
 
   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
   ArduinoOTA.begin();
-
-  setupKeyboard();
-  setupScan();
-  setupClient();
 }
 
 void loop() {
-  if (WiFi.status() == WL_CONNECTED) {
-    Log.error("WiFi disconnected, restarting...");
-    delay(1000);
-    ESP.restart();
-  }
+  // if (WiFi.status() == WL_CONNECTED) {
+  //   Log.error("WiFi disconnected, restarting...");
+  //   delay(1000);
+  //   ESP.restart();
+  // }
 
   ArduinoOTA.handle();
 }
