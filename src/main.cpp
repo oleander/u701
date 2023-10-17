@@ -182,11 +182,5 @@ void setup() {
 }
 
 void loop() {
-  // if (WiFi.status() == WL_CONNECTED) {
-  //   Log.error("WiFi disconnected, restarting...");
-  //   delay(1000);
-  //   ESP.restart();
-  // }
-
   ArduinoOTA.handle();
 }

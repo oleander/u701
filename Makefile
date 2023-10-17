@@ -5,7 +5,7 @@ PORT := $(shell ls /dev/* | grep "tty.usbserial" | head -n 1)
 ENVIROMENT := debug # release, debug, ota
 
 build:
-	cargo pio build -e $(ENVIROMENT)
+	cargo pio build --release
 clean:
 	cargo clean
 	pio run --target clean -e $(ENVIROMENT)
