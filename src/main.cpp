@@ -163,10 +163,10 @@ void setupScan() {
 void setup() {
   NimBLEDevice::init(DEVICE_NAME);
   setupSerial();
+  setupKeyboard();
   setup_rust();
 
 
-  setupKeyboard();
   setupScan();
   Log.noticeln("Setup done");
   setupClient();
