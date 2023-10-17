@@ -45,11 +45,10 @@ static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size
   }
 
   if (!isNotify) {
-    return Log.traceln("Received invalid isNotify: %d (data=%s) (expected true)", isNotify, data);
+    Log.traceln("Received invalid isNotify: %d (expected true)", isNotify);
+    return;
   }
 
-  Log.traceln("[Click] Received characteristic: %s", characteristic->getUUID().toString().c_str());
-  Log.traceln("[Click] Received data: %s", data);
   Log.traceln("[Click] Received length: %d", length);
   Log.traceln("[Click] Received isNotify: %d", isNotify);
 
