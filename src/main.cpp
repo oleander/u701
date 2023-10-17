@@ -55,11 +55,11 @@ void setupKeyboard() {
 
 void setupSerial() {
   Serial.begin(SERIAL_BAUD_RATE);
-#ifdef RELEASE
-  Log.begin(LOG_LEVEL_SILENT, &Serial);
-#else
+// #ifdef RELEASE
+  // Log.begin(LOG_LEVEL_SILENT, &Serial);
+// #else
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-#endif
+// #endif
 
   Log.noticeln("Starting ESP32 ...");
 }
