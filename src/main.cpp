@@ -150,9 +150,6 @@ void setup() {
   NimBLEDevice::init(DEVICE_NAME);
   setupSerial();
   setup_rust();
-  setupKeyboard();
-  setupScan();
-  setupClient();
 
   WiFi.config(ip, gateway, subnet);
   WiFi.setTxPower(WIFI_POWER_11dBm);
@@ -160,6 +157,10 @@ void setup() {
 
   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
   ArduinoOTA.begin();
+
+  setupKeyboard();
+  setupScan();
+  setupClient();
 }
 
 void loop() {
