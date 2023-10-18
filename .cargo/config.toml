@@ -3,8 +3,8 @@ target = "riscv32imc-esp-espidf"
 
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
-runner = "espflash flash --baud 921600 --port /dev/tty.SLAB_USBtoUART --monitor"
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace", "--cfg", "espidf_time64"]
+runner = "espflash flash --baud 921600 --port /dev/cu.SLAB_USBtoUART --monitor"
+rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]#, "--cfg", "espidf_time64"]
 
 [unstable]
 build-std = ["std", "panic_abort"]
