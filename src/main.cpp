@@ -9,15 +9,16 @@
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
-// #include <WiFi.h>
-// #include <ArduinoOTA.h>
-// #include <esp_task_wdt.h>
-
-#include "shared.h"
 
 IPAddress ip(192, 168, 4, 1);
 IPAddress gateway(192, 168, 4, 1);
 IPAddress subnet(255, 255, 255, 0);
+
+static NimBLEUUID reportUUID("2A4D");
+static NimBLEUUID cccdUUID("2902");
+static NimBLEUUID hidService("1812");
+
+static NimBLEClient *client;
 
 /* Removes warnings */
 #undef LOG_LEVEL_INFO
@@ -94,62 +95,58 @@ void initializeSerialCommunication() {
  */
 void initializeAndConnectClient() {
   if (!client) {
-    restart("[BUG] Device not found, will reboot");
+    restart("Device not found, will reboot");
   }
 
-  Log.noticeln("Connecting to client: %s", client->getPeerAddress());
+  Log.noticeln("Attempting to connect to client: %s", client->getPeerAddress());
   client->setClientCallbacks(new ClientCallback());
 
-  Log.noticeln("\tConnecting");
   if (!client->connect()) {
     restart("\tTimeout connecting to device");
   }
 
-  Log.noticeln("\tDiscovering services");
+  Log.noticeln("\tDiscovering services...");
   auto services = client->getServices(true);
   if (services->empty()) {
-    restart("\t[BUG] No services found, will retry");
+    restart("\tNo services found, will retry");
   }
 
-  Log.noticeln("\tReceived %d services", services->size());
-
   for (auto &service: *services) {
+    Log.noticeln("\t\tChecking service: %s", service->getUUID());
     if (!service->getUUID().equals(hidService)) {
-      Log.warningln("\tSkipping service: %s", service->getUUID());
+      Log.warningln("\t\t\tSkipping non-matching service");
       continue;
     }
 
-    Log.noticeln("\tDiscovering characteristics ...");
+    Log.noticeln("\t\t\tDiscovering characteristics...");
     auto characteristics = service->getCharacteristics(true);
     if (characteristics->empty()) {
-      restart("\t[BUG] No characteristics found");
+      restart("\t\t\tNo characteristics found");
     }
 
-    Log.noticeln("\tReceived %d characteristics", characteristics->size());
     for (auto &characteristic: *characteristics) {
+      Log.noticeln("\t\t\t\tChecking characteristic: %s", characteristic->getUUID());
       if (!characteristic->getUUID().equals(reportUUID)) {
-        Log.warningln("\tSkipping characteristic: %s", characteristic->getUUID());
+        Log.warningln("\t\t\t\t\tSkipping non-matching characteristic");
         continue;
       }
 
-      Log.noticeln("\tFound report characteristic: %s", characteristic->getUUID());
-
       if (!characteristic->canNotify()) {
-        restart("\t[BUG] Characteristic cannot notify");
+        restart("\t\t\t\t\tCharacteristic cannot notify");
       }
 
-      Log.noticeln("\tSubscribing to characteristic ...");
+      Log.noticeln("\t\t\t\t\tSubscribing to characteristic...");
       auto status = characteristic->subscribe(true, handleBLERemoteEvent, true);
       if (!status) {
-        restart("\t[BUG] Failed to subscribe to notifications");
+        restart("\t\t\t\t\tFailed to subscribe to notifications");
       }
 
-      Log.noticeln("\tSubscribed to notifications");
+      Log.noticeln("\t\t\t\t\tSuccessfully subscribed!");
       return;
     }
   }
 
-  restart("[BUG] No report characteristic found");
+  restart("No report characteristic found");
 }
 
 /**
