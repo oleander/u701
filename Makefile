@@ -10,21 +10,14 @@ build:
 clean:
 	cargo clean
 	pio run --target clean -e $(ENVIROMENT)
-upload:
+upload: erase
 	. /Users/linusoleander/export-esp.sh && cargo pio exec -- run --target upload -e $(ENVIROMENT) --monitor-port $(PORT)
-flash:
-	cargo pio exec -- run --target upload -e $(ENVIROMENT) --monitor-port $(PORT)
-erase: build
-	espflash flash \
-		--erase-parts nvs \
-		--partition-table partitions.csv \
-		--baud 921600 \
-		--port $(PORT) \
-		.pio/build/${ENVIROMENT}/firmware.elf
+erase:
+	esptool.py erase_region 0x9000 0x5000
 monitor:
-	espflash monitor -b 115200 -p $(PORT)
+	./tools/monitor.sh -b 115200 -p $(PORT)
 menuconfig:
-	cargo pio espidf menuconfig -r true -t xtensa-esp32-espidf
+	cargo pio espidf menuconfig -r true
 release: clean erase flash monitor
 
 default: upload monitor

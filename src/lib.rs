@@ -6,10 +6,11 @@ extern crate hashbrown;
 extern crate lazy_static;
 extern crate log;
 
-use hashbrown::HashMap;
-use lazy_static::lazy_static;
-use std::sync::Mutex;
 use thingbuf::mpsc::{self, Receiver, Sender};
+use lazy_static::lazy_static;
+use hashbrown::HashMap;
+use log::{info, warn};
+use std::sync::Mutex;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
@@ -173,22 +174,22 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
-  // esp_idf_sys::link_patches();
-  // esp_idf_svc::log::EspLogger::initialize_default();
-  // println!("Rust setup complete");
+  info!("Setup rust");
+  esp_idf_sys::link_patches();
+  esp_idf_svc::log::EspLogger::initialize_default();
 }
 
 #[no_mangle]
 pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
-  println!("Received event from C++");
+  info!("Received event from C++");
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
   let mut click_event = [0u8; 4];
 
   if len > 4 {
-    println!("Event too long, truncating");
+    info!("Event too long, truncating");
     click_event.copy_from_slice(event_slice[0..4].as_ref());
   } else if len < 4 {
-    return println!("[BUG] Event too short, abort");
+    return warn!("[BUG] Event too short, abort");
   } else {
     click_event.copy_from_slice(event_slice);
   }
@@ -200,12 +201,12 @@ pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
 pub extern "C" fn process_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
-      println!("Sending media key report: {:?}", report);
+      info!("Sending media key report: {:?}", report);
       let xs: [u8; 2] = [report.0, report.1];
       unsafe { ble_keyboard_write(xs.as_ptr()) };
     },
     Ok(BLEEvent::Letter(index)) => {
-      println!("Sending letter: {:?}", index);
+      info!("Sending letter: {:?}", index);
       let base_letter = 'a' as u8;
       let curr_letter = base_letter + index - 1;
       let printable_char = format!("{}", curr_letter as char);
@@ -216,13 +217,13 @@ pub extern "C" fn process_ble_events() {
 }
 
 fn transition(curr_event: &ClickEvent) {
-  println!("Received event: {:?}", curr_event);
+  info!("Received event: {:?}", curr_event);
 
   let Ok(mut active_state) = ACTIVE_STATE.lock() else {
-    return println!("Failed to lock mutex");
+    return info!("Failed to lock mutex");
   };
 
-  println!("Current state: {:?}", active_state);
+  info!("Current state: {:?}", active_state);
   let (next_state, next_event) = active_state.transition(&curr_event);
   *active_state = next_state;
 
