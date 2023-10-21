@@ -160,7 +160,8 @@ void setupScan() {
   Log.noticeln("Scan finished");
 }
 
-void setup() {
+
+extern "C" void app_main() {
   NimBLEDevice::init(DEVICE_NAME);
   setupSerial();
   setupKeyboard();
@@ -177,8 +178,8 @@ void setup() {
 
   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
   ArduinoOTA.begin();
-}
 
-void loop() {
-  ArduinoOTA.handle();
+  while(true) {
+    ArduinoOTA.handle();
+  }
 }
