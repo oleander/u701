@@ -147,6 +147,13 @@ class AdvertisedDeviceResultHandler : public NimBLEAdvertisedDeviceCallbacks {
   }
 };
 
+void initializeOTA() {
+  // WiFi.config(ip, gateway, subnet);
+  // WiFi.setTxPower(WIFI_POWER_11dBm);
+  // WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
+  // ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
+  // ArduinoOTA.begin();
+}
 /**
  * Sets up the BLE scan to search for the device with the specified MAC address.
  * If the device is found, the scan will stop and the client will be set up.
@@ -168,18 +175,11 @@ void startBLEDeviceScan() {
 void setup() {
   initializeSerialCommunication();
   initializeKeyboard();
-  setup_rust();
+  setupRust();
   startBLEDeviceScan();
   setupClient();
-
-  // WiFi.config(ip, gateway, subnet);
-  // WiFi.setTxPower(WIFI_POWER_11dBm);
-  // WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
-  // ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
-  // ArduinoOTA.begin();
 }
 
 void loop() {
-  // ArduinoOTA.handle();
   handleBLEevents();
 }
