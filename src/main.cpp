@@ -134,13 +134,13 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
     auto deviceMacAsString = deviceMacAddress.toString().c_str();
     auto deviceName        = advertised->getName();
 
-    // if (deviceMacAddress != buttonMacAddress) {
-    //   return Log.noticeln("[WRONG] %s", deviceMacAsString);
-    // }
-
-    if (deviceName.compare("Terrain Fake") != 0) {
-      return Log.noticeln("[WRONG] %s", deviceName);
+    if (deviceMacAddress != buttonMacAddress) {
+      return Log.noticeln("[WRONG] %s", deviceMacAsString);
     }
+
+    // if (deviceName.compare("Terrain Fake") != 0) {
+    //   return Log.noticeln("[WRONG] %s", deviceName);
+    // }
 
     Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
 
@@ -184,13 +184,7 @@ void setup() {
 }
 
 void loop() {
-  Log.traceln("Looping ...");
   ArduinoOTA.handle();
-  Log.traceln("Handling OTA ...");
   esp_task_wdt_reset();
-
-  Log.traceln("Resetting WDT ...");
   process_ble_events();
-  Log.traceln("Processing BLE events ...");
-  delay(10);
 }
