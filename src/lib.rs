@@ -13,9 +13,11 @@ use std::sync::Mutex;
 use thingbuf::mpsc::{self, Receiver, Sender};
 
 extern "C" {
+  #[link_name = "printStringViaBleKeyboard"]
   fn print_string_via_ble_keyboard(xs: *const u8);
   #[link_name = "sendCharacterViaBleKeyboard"]
   fn send_character_via_ble_keyboard(xs: *const u8);
+  #[link_name = "isBleKeyboardConnected"]
   fn is_ble_keyboard_connected() -> bool;
 }
 

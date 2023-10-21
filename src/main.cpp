@@ -33,13 +33,13 @@ extern "C" void sendCharacterViaBleKeyboard(uint8_t c[2]) {
   }
 }
 
-extern "C" void print_string_via_ble_keyboard(const uint8_t *format) {
+extern "C" void printStringViaBleKeyboard(const char *format) {
   if (keyboard.isConnected()) {
     keyboard.print(reinterpret_cast<const char *>(format));
   }
 }
 
-extern "C" bool is_ble_keyboard_connected() {
+extern "C" bool isBleKeyboardConnected() {
   return keyboard.isConnected();
 }
 
