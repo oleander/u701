@@ -138,7 +138,7 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
     //   return Log.noticeln("[WRONG] %s", deviceMacAsString);
     // }
 
-    if (deviceName.compare("tob") != 0) {
+    if (deviceName.compare("Terrain Fake") != 0) {
       return Log.noticeln("[WRONG] %s", deviceName);
     }
 
@@ -184,7 +184,13 @@ void setup() {
 }
 
 void loop() {
+  Log.traceln("Looping ...");
   ArduinoOTA.handle();
+  Log.traceln("Handling OTA ...");
   esp_task_wdt_reset();
+
+  Log.traceln("Resetting WDT ...");
   process_ble_events();
+  Log.traceln("Processing BLE events ...");
+  delay(10);
 }

@@ -11,7 +11,7 @@ clean:
 	cargo clean
 	pio run --target clean -e $(ENVIROMENT)
 upload:
-	cargo pio exec -- run --target upload -e $(ENVIROMENT) --monitor-port $(PORT)
+	. /Users/linusoleander/export-esp.sh && cargo pio exec -- run --target upload -e $(ENVIROMENT) --monitor-port $(PORT)
 flash:
 	cargo pio exec -- run --target upload -e $(ENVIROMENT) --monitor-port $(PORT)
 erase: build
@@ -23,6 +23,8 @@ erase: build
 		.pio/build/${ENVIROMENT}/firmware.elf
 monitor:
 	espflash monitor -b 115200 -p $(PORT)
+menuconfig:
+	cargo pio espidf menuconfig -r true -t xtensa-esp32-espidf
 release: clean erase flash monitor
 
 default: upload monitor

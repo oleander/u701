@@ -7,9 +7,9 @@ extern crate lazy_static;
 extern crate log;
 
 use hashbrown::HashMap;
-use thingbuf::mpsc::{Receiver, Sender, self};
 use lazy_static::lazy_static;
 use std::sync::Mutex;
+use thingbuf::mpsc::{self, Receiver, Sender};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
@@ -198,21 +198,21 @@ pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
 
 #[no_mangle]
 pub extern "C" fn process_ble_events() {
-    match BLE_EVENT_QUEUE.1.try_recv() {
-      Ok(BLEEvent::MediaKey(report)) => {
-        println!("Sending media key report: {:?}", report);
-        let xs: [u8; 2] = [report.0, report.1];
-        unsafe { ble_keyboard_write(xs.as_ptr()) };
-      },
-      Ok(BLEEvent::Letter(index)) => {
-        println!("Sending letter: {:?}", index);
-        let base_letter = 'a' as u8;
-        let curr_letter = base_letter + index - 1;
-        let printable_char = format!("{}", curr_letter as char);
-        unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
-      },
-      _ => {},
-    }
+  match BLE_EVENT_QUEUE.1.try_recv() {
+    Ok(BLEEvent::MediaKey(report)) => {
+      println!("Sending media key report: {:?}", report);
+      let xs: [u8; 2] = [report.0, report.1];
+      unsafe { ble_keyboard_write(xs.as_ptr()) };
+    },
+    Ok(BLEEvent::Letter(index)) => {
+      println!("Sending letter: {:?}", index);
+      let base_letter = 'a' as u8;
+      let curr_letter = base_letter + index - 1;
+      let printable_char = format!("{}", curr_letter as char);
+      unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
+    },
+    _ => {},
+  }
 }
 
 fn transition(curr_event: &ClickEvent) {
@@ -227,9 +227,7 @@ fn transition(curr_event: &ClickEvent) {
   *active_state = next_state;
 
   if let Some(event) = next_event {
-    if let Err(_e) = BLE_EVENT_QUEUE.0.try_send(event) {
-      // println!("Failed to send event to queue: {:?}", e);
-    }
+    BLE_EVENT_QUEUE.0.try_send(event);
   }
 }
 
