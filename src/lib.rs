@@ -173,9 +173,9 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
-  esp_idf_sys::link_patches();
-  esp_idf_svc::log::EspLogger::initialize_default();
-  println!("Rust setup complete");
+  // esp_idf_sys::link_patches();
+  // esp_idf_svc::log::EspLogger::initialize_default();
+  // println!("Rust setup complete");
 }
 
 #[no_mangle]

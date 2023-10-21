@@ -6,7 +6,7 @@ PORT := "/dev/cu.SLAB_USBtoUART"
 ENVIROMENT ?= "release"
 
 build:
-	cargo pio build --release
+	 . /Users/linusoleander/export-esp.sh && cargo pio build --release
 clean:
 	cargo clean
 	pio run --target clean -e $(ENVIROMENT)
@@ -16,7 +16,7 @@ flash:
 	cargo pio exec -- run --target upload -e $(ENVIROMENT) --monitor-port $(PORT)
 erase: build
 	espflash flash \
-		--erase-parts nvs,phy_init \
+		--erase-parts nvs \
 		--partition-table partitions.csv \
 		--baud 921600 \
 		--port $(PORT) \

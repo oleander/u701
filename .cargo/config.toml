@@ -4,12 +4,10 @@ target = "xtensa-esp32-espidf"
 
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
-runner = "espflash flash --baud 921600 --port /dev/cu.SLAB_USBtoUART --monitor"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [target.xtensa-esp32-espidf]
 linker = "ldproxy"
-runner = "espflash flash -b 921600 -p /dev/tty.SLAB_USBtoUART --monitor"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [unstable]

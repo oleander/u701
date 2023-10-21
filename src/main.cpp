@@ -168,7 +168,7 @@ void setupScan() {
 }
 
 void setup() {
-  NimBLEDevice::init(DEVICE_NAME);
+  // NimBLEDevice::init(DEVICE_NAME);
   setupSerial();
   setupKeyboard();
   setup_rust();
