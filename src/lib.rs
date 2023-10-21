@@ -6,13 +6,11 @@ extern crate hashbrown;
 extern crate lazy_static;
 extern crate log;
 
-use thingbuf::mpsc::{self, Receiver, Sender};
-use lazy_static::lazy_static;
 use hashbrown::HashMap;
+use lazy_static::lazy_static;
 use log::{info, warn};
 use std::sync::Mutex;
-
-
+use thingbuf::mpsc::{self, Receiver, Sender};
 
 extern "C" {
   fn print_string_via_ble_keyboard(xs: *const u8);
@@ -174,15 +172,30 @@ impl PushState {
   }
 }
 
+fn handle_received_event(curr_event: &ClickEvent) {
+  info!("Received event: {:?}", curr_event);
 
-#[no_mangle]
+  let Ok(mut active_state) = ACTIVE_STATE.lock() else {
+    return info!("Failed to lock mutex");
+  };
+
+  info!("Current state: {:?}", active_state);
+  let (next_state, next_event) = active_state.transition(&curr_event);
+  *active_state = next_state;
+
+  if let Some(event) = next_event {
+    if let Err(e) = BLE_EVENT_QUEUE.0.try_send(event) {
+      warn!("Failed to send event to BLE queue: {:?}", e);
+    }
+  }
+}
+
 #[export_name = "setupRust"]
 pub extern "C" fn setup_rust() {
   esp_idf_sys::link_patches();
   esp_idf_svc::log::EspLogger::initialize_default();
 }
 
-#[no_mangle]
 #[export_name = "handleEventFromCpp"]
 pub extern "C" fn handle_event_from_cpp(event: *const u8, len: usize) {
   info!("Received event from C++");
@@ -201,7 +214,6 @@ pub extern "C" fn handle_event_from_cpp(event: *const u8, len: usize) {
   handle_received_event(&click_event);
 }
 
-#[no_mangle]
 #[export_name = "handleBleEvents"]
 pub extern "C" fn handle_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
@@ -215,24 +227,6 @@ pub extern "C" fn handle_ble_events() {
       unsafe { print_string_via_ble_keyboard(char.as_str().as_ptr()) };
     },
     _ => {},
-  }
-}
-
-fn handle_received_event(curr_event: &ClickEvent) {
-  info!("Received event: {:?}", curr_event);
-
-  let Ok(mut active_state) = ACTIVE_STATE.lock() else {
-    return info!("Failed to lock mutex");
-  };
-
-  info!("Current state: {:?}", active_state);
-  let (next_state, next_event) = active_state.transition(&curr_event);
-  *active_state = next_state;
-
-  if let Some(event) = next_event {
-    if let Err(e) = BLE_EVENT_QUEUE.0.try_send(event) {
-      warn!("Failed to send event to BLE queue: {:?}", e);
-    }
   }
 }
 
