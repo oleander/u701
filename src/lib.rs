@@ -179,7 +179,7 @@ pub extern "C" fn setup_rust() {
 }
 
 #[no_mangle]
-pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
+pub extern "C" fn handle_event_from_cpp(event: *const u8, len: usize) {
   info!("Received event from C++");
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
   let mut click_event = [0u8; 4];
@@ -193,11 +193,11 @@ pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
     click_event.copy_from_slice(event_slice);
   }
 
-  transition(&click_event);
+  handle_received_event(&click_event);
 }
 
 #[no_mangle]
-pub extern "C" fn process_ble_events() {
+pub extern "C" fn handle_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
       info!("Sending keyboard key report: {:?}", report);
@@ -212,7 +212,7 @@ pub extern "C" fn process_ble_events() {
   }
 }
 
-fn transition(curr_event: &ClickEvent) {
+fn handle_received_event(curr_event: &ClickEvent) {
   info!("Received event: {:?}", curr_event);
 
   let Ok(mut active_state) = ACTIVE_STATE.lock() else {

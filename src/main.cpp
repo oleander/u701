@@ -27,7 +27,7 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
-extern "C" void process_ble_events();
+extern "C" void handle_ble_events();
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   if (keyboard.isConnected()) {
@@ -59,7 +59,7 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   Log.traceln("[Click] Received length: %d", length);
   Log.traceln("[Click] Received isNotify: %d", isNotify);
 
-  transition_from_cpp(data, length);
+  handle_event_from_cpp(data, length);
 }
 
 void setupKeyboard() {
@@ -182,5 +182,5 @@ void setup() {
 
 void loop() {
   // ArduinoOTA.handle();
-  process_ble_events();
+  handle_ble_events();
 }
