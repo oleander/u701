@@ -11,13 +11,12 @@ linker = "ldproxy"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [unstable]
-# build-std = ["std", "panic_abort"]
-build-std = ["core", "panic_abort", "alloc", "std"]
+build-std = ["std", "panic_abort"]
 
 [profile]
-opt-level = "z"
-lto = true
 codegen-units = 1
+opt-level = "z"
 panic = "abort"
 debug = false
 rpath = false
+lto = true

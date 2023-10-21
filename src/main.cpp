@@ -146,40 +146,6 @@ class AdvertisedDeviceResultHandler : public NimBLEAdvertisedDeviceCallbacks {
   }
 };
 
-// /**
-//  * @brief Set a custom callback for gap events.
-//  * @param [in] handler The function to call when gap events occur.
-//  */
-// /*STATIC*/
-// void NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
-//   m_customGapHandler = handler;
-//   int rc             = ble_gap_event_listener_register(&m_listener, m_customGapHandler, NULL);
-//   if (rc == BLE_HS_EALREADY) {
-//     NIMBLE_LOGI(LOG_TAG, "Already listening to GAP events.");
-//   } else {
-//     assert(rc == 0);
-//   }
-// } // setCustomGapHandler
-
-// int handleCustomGapEvent(ble_gap_event *event, void *arg) {
-//   Log.noticeln("handleCustomGapEvent=%s", event);
-//   return 0;
-// }
-
-// void enableCustomLogger() {
-//   NimBLEDevice::setCustomGapHandler([](ble_gap_event *event, void *arg) {
-//     Log.noticeln("handleCustomGapEvent=%s", event);
-//     return 0;
-//   });
-// }
-
-void initializeOTA() {
-  // WiFi.config(ip, gateway, subnet);
-  // WiFi.setTxPower(WIFI_POWER_11dBm);
-  // WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
-  // ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
-  // ArduinoOTA.begin();
-}
 /**
  * Sets up the BLE scan to search for the device with the specified MAC address.
  * If the device is found, the scan will stop and the client will be set up.
