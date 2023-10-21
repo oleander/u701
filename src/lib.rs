@@ -116,7 +116,7 @@ lazy_static! {
   };
 
   static ref ACTIVE_STATE: Mutex<PushState> = Mutex::new(PushState::Up(0));
-  static ref BLE_EVENT_QUEUE: (Sender<BLEEvent>, Receiver<BLEEvent>) = mpsc::channel(5);
+  static ref BLE_EVENT_QUEUE: (Sender<BLEEvent>, Receiver<BLEEvent>) = mpsc::channel(10);
 }
 
 impl PushState {
@@ -198,24 +198,20 @@ pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
 
 #[no_mangle]
 pub extern "C" fn process_ble_events() {
-    let event = match BLE_EVENT_QUEUE.1.try_recv() {
-      Ok(event) => event,
-      Err(e) => return println!("Failed to receive event from channel: {:?}", e),
-    };
-
-    match event {
-      BLEEvent::MediaKey(report) => {
+    match BLE_EVENT_QUEUE.1.try_recv() {
+      Ok(BLEEvent::MediaKey(report)) => {
         println!("Sending media key report: {:?}", report);
         let xs: [u8; 2] = [report.0, report.1];
         unsafe { ble_keyboard_write(xs.as_ptr()) };
       },
-      BLEEvent::Letter(index) => {
+      Ok(BLEEvent::Letter(index)) => {
         println!("Sending letter: {:?}", index);
         let base_letter = 'a' as u8;
         let curr_letter = base_letter + index - 1;
         let printable_char = format!("{}", curr_letter as char);
         unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
-      }
+      },
+      _ => {},
     }
 }
 
@@ -231,8 +227,8 @@ fn transition(curr_event: &ClickEvent) {
   *active_state = next_state;
 
   if let Some(event) = next_event {
-    if let Err(e) = BLE_EVENT_QUEUE.0.try_send(event) {
-      println!("Failed to send event to queue: {:?}", e);
+    if let Err(_e) = BLE_EVENT_QUEUE.0.try_send(event) {
+      // println!("Failed to send event to queue: {:?}", e);
     }
   }
 }
