@@ -81,7 +81,7 @@ void initializeSerialCommunication() {
  * Sets up the client to connect to the BLE device with the specified MAC address.
  * If the connection fails or no services/characteristics are found, the device will restart.
  */
-void setupClient() {
+void initializeAndConnectClient() {
   Log.noticeln("Connecting to");
   if (!client) {
     restart("[BUG] Device not found, will reboot");
@@ -177,7 +177,7 @@ void setup() {
   initializeKeyboard();
   setupRust();
   startBLEDeviceScan();
-  setupClient();
+  initializeAndConnectClient();
 }
 
 void loop() {
