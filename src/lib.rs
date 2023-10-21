@@ -174,7 +174,6 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
-  info!("Setup rust");
   esp_idf_sys::link_patches();
   esp_idf_svc::log::EspLogger::initialize_default();
 }
@@ -201,16 +200,13 @@ pub extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
 pub extern "C" fn process_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
-      info!("Sending media key report: {:?}", report);
-      let xs: [u8; 2] = [report.0, report.1];
-      unsafe { ble_keyboard_write(xs.as_ptr()) };
+      info!("Sending keyboard key report: {:?}", report);
+      unsafe { ble_keyboard_write([report.0, report.1].as_ptr()) };
     },
     Ok(BLEEvent::Letter(index)) => {
-      info!("Sending letter: {:?}", index);
-      let base_letter = 'a' as u8;
-      let curr_letter = base_letter + index - 1;
-      let printable_char = format!("{}", curr_letter as char);
-      unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
+      let char = format!("{}", (('a' as u8) + index - 1) as char);
+      info!("Sending keyboard letter event: {:?}", char);
+      unsafe { ble_keyboard_print(char.as_str().as_ptr()) };
     },
     _ => {},
   }
