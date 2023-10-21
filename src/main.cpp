@@ -160,16 +160,13 @@ void setupScan() {
   Log.noticeln("Scan finished");
 }
 
-extern "C" void app_main() {
+void setup() {
   NimBLEDevice::init(DEVICE_NAME);
   setupSerial();
   setupKeyboard();
   setup_rust();
-
   setupScan();
-  Log.noticeln("Setup done");
   setupClient();
-  Log.noticeln("Setup done");
 
   WiFi.config(ip, gateway, subnet);
   WiFi.setTxPower(WIFI_POWER_11dBm);
@@ -177,8 +174,8 @@ extern "C" void app_main() {
 
   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
   ArduinoOTA.begin();
+}
 
-  while (true) {
-    ArduinoOTA.handle();
-  }
+void loop() {
+  ArduinoOTA.handle();
 }
