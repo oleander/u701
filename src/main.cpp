@@ -27,20 +27,19 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
-#[no_mangle]
-pub extern "C" void send_character_via_ble_keyboard(uint8_t c[2]) {
+extern "C" void send_character_via_ble_keyboard(uint8_t c[2]) {
   if (keyboard.isConnected()) {
     keyboard.write(c);
   }
 }
 
-pub extern "C" void print_string_via_ble_keyboard(const uint8_t *format) {
+extern "C" void print_string_via_ble_keyboard(const uint8_t *format) {
   if (keyboard.isConnected()) {
     keyboard.print(reinterpret_cast<const char *>(format));
   }
 }
 
-pub extern "C" bool is_ble_keyboard_connected() {
+extern "C" bool is_ble_keyboard_connected() {
   return keyboard.isConnected();
 }
 
@@ -117,7 +116,7 @@ void initializeAndConnectClient() {
         restart("[BUG] Characteristic cannot notify");
       }
 
-      auto status = characteristic->subscribe(true, ohandleBLERemoteEvent, true);
+      auto status = characteristic->subscribe(true, handleBLERemoteEvent, true);
       if (!status) {
         restart("[BUG] Failed to subscribe to notifications");
       }
@@ -146,6 +145,33 @@ class AdvertisedDeviceResultHandler : public NimBLEAdvertisedDeviceCallbacks {
     advertised->getScan()->stop();
   }
 };
+
+// /**
+//  * @brief Set a custom callback for gap events.
+//  * @param [in] handler The function to call when gap events occur.
+//  */
+// /*STATIC*/
+// void NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
+//   m_customGapHandler = handler;
+//   int rc             = ble_gap_event_listener_register(&m_listener, m_customGapHandler, NULL);
+//   if (rc == BLE_HS_EALREADY) {
+//     NIMBLE_LOGI(LOG_TAG, "Already listening to GAP events.");
+//   } else {
+//     assert(rc == 0);
+//   }
+// } // setCustomGapHandler
+
+// int handleCustomGapEvent(ble_gap_event *event, void *arg) {
+//   Log.noticeln("handleCustomGapEvent=%s", event);
+//   return 0;
+// }
+
+// void enableCustomLogger() {
+//   NimBLEDevice::setCustomGapHandler([](ble_gap_event *event, void *arg) {
+//     Log.noticeln("handleCustomGapEvent=%s", event);
+//     return 0;
+//   });
+// }
 
 void initializeOTA() {
   // WiFi.config(ip, gateway, subnet);
@@ -181,5 +207,5 @@ void setup() {
 }
 
 void loop() {
-  handleBLEevents();
+  handleBleEvents();
 }

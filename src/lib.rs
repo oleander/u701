@@ -176,12 +176,14 @@ impl PushState {
 
 
 #[no_mangle]
+#[export_name = "setupRust"]
 pub extern "C" fn setup_rust() {
   esp_idf_sys::link_patches();
   esp_idf_svc::log::EspLogger::initialize_default();
 }
 
 #[no_mangle]
+#[export_name = "handleEventFromCpp"]
 pub extern "C" fn handle_event_from_cpp(event: *const u8, len: usize) {
   info!("Received event from C++");
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
@@ -200,6 +202,7 @@ pub extern "C" fn handle_event_from_cpp(event: *const u8, len: usize) {
 }
 
 #[no_mangle]
+#[export_name = "handleBleEvents"]
 pub extern "C" fn handle_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
@@ -227,7 +230,9 @@ fn handle_received_event(curr_event: &ClickEvent) {
   *active_state = next_state;
 
   if let Some(event) = next_event {
-    BLE_EVENT_QUEUE.0.try_send(event);
+    if let Err(e) = BLE_EVENT_QUEUE.0.try_send(event) {
+      warn!("Failed to send event to BLE queue: {:?}", e);
+    }
   }
 }
 
