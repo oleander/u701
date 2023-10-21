@@ -11,6 +11,7 @@
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
 #include <WiFi.h>
+#include <esp_task_wdt.h>
 
 #include "shared.h"
 
@@ -178,4 +179,6 @@ void setup() {
 
 void loop() {
   ArduinoOTA.handle();
+  esp_task_wdt_reset();
+  // delay(10);
 }
