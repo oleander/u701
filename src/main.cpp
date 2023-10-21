@@ -5,13 +5,13 @@
 #include "utility.h"
 
 #include <ArduinoLog.h>
-#include <ArduinoOTA.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
-#include <WiFi.h>
-#include <esp_task_wdt.h>
+// #include <WiFi.h>
+// #include <ArduinoOTA.h>
+// #include <esp_task_wdt.h>
 
 #include "shared.h"
 
@@ -173,17 +173,14 @@ void setup() {
   setupScan();
   setupClient();
 
-  WiFi.config(ip, gateway, subnet);
-  WiFi.setTxPower(WIFI_POWER_11dBm);
-  WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
-  WiFi.setHostname("u701.local");
-
-  ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
-  ArduinoOTA.begin();
+  // WiFi.config(ip, gateway, subnet);
+  // WiFi.setTxPower(WIFI_POWER_11dBm);
+  // WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
+  // ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
+  // ArduinoOTA.begin();
 }
 
 void loop() {
-  ArduinoOTA.handle();
-  esp_task_wdt_reset();
+  // ArduinoOTA.handle();
   process_ble_events();
 }
