@@ -32,15 +32,19 @@ extern "C" void ble_keyboard_write(uint8_t c[2]) {
 }
 
 extern "C" void ble_keyboard_print(const uint8_t *format) {
-  keyboard.print(reinterpret_cast<const char *>(format));
+  if (keyboard.isConnected()) {
+    keyboard.print(reinterpret_cast<const char *>(format));
+  }
 }
 
 extern "C" bool ble_keyboard_is_connected() {
-  return keyboard.isConnected();
+  if (keyboard.isConnected()) {
+    keyboard.isConnected();
+  }
 }
 
 /* Add function isActive to the State struct */
-static void onEvent(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool isNotify) {
+static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 4) {
     Log.traceln("Received length should be 4, got %d (will continue anyway)", length);
   }
@@ -130,10 +134,14 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto deviceMacAddress  = advertised->getAddress();
     auto deviceMacAsString = deviceMacAddress.toString().c_str();
-    auto deviceName        = advertised->getName().c_str();
+    auto deviceName        = advertised->getName();
 
-    if (deviceMacAddress != buttonMacAddress) {
-      return Log.noticeln("[WRONG] %s", deviceMacAsString);
+    // if (deviceMacAddress != buttonMacAddress) {
+    //   return Log.noticeln("[WRONG] %s", deviceMacAsString);
+    // }
+
+    if (deviceName.compare("tob") != 0) {
+      return Log.noticeln("[WRONG] %s", deviceName);
     }
 
     Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
@@ -180,5 +188,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   esp_task_wdt_reset();
-  // delay(10);
+  Serial.println(ESP.getFreeHeap());
 }
