@@ -5,11 +5,11 @@ edition = "2021"
 name = "u701"
 
 [dependencies]
-esp-idf-svc = { version = "0.47.1", default-features = false, features = ["std"] }
-hashbrown = { version = "0.14.1", default-features = false, features = ["ahash"] }
-esp-idf-sys = { version = "0.33.2", default-features = false, features = ["std"] }
-esp-idf-hal = { version = "0.42.1", default-features = false, features = ["std"] }
-lazy_static = { version = "1.4.0", default-features = false, features = ["spin_no_std"] }
+esp-idf-svc = { version = "0.47.1" }
+hashbrown = { version = "0.14.1" }
+esp-idf-sys = { version = "0.33.2" }
+esp-idf-hal = { version = "0.42.1" }
+lazy_static = { version = "1.4.0" }
 libc = { version = "0.2.149" }
 log = { version = "0.4.20", default-features = false }
 
