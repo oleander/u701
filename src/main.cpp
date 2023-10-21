@@ -43,6 +43,23 @@ extern "C" bool isBleKeyboardConnected() {
   return keyboard.isConnected();
 }
 
+class AdvertisedDeviceResultHandler : public NimBLEAdvertisedDeviceCallbacks {
+  void onResult(NimBLEAdvertisedDevice *advertised) {
+    auto deviceMacAddress  = advertised->getAddress();
+    auto deviceMacAsString = deviceMacAddress.toString().c_str();
+    auto deviceName        = advertised->getName();
+
+    if (deviceMacAddress != buttonMacAddress) {
+      return Log.noticeln("[WRONG] %s", deviceMacAsString);
+    }
+
+    Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
+
+    client = NimBLEDevice::createClient(deviceMacAddress);
+    advertised->getScan()->stop();
+  }
+};
+
 /* Add function isActive to the State struct */
 static void handleBLERemoteEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 4) {
@@ -66,13 +83,8 @@ void initializeKeyboard() {
 }
 
 void initializeSerialCommunication() {
-  // Serial.begin(SERIAL_BAUD_RATE);
-  // #ifdef RELEASE
   // Log.begin(LOG_LEVEL_SILENT, &Serial);
-  // #else
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  // #endif
-
   Log.noticeln("Starting ESP32 ...");
 }
 
@@ -81,70 +93,64 @@ void initializeSerialCommunication() {
  * If the connection fails or no services/characteristics are found, the device will restart.
  */
 void initializeAndConnectClient() {
-  Log.noticeln("Connecting to");
   if (!client) {
     restart("[BUG] Device not found, will reboot");
   }
 
-  Log.noticeln("Setting client callbacks ...");
+  Log.noticeln("Connecting to client: %s", client->getPeerAddress());
   client->setClientCallbacks(new ClientCallback());
 
-  Log.noticeln("[Connecting]");
+  Log.noticeln("\tConnecting");
   if (!client->connect()) {
-    restart("Timeout connecting to the device");
+    restart("\tTimeout connecting to device");
   }
 
-  Log.noticeln("Discovering services ...");
+  Log.noticeln("\tDiscovering services");
   auto services = client->getServices(true);
   if (services->empty()) {
-    restart("[BUG] No services found, will retry");
+    restart("\t[BUG] No services found, will retry");
   }
 
-  for (auto &service: *services) {
-    if (!service->getUUID().equals(hidService)) continue;
+  Log.noticeln("\tReceived %d services", services->size());
 
-    Log.noticeln("Discovering characteristics ...");
-    auto characteristics = service->getCharacteristics(true);
-    if (characteristics->empty()) {
-      restart("[BUG] No characteristics found");
+  for (auto &service: *services) {
+    if (!service->getUUID().equals(hidService)) {
+      Log.warningln("\tSkipping service: %s", service->getUUID());
+      continue;
     }
 
+    Log.noticeln("\tDiscovering characteristics ...");
+    auto characteristics = service->getCharacteristics(true);
+    if (characteristics->empty()) {
+      restart("\t[BUG] No characteristics found");
+    }
+
+    Log.noticeln("\tReceived %d characteristics", characteristics->size());
     for (auto &characteristic: *characteristics) {
-      if (!characteristic->getUUID().equals(reportUUID)) continue;
+      if (!characteristic->getUUID().equals(reportUUID)) {
+        Log.warningln("\tSkipping characteristic: %s", characteristic->getUUID());
+        continue;
+      }
+
+      Log.noticeln("\tFound report characteristic: %s", characteristic->getUUID());
 
       if (!characteristic->canNotify()) {
-        restart("[BUG] Characteristic cannot notify");
+        restart("\t[BUG] Characteristic cannot notify");
       }
 
+      Log.noticeln("\tSubscribing to characteristic ...");
       auto status = characteristic->subscribe(true, handleBLERemoteEvent, true);
       if (!status) {
-        restart("[BUG] Failed to subscribe to notifications");
+        restart("\t[BUG] Failed to subscribe to notifications");
       }
 
-      Log.noticeln("Subscribed to notifications");
+      Log.noticeln("\tSubscribed to notifications");
       return;
     }
   }
 
   restart("[BUG] No report characteristic found");
 }
-
-class AdvertisedDeviceResultHandler : public NimBLEAdvertisedDeviceCallbacks {
-  void onResult(NimBLEAdvertisedDevice *advertised) {
-    auto deviceMacAddress  = advertised->getAddress();
-    auto deviceMacAsString = deviceMacAddress.toString().c_str();
-    auto deviceName        = advertised->getName();
-
-    if (deviceMacAddress != buttonMacAddress) {
-      return Log.noticeln("[WRONG] %s", deviceMacAsString);
-    }
-
-    Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
-
-    client = NimBLEDevice::createClient(deviceMacAddress);
-    advertised->getScan()->stop();
-  }
-};
 
 /**
  * Sets up the BLE scan to search for the device with the specified MAC address.
