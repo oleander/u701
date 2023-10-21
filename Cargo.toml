@@ -5,12 +5,12 @@ edition = "2021"
 name = "u701"
 
 [dependencies]
-esp-idf-svc = { version = "0.47.1" }
-hashbrown = { version = "0.14.1" }
-esp-idf-sys = { version = "0.33.2" }
-esp-idf-hal = { version = "0.42.1" }
-lazy_static = { version = "1.4.0" }
-libc = { version = "0.2.149" }
+esp-idf-svc = { version = "0.47.1", default-features = false, features = ["std"] }
+esp-idf-sys = { version = "0.33.2", default-features = false }
+esp-idf-hal = { version = "0.42.1", default-features = false }
+lazy_static = { version = "1.4.0", default-features = false }
+hashbrown = { version = "0.14.1", default-features = true }
+libc = { version = "0.2.149", default-features = false }
 log = { version = "0.4.20", default-features = false }
 
 [lib]
@@ -23,4 +23,4 @@ embuild = "0.31.2"
 
 [package.metadata.esp-idf-sys]
 # esp_idf_sdkconfig_defaults = "sdkconfig.release"
-esp_idf_version = "release/v4.4"
+esp_idf_version = "tag:v4.4.6"

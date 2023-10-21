@@ -10,21 +10,13 @@ rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 [target.xtensa-esp32-espidf]
 linker = "ldproxy"
 runner = "espflash flash -b 921600 -p /dev/tty.SLAB_USBtoUART --monitor"
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
+# rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [unstable]
 # build-std = ["std", "panic_abort"]
 build-std = ["core", "panic_abort", "alloc", "std"]
 
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-debug = false
-rpath = false
-
-[profile.dev]
+[profile]
 opt-level = "z"
 lto = true
 codegen-units = 1
