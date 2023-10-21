@@ -27,20 +27,18 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
+extern "C" void process_ble_events();
+
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   keyboard.write(c);
 }
 
 extern "C" void ble_keyboard_print(const uint8_t *format) {
-  if (keyboard.isConnected()) {
-    keyboard.print(reinterpret_cast<const char *>(format));
-  }
+  keyboard.print(reinterpret_cast<const char *>(format));
 }
 
 extern "C" bool ble_keyboard_is_connected() {
-  if (keyboard.isConnected()) {
-    keyboard.isConnected();
-  }
+  return keyboard.isConnected();
 }
 
 /* Add function isActive to the State struct */
@@ -188,5 +186,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   esp_task_wdt_reset();
-  Serial.println(ESP.getFreeHeap());
+  process_ble_events();
 }
