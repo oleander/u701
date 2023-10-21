@@ -46,7 +46,7 @@ extern "C" bool ble_keyboard_is_connected() {
 }
 
 /* Add function isActive to the State struct */
-static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
+static void handleBLERemoteEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 4) {
     Log.traceln("Received length should be 4, got %d (will continue anyway)", length);
   }
@@ -62,12 +62,12 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   handle_event_from_cpp(data, length);
 }
 
-void setupKeyboard() {
+void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
   keyboard.begin();
 }
 
-void setupSerial() {
+void initializeSerialCommunication() {
   // Serial.begin(SERIAL_BAUD_RATE);
   // #ifdef RELEASE
   // Log.begin(LOG_LEVEL_SILENT, &Serial);
@@ -118,7 +118,7 @@ void setupClient() {
         restart("[BUG] Characteristic cannot notify");
       }
 
-      auto status = characteristic->subscribe(true, onEvent, true);
+      auto status = characteristic->subscribe(true, ohandleBLERemoteEvent, true);
       if (!status) {
         restart("[BUG] Failed to subscribe to notifications");
       }
@@ -131,7 +131,7 @@ void setupClient() {
   restart("[BUG] No report characteristic found");
 }
 
-class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
+class AdvertisedDeviceResultHandler : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto deviceMacAddress  = advertised->getAddress();
     auto deviceMacAsString = deviceMacAddress.toString().c_str();
@@ -153,11 +153,11 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
  * If the device is found, the scan will stop and the client will be set up.
  * The scan interval is set high to save power
  */
-void setupScan() {
+void startBLEDeviceScan() {
   Log.noticeln("Starting BLE scan ...");
 
   auto scan = NimBLEDevice::getScan();
-  scan->setAdvertisedDeviceCallbacks(new Callbacks());
+  scan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceResultHandler());
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
@@ -167,10 +167,10 @@ void setupScan() {
 }
 
 void setup() {
-  setupSerial();
-  setupKeyboard();
+  initializeSerialCommunication();
+  initializeKeyboard();
   setup_rust();
-  setupScan();
+  startBLEDeviceScan();
   setupClient();
 
   // WiFi.config(ip, gateway, subnet);
