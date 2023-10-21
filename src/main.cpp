@@ -27,7 +27,7 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
-extern "C" void send_character_via_ble_keyboard(uint8_t c[2]) {
+extern "C" void sendCharacterViaBleKeyboard(uint8_t c[2]) {
   if (keyboard.isConnected()) {
     keyboard.write(c);
   }

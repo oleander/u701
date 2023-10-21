@@ -14,6 +14,7 @@ use thingbuf::mpsc::{self, Receiver, Sender};
 
 extern "C" {
   fn print_string_via_ble_keyboard(xs: *const u8);
+  #[link_name = "sendCharacterViaBleKeyboard"]
   fn send_character_via_ble_keyboard(xs: *const u8);
   fn is_ble_keyboard_connected() -> bool;
 }
