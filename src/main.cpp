@@ -30,11 +30,15 @@ BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 extern "C" void process_ble_events();
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
-  keyboard.write(c);
+  if (keyboard.isConnected()) {
+    keyboard.write(c);
+  }
 }
 
 extern "C" void ble_keyboard_print(const uint8_t *format) {
-  keyboard.print(reinterpret_cast<const char *>(format));
+  if (keyboard.isConnected()) {
+    keyboard.print(reinterpret_cast<const char *>(format));
+  }
 }
 
 extern "C" bool ble_keyboard_is_connected() {
@@ -61,7 +65,6 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 void setupKeyboard() {
   Log.noticeln("Enable Keyboard");
   keyboard.begin();
-  keyboard.setDelay(13);
 }
 
 void setupSerial() {
@@ -138,10 +141,6 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
       return Log.noticeln("[WRONG] %s", deviceMacAsString);
     }
 
-    // if (deviceName.compare("Terrain Fake") != 0) {
-    //   return Log.noticeln("[WRONG] %s", deviceName);
-    // }
-
     Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
 
     client = NimBLEDevice::createClient(deviceMacAddress);
@@ -168,7 +167,6 @@ void setupScan() {
 }
 
 void setup() {
-  // NimBLEDevice::init(DEVICE_NAME);
   setupSerial();
   setupKeyboard();
   setup_rust();
