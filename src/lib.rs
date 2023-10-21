@@ -12,6 +12,12 @@ use hashbrown::HashMap;
 use log::{info, warn};
 use std::sync::Mutex;
 
+extern "C" {
+  fn print_string_via_ble_keyboard(xs: *const u8);
+  fn ble_keyboard_write(xs: *const u8);
+  fn ble_keyboard_is_connected() -> bool;
+}
+
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
 pub struct MediaKeyReport(u8, u8);
@@ -166,11 +172,6 @@ impl PushState {
   }
 }
 
-extern "C" {
-  fn ble_keyboard_print(xs: *const u8);
-  fn ble_keyboard_write(xs: *const u8);
-  fn ble_keyboard_is_connected() -> bool;
-}
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
@@ -206,7 +207,7 @@ pub extern "C" fn handle_ble_events() {
     Ok(BLEEvent::Letter(index)) => {
       let char = format!("{}", (('a' as u8) + index - 1) as char);
       info!("Sending keyboard letter event: {:?}", char);
-      unsafe { ble_keyboard_print(char.as_str().as_ptr()) };
+      unsafe { print_string_via_ble_keyboard(char.as_str().as_ptr()) };
     },
     _ => {},
   }

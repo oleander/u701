@@ -34,7 +34,7 @@ pub extern "C" void ble_keyboard_write(uint8_t c[2]) {
   }
 }
 
-extern "C" void ble_keyboard_print(const uint8_t *format) {
+extern "C" void print_string_via_ble_keyboard(const uint8_t *format) {
   if (keyboard.isConnected()) {
     keyboard.print(reinterpret_cast<const char *>(format));
   }
@@ -58,7 +58,7 @@ static void handleBLERemoteEvent(BLERemoteCharacteristic *_, uint8_t *data, size
   Log.traceln("[Click] Received length: %d", length);
   Log.traceln("[Click] Received isNotify: %d", isNotify);
 
-  handle_event_from_cpp(data, length);
+  handleEventFromCpp(data, length);
 }
 
 void initializeKeyboard() {
