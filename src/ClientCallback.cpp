@@ -1,6 +1,6 @@
 #include "ClientCallback.h"
 
-void ClientCallback::onConnect(BLEServer *server) {
+void ClientCallback::onConnect(NimBLEServer *server) {
   Log.noticeln("Connected to device!");
 }
 

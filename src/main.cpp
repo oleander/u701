@@ -63,11 +63,11 @@ void setupKeyboard() {
 
 void setupSerial() {
   // Serial.begin(SERIAL_BAUD_RATE);
-// #ifdef RELEASE
-  Log.begin(LOG_LEVEL_SILENT, &Serial);
-// #else
-  // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-// #endif
+  // #ifdef RELEASE
+  // Log.begin(LOG_LEVEL_SILENT, &Serial);
+  // #else
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  // #endif
 
   Log.noticeln("Starting ESP32 ...");
 }
@@ -127,9 +127,9 @@ void setupClient() {
 
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
-    auto deviceMacAddress = advertised->getAddress();
+    auto deviceMacAddress  = advertised->getAddress();
     auto deviceMacAsString = deviceMacAddress.toString().c_str();
-    auto deviceName = advertised->getName().c_str();
+    auto deviceName        = advertised->getName().c_str();
 
     if (deviceMacAddress != buttonMacAddress) {
       return Log.noticeln("[WRONG] %s", deviceMacAsString);
@@ -165,7 +165,6 @@ void setup() {
   setupSerial();
   setupKeyboard();
   setup_rust();
-
 
   setupScan();
   Log.noticeln("Setup done");
