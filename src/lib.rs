@@ -12,10 +12,12 @@ use hashbrown::HashMap;
 use log::{info, warn};
 use std::sync::Mutex;
 
+
+
 extern "C" {
   fn print_string_via_ble_keyboard(xs: *const u8);
-  fn ble_keyboard_write(xs: *const u8);
-  fn ble_keyboard_is_connected() -> bool;
+  fn send_character_via_ble_keyboard(xs: *const u8);
+  fn is_ble_keyboard_connected() -> bool;
 }
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -202,7 +204,7 @@ pub extern "C" fn handle_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
       info!("Sending keyboard key report: {:?}", report);
-      unsafe { ble_keyboard_write([report.0, report.1].as_ptr()) };
+      unsafe { send_character_via_ble_keyboard([report.0, report.1].as_ptr()) };
     },
     Ok(BLEEvent::Letter(index)) => {
       let char = format!("{}", (('a' as u8) + index - 1) as char);

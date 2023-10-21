@@ -28,19 +28,19 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
 #[no_mangle]
-pub extern "C" void ble_keyboard_write(uint8_t c[2]) {
+pub extern "C" void send_character_via_ble_keyboard(uint8_t c[2]) {
   if (keyboard.isConnected()) {
     keyboard.write(c);
   }
 }
 
-extern "C" void print_string_via_ble_keyboard(const uint8_t *format) {
+pub extern "C" void print_string_via_ble_keyboard(const uint8_t *format) {
   if (keyboard.isConnected()) {
     keyboard.print(reinterpret_cast<const char *>(format));
   }
 }
 
-extern "C" bool ble_keyboard_is_connected() {
+pub extern "C" bool is_ble_keyboard_connected() {
   return keyboard.isConnected();
 }
 
