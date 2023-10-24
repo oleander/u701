@@ -11,7 +11,7 @@ extern crate log;
 use thingbuf::mpsc::{self, Receiver, Sender};
 use lazy_static::lazy_static;
 use hashbrown::HashMap;
-use log::{info, warn, error};
+use log::{error, info, warn};
 use std::sync::Mutex;
 use anyhow::{anyhow, bail, Result};
 
@@ -233,15 +233,14 @@ fn transition(curr_event: &ClickEvent) -> Result<()> {
     bail!("Failed to lock mutex");
   };
 
-  info!("Current state: {:?}", active_state);
   let (next_state, next_event) = active_state.transition(curr_event);
   *active_state = next_state;
 
   if let Some(event) = next_event {
-    BLE_EVENT_QUEUE.0.try_send(event).map_err(|e| anyhow!(e))
-  } else {
-    Ok(())
+    BLE_EVENT_QUEUE.0.try_send(event).map_err(|e| anyhow!(e))?;
   }
+
+  Ok(())
 }
 
 #[cfg(test)]
