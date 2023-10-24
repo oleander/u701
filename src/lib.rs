@@ -5,6 +5,7 @@
 extern crate esp_idf_svc;
 extern crate hashbrown;
 extern crate lazy_static;
+extern crate anyhow;
 extern crate log;
 
 use thingbuf::mpsc::{self, Receiver, Sender};
@@ -12,6 +13,7 @@ use lazy_static::lazy_static;
 use hashbrown::HashMap;
 use log::{info, warn};
 use std::sync::Mutex;
+use anyhow::{anyhow, bail, Result};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
@@ -200,7 +202,9 @@ pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
     }
   }
 
-  transition(&click_event);
+  if let Err(e) = transition(&click_event) {
+    warn!("Failed to transition: {:?}", e);
+  }
 }
 
 #[no_mangle]
@@ -220,11 +224,11 @@ pub extern "C" fn process_ble_events() {
   }
 }
 
-fn transition(curr_event: &ClickEvent) {
+fn transition(curr_event: &ClickEvent) -> Result<()> {
   info!("Received event: {:?}", curr_event);
 
   let Ok(mut active_state) = ACTIVE_STATE.lock() else {
-    return info!("Failed to lock mutex");
+    bail!("Failed to lock mutex");
   };
 
   info!("Current state: {:?}", active_state);
@@ -232,7 +236,9 @@ fn transition(curr_event: &ClickEvent) {
   *active_state = next_state;
 
   if let Some(event) = next_event {
-    let _ = BLE_EVENT_QUEUE.0.try_send(event);
+    BLE_EVENT_QUEUE.0.try_send(event).map_err(|e| anyhow!(e))
+  } else {
+    bail!("No event to send")
   }
 }
 
