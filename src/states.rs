@@ -3,7 +3,10 @@ mod states {
   use std::fmt;
 
   // Define individual states as structs.
+  #[derive(Clone)]
   pub struct Up(pub u8);
+
+  #[derive(Clone)]
   pub struct Down(pub u8);
 
   impl Up {
@@ -45,7 +48,7 @@ mod states {
     }
 
     fn transition(&self, event: &ClickEvent) -> Transition {
-      self.transition(event)
+      Up::transition(self.clone(), event)
     }
   }
 
@@ -55,7 +58,7 @@ mod states {
     }
 
     fn transition(&self, event: &ClickEvent) -> Transition {
-      self.transition(event)
+      Down::transition(self.clone(), event)
     }
   }
 
