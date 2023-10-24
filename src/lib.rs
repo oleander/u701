@@ -21,7 +21,7 @@ pub type ID = u8;
 #[derive(Debug, PartialEq, Clone)]
 pub enum BLEEvent {
   MediaKey(MediaKeyReport),
-  Letter(u8),
+  Letter(u8)
 }
 
 impl Default for BLEEvent {
@@ -38,7 +38,7 @@ type ClickEvent = [u8; 4];
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PushState {
   Down(ID),
-  Up(ID),
+  Up(ID)
 }
 
 const KEY_MEDIA_VOLUME_DOWN: MediaKeyReport = MediaKeyReport(64, 0);
@@ -145,7 +145,7 @@ impl PushState {
 
       // The button was pressed after being released
       // [Ok] Released -> Pressed (updated)
-      ([.., id, _], Up(_)) => Down(*id),
+      ([.., id, _], Up(_)) => Down(*id)
     };
 
     let next_event = match (self, next_state) {
@@ -159,7 +159,7 @@ impl PushState {
       (_, Down(id)) => REGULAR_LOOKUP.get(&id),
 
       // A regular key was released
-      (_, Up(_)) => None,
+      (_, Up(_)) => None
     };
 
     (next_state, next_event.cloned())
@@ -212,7 +212,7 @@ pub extern "C" fn process_ble_events() {
       let printable_char = format!("{}", curr_letter as char);
       unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
     },
-    _ => {},
+    _ => {}
   }
 }
 
@@ -235,7 +235,6 @@ fn transition(curr_event: &ClickEvent) {
 #[cfg(test)]
 mod tests {
   use std::assert_matches::assert_matches;
-
   use super::*;
 
   #[test]

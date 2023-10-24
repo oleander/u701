@@ -1,18 +1,25 @@
 match_block_trailing_comma = true
 use_small_heuristics = "Max"
 normalize_comments = false
-reorder_impl_items = true
-align_assignments = true
-fn_args_density = "Tall"
 newline_style = "Auto"
-reorder_imports = true
-align_params = true
-fn_call_width = 60
+fn_call_width = 100
 hard_tabs = false
-max_width = 120
+max_width = 170
 tab_spaces = 2
 
-align_open_brace_with_fn = true
-align_where_bounds = true
-align_number_left = true
 imports_indent = "Block"
+
+struct_lit_single_line = false
+struct_field_align_threshold = 20
+single_line_let_else_max_width = 0
+reorder_modules = false
+group_imports = "One"
+reorder_imports = false
+reorder_impl_items = true
+where_single_line = true
+imports_granularity = "Module"
+imports_layout = "Horizontal"
+force_multiline_blocks = true
+fn_params_layout = "Compressed"
+trailing_comma = "Never"
+use_field_init_shorthand = true
