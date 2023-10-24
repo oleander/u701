@@ -238,7 +238,7 @@ fn transition(curr_event: &ClickEvent) -> Result<()> {
   if let Some(event) = next_event {
     BLE_EVENT_QUEUE.0.try_send(event).map_err(|e| anyhow!(e))
   } else {
-    bail!("No event to send")
+    Ok(())
   }
 }
 
