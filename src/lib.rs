@@ -212,9 +212,7 @@ pub extern "C" fn process_ble_events() {
     },
     Ok(BLEEvent::Letter(index)) => {
       info!("Sending letter: {:?}", index);
-      let base_letter = 'a' as u8;
-      let curr_letter = base_letter + index - 1;
-      let printable_char = format!("{}", curr_letter as char);
+      let printable_char = format!("{}", (b'a' + index - 1) as char);
       unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
     },
     _ => {}
