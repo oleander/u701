@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(clippy::missing_safety_doc)]
 #![feature(assert_matches)]
 
 extern crate esp_idf_svc;
@@ -227,11 +228,11 @@ fn transition(curr_event: &ClickEvent) {
   };
 
   info!("Current state: {:?}", active_state);
-  let (next_state, next_event) = active_state.transition(&curr_event);
+  let (next_state, next_event) = active_state.transition(curr_event);
   *active_state = next_state;
 
   if let Some(event) = next_event {
-    BLE_EVENT_QUEUE.0.try_send(event);
+    let _ = BLE_EVENT_QUEUE.0.try_send(event);
   }
 }
 
