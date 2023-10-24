@@ -10,8 +10,9 @@ rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 linker = "ldproxy"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
+[target.aarch64-apple-darwin]
+
 [unstable]
-# build-std = ["std", "panic_abort"]
 build-std = ["core", "panic_abort", "alloc", "std"]
 
 [profile]
@@ -24,5 +25,4 @@ rpath = false
 
 
 [env]
-
 LIBCLANG_PATH = "/Users/linusoleander/.rustup/toolchains/esp/xtensa-esp32-elf-clang/esp-16.0.0-20230516/esp-clang/lib"
