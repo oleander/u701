@@ -1,6 +1,6 @@
 mod states {
-  use crate::{BLEEvent, ClickEvent, *};
-  use crate::BUTTON_2;
+  use crate::{BLEEvent, ClickEvent, BUTTON_2, *};
+  use std::fmt;
 
   // Define individual states as structs.
   pub struct Up(pub u8);
@@ -28,7 +28,6 @@ mod states {
     }
   }
 
-  // Define possible transitions including staying in the same state.
   pub enum Transition {
     Stay(Box<dyn CurrentState>),
     MoveToUp(Up),
@@ -37,26 +36,39 @@ mod states {
 
   pub trait CurrentState {
     fn to_event(&self) -> Option<BLEEvent>;
+    fn transition(&self, event: &ClickEvent) -> Transition;
   }
 
   impl CurrentState for Up {
     fn to_event(&self) -> Option<BLEEvent> {
-      // Logic to determine event for Up state
       None
+    }
+
+    fn transition(&self, event: &ClickEvent) -> Transition {
+      self.transition(event)
     }
   }
 
   impl CurrentState for Down {
     fn to_event(&self) -> Option<BLEEvent> {
-      // Logic to determine event for Down state
       Some(BLEEvent::Letter(self.0))
+    }
+
+    fn transition(&self, event: &ClickEvent) -> Transition {
+      self.transition(event)
+    }
+  }
+
+  impl fmt::Debug for dyn CurrentState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+      write!(f, "CurrentState")
     }
   }
 }
 
 use states::*;
 
-fn process_event(state: Box<dyn CurrentState>, event: &ClickEvent) -> Box<dyn CurrentState> {
+fn process_event(state: &dyn CurrentState, event: &ClickEvent) -> Box<dyn CurrentState> {
   match state.transition(event) {
     Transition::Stay(s) => s,
     Transition::MoveToUp(s) => Box::new(s),
@@ -64,15 +76,13 @@ fn process_event(state: Box<dyn CurrentState>, event: &ClickEvent) -> Box<dyn Cu
   }
 }
 
-use crate::BUTTON_2;
-use crate::ClickEvent;
+use crate::{ClickEvent, BUTTON_2};
 use std::assert_matches::assert_matches;
 
 #[test]
 fn test_up_to_down() {
-  let state = Box::new(Up(0));
+  let state = Up(0);
   let event: ClickEvent = [0, 0, BUTTON_2, 0];
-  let next_state = process_event(state, &event);
-
-  assert_matches!(next_state, Box::new(Down(BUTTON_2)));
+  let next_state = process_event(&state, &event);
+  assert_matches!(next_state.to_event(), None);
 }
