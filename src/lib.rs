@@ -11,7 +11,7 @@ extern crate log;
 use thingbuf::mpsc::{self, Receiver, Sender};
 use lazy_static::lazy_static;
 use hashbrown::HashMap;
-use log::{info, warn};
+use log::{info, warn, error};
 use std::sync::Mutex;
 use anyhow::{anyhow, bail, Result};
 
@@ -220,7 +220,9 @@ pub extern "C" fn process_ble_events() {
       let printable_char = format!("{}", (b'a' + index - 1) as char);
       unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
     },
-    _ => {}
+    Err(e) => {
+      error!("Failed to receive event: {:?}", e);
+    }
   }
 }
 
