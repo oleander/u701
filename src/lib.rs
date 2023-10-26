@@ -2,13 +2,12 @@
 #![allow(clippy::missing_safety_doc)]
 #![feature(assert_matches)]
 
-extern crate hashbrown;
 extern crate lazy_static;
 extern crate anyhow;
 
 use thingbuf::mpsc::{self, Receiver, Sender};
 use lazy_static::lazy_static;
-use hashbrown::HashMap;
+use std::collections::HashMap;
 use std::sync::Mutex;
 use anyhow::{anyhow, bail, Result};
 
