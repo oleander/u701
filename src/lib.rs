@@ -4,8 +4,6 @@
 
 mod states;
 
-#[cfg(target_arch = "xtensa")]
-extern crate esp_idf_svc;
 extern crate hashbrown;
 extern crate lazy_static;
 extern crate anyhow;
