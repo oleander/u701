@@ -178,11 +178,11 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
-  info!("Setup rust");
-  #[cfg(target_arch = "xtensa")]
-  esp_idf_sys::link_patches();
-  #[cfg(target_arch = "xtensa")]
-  esp_idf_svc::log::EspLogger::initialize_default();
+  // info!("Setup rust");
+  // #[cfg(target_arch = "xtensa")]
+  // esp_idf_sys::link_patches();
+  // #[cfg(target_arch = "xtensa")]
+  // esp_idf_svc::log::EspLogger::initialize_default();
 }
 
 #[no_mangle]

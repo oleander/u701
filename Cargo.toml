@@ -5,19 +5,12 @@ edition = "2021"
 name = "u701"
 
 [dependencies]
-esp-idf-svc = { version = "0.47.1", default-features = false, features = ["std"], optional = true }
-esp-idf-sys = { version = "0.33.2", default-features = false, optional = true }
-esp-idf-hal = { version = "0.42.1", default-features = false, optional = true }
 lazy_static = { version = "1.4.0", default-features = false }
 hashbrown = { version = "0.14.1", default-features = true }
 libc = { version = "0.2.149", default-features = false }
 log = { version = "0.4.20", default-features = false }
 thingbuf = "0.1.4"
 anyhow = "1.0.75"
-
-[features]
-default = ["esp"]
-esp = ["esp-idf-sys", "esp-idf-hal", "esp-idf-svc"]
 
 [lib]
 crate-type = ["staticlib"]
