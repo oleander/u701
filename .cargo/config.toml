@@ -8,7 +8,7 @@ linker = "ldproxy"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [target.xtensa-esp32-espidf]
-linker = "ldproxy"
+# linker = "ldproxy"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [target.aarch64-apple-darwin]

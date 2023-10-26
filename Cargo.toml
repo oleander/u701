@@ -13,6 +13,6 @@ thingbuf = "0.1.4"
 anyhow = "1.0.75"
 
 [lib]
-# crate-type = ["staticlib"]
+crate-type = ["staticlib", "lib"]
 path = "src/lib.rs"
 name = "u701"
