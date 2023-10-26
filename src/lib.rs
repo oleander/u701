@@ -2,8 +2,6 @@
 #![allow(clippy::missing_safety_doc)]
 #![feature(assert_matches)]
 
-mod states;
-
 extern crate hashbrown;
 extern crate lazy_static;
 extern crate anyhow;
@@ -71,8 +69,8 @@ pub const BUTTON_7: u8 = 0x05; // Blue (Next track)
 pub const BUTTON_8: u8 = 0x28; // Black (Toggle AC)
 
 // Meta keys, much like the shift key on a regular keyboard
-const META_1: u8 = BUTTON_1;
-const META_2: u8 = BUTTON_5;
+pub const META_1: u8 = BUTTON_1;
+pub const META_2: u8 = BUTTON_5;
 
 lazy_static! {
   // Button 2-4 & 6-8
@@ -240,73 +238,3 @@ fn transition(curr_event: &ClickEvent) -> Result<()> {
   Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-  use std::assert_matches::assert_matches;
-  use super::*;
-
-  #[test]
-  // [Pressed] Up -> Down
-  fn test_up_to_down() {
-    let state = PushState::Up(0);
-    let event: ClickEvent = [0, 0, BUTTON_2, 0];
-    let (next_state, next_event) = state.transition(&event);
-
-    assert_matches!(next_state, PushState::Down(BUTTON_2));
-    assert_matches!(next_event, Some(_));
-  }
-
-  #[test]
-  // [Released] Down -> Up
-  fn test_down_to_up() {
-    let state = PushState::Down(BUTTON_2);
-    let event: ClickEvent = [0, 0, 0, 0];
-    let (next_state, next_event) = state.transition(&event);
-
-    assert_matches!(next_state, PushState::Up(BUTTON_2));
-    assert_matches!(next_event, None);
-  }
-
-  // [Invalid] Down -> Down
-  fn test_down_to_down() {
-    let state = PushState::Down(BUTTON_2);
-    let event: ClickEvent = [0, 0, BUTTON_3, 0];
-    let (next_state, next_event) = state.transition(&event);
-
-    assert_matches!(next_state, PushState::Down(BUTTON_2));
-    assert_matches!(next_event, None);
-  }
-
-  #[test]
-  // [Invalid] Up -> Up
-  fn test_up_to_up() {
-    let state = PushState::Up(BUTTON_2);
-    let event: ClickEvent = [0, 0, 0, 0];
-    let (next_state, next_event) = state.transition(&event);
-
-    assert_matches!(next_state, PushState::Up(BUTTON_2));
-    assert_matches!(next_event, None);
-  }
-
-  #[test]
-  // [Pressed] Up(Meta) -> Down
-  fn test_meta_up_to_regular_down() {
-    let prev_state = PushState::Up(META_1);
-    let curr_event: ClickEvent = [0, 0, BUTTON_2, 0];
-    let (next_state, next_event) = prev_state.transition(&curr_event);
-
-    assert_matches!(next_state, PushState::Down(BUTTON_2));
-    assert_matches!(next_event, Some(_));
-  }
-
-  #[test]
-  // [Invalid] Up(Meta) -> Up
-  fn test_meta_up_to_regular_up() {
-    let prev_state = PushState::Up(META_1);
-    let curr_event: ClickEvent = [0, 0, 0, 0];
-    let (next_state, next_event) = prev_state.transition(&curr_event);
-
-    assert_matches!(next_state, PushState::Up(META_1));
-    assert_matches!(next_event, None);
-  }
-}
