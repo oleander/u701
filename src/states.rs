@@ -1,5 +1,5 @@
 mod states {
-  use crate::{BLEEvent, ClickEvent, BUTTON_2, *};
+  use crate::{BLEEvent, ClickEvent};
   use std::fmt;
 
   // Define individual states as structs.
@@ -79,8 +79,7 @@ fn process_event(state: &dyn CurrentState, event: &ClickEvent) -> Box<dyn Curren
   }
 }
 
-use crate::{ClickEvent, BUTTON_2};
-use std::assert_matches::assert_matches;
+use crate::ClickEvent;
 
 #[test]
 fn test_up_to_down() {

@@ -7,12 +7,10 @@ mod states;
 extern crate hashbrown;
 extern crate lazy_static;
 extern crate anyhow;
-extern crate log;
 
 use thingbuf::mpsc::{self, Receiver, Sender};
 use lazy_static::lazy_static;
 use hashbrown::HashMap;
-use log::{error, info, warn};
 use std::sync::Mutex;
 use anyhow::{anyhow, bail, Result};
 
@@ -178,26 +176,22 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
-  // info!("Setup rust");
-  // #[cfg(target_arch = "xtensa")]
-  // esp_idf_sys::link_patches();
-  // #[cfg(target_arch = "xtensa")]
-  // esp_idf_svc::log::EspLogger::initialize_default();
+  println!("Setup rust");
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
-  info!("Received event from C++");
+  println!("Received event from C++");
 
   let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
   let mut click_event = [0u8; 4];
 
   match len.cmp(&4) {
     std::cmp::Ordering::Less => {
-      return warn!("[BUG] Event too short, abort");
+      return println!("[BUG] Event too short, abort");
     },
     std::cmp::Ordering::Greater => {
-      info!("Event too long, truncating");
+      println!("Event too long, truncating");
       click_event.copy_from_slice(event_slice[0..4].as_ref());
     },
     std::cmp::Ordering::Equal => {
@@ -206,7 +200,7 @@ pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
   }
 
   if let Err(e) = transition(&click_event) {
-    warn!("Failed to transition: {:?}", e);
+    println!("Failed to transition: {:?}", e);
   }
 }
 
@@ -214,23 +208,23 @@ pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
 pub extern "C" fn process_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
-      info!("Sending media key report: {:?}", report);
+      println!("Sending media key report: {:?}", report);
       let xs: [u8; 2] = [report.0, report.1];
       unsafe { ble_keyboard_write(xs.as_ptr()) };
     },
     Ok(BLEEvent::Letter(index)) => {
-      info!("Sending letter: {:?}", index);
+      println!("Sending letter: {:?}", index);
       let printable_char = format!("{}", (b'a' + index - 1) as char);
       unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
     },
     Err(e) => {
-      error!("Failed to receive event: {:?}", e);
+      eprintln!("Failed to receive event: {:?}", e);
     }
   }
 }
 
 fn transition(curr_event: &ClickEvent) -> Result<()> {
-  info!("Received event: {:?}", curr_event);
+  println!("Received event: {:?}", curr_event);
 
   let Ok(mut active_state) = ACTIVE_STATE.lock() else {
     bail!("Failed to lock mutex");
