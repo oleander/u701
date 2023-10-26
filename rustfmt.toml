@@ -1,6 +1,7 @@
 single_line_let_else_max_width = 0
 match_block_trailing_comma = true
-struct_field_align_threshold = 20
+enum_discrim_align_threshold = 40
+struct_field_align_threshold = 40
 fn_params_layout = "Compressed"
 use_field_init_shorthand = true
 struct_lit_single_line = false
