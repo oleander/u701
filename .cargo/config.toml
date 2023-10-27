@@ -7,10 +7,10 @@ rustflags = ["-Z", "macro-backtrace"]
 
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
+rustflags = ["-Z", "macro-backtrace"]
 
 [target.xtensa-esp32-espidf]
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
+rustflags = ["-Z", "macro-backtrace"]
 
 [unstable]
-build-std = ["std", "panic_abort"]
+build-std = ["std", "panic_abort", "alloc"]
