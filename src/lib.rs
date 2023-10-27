@@ -47,6 +47,8 @@ pub enum PushState {
   Up(ID)
 }
 
+const CLICK_EVENT_SIZE: usize = 4;
+
 const KEY_MEDIA_VOLUME_DOWN: MediaKey = MediaKey(64, 0);
 const KEY_MEDIA_NEXT_TRACK: MediaKey = MediaKey(1, 0);
 const KEY_MEDIA_PREV_TRACK: MediaKey = MediaKey(2, 0);
@@ -191,21 +193,13 @@ pub extern "C" fn setup_rust() {
 pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
   println!("Received event from C++");
 
-  let event_slice: &[u8] = unsafe { std::slice::from_raw_parts(event, len) };
-  let mut click_event = [0u8; 4];
-
-  match len.cmp(&4) {
-    std::cmp::Ordering::Less => {
-      return println!("[BUG] Event too short, abort");
-    },
-    std::cmp::Ordering::Greater => {
-      println!("Event too long, truncating");
-      click_event.copy_from_slice(event_slice[0..4].as_ref());
-    },
-    std::cmp::Ordering::Equal => {
-      click_event.copy_from_slice(event_slice);
-    }
+  if len != CLICK_EVENT_SIZE {
+    return eprintln!("[BUG] Unexpected event size, got {} (expected {})", len, CLICK_EVENT_SIZE);
   }
+
+  let event_slice = std::slice::from_raw_parts(event, len);
+  let mut click_event = [0u8; CLICK_EVENT_SIZE];
+  click_event.copy_from_slice(event_slice);
 
   if let Err(e) = transition(&click_event) {
     println!("Failed to transition: {:?}", e);
@@ -217,12 +211,13 @@ pub extern "C" fn process_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
       println!("Sending media key report: {:?}", report);
-      unsafe { ble_keyboard_write(report.reverse().as_ptr()) };
+      let reversed_report = report.reverse();
+      unsafe { ble_keyboard_write(reversed_report.as_ptr()) };
     },
     Ok(BLEEvent::Letter(index)) => {
       println!("Sending letter: {:?}", index);
-      let printable_char = format!("{}", (b'a' + index - 1) as char);
-      unsafe { ble_keyboard_print(printable_char.as_str().as_ptr()) };
+      let letter = (b'a' + index - 1) as char;
+      unsafe { ble_keyboard_print(&letter as *const _ as *const u8) };
     },
     Err(e) => {
       eprintln!("Failed to receive event: {:?}", e);
@@ -246,4 +241,3 @@ fn transition(curr_event: &ClickEvent) -> Result<()> {
 
   Ok(())
 }
-
