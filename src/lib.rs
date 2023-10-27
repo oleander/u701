@@ -135,12 +135,13 @@ impl PushState {
       ([.., 0, _], Down(id)) => Up(id),
       // A button has already been pushed
       // [User error] Pressed -> Pressed (ignored)
-      ([.., _, _], Down(id)) => Down(id),
+      ([.., _, _], prev @ Down(_)) => prev,
 
       // The button was released after being released
       // [Bug] Released -> Released (ignored)
-      ([.., 0, _], Up(id)) => Up(id),
+      ([.., 0, _], prev @ Up(_)) => prev,
 
+      // [Ignore] Meta button is being double pressed
       ([.., META_1 | META_2, _], prev @ Up(META_1 | META_2)) => prev,
 
       // The button was pressed after being released
