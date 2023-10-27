@@ -6,9 +6,8 @@ name = "u701"
 
 [dependencies]
 lazy_static = { version = "1.4.0", default-features = false }
-thingbuf = "0.1.4"
-anyhow = "1.0.75"
-mockall = "0.11.4"
+thingbuf = { version = "0.1.4", default-features = true }
+anyhow = { version = "1.0.75", default-features = false }
 
 [lib]
 crate-type = ["staticlib", "lib"]
