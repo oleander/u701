@@ -25,6 +25,8 @@ fn test_down_to_up() {
   assert_matches!(next_event, None);
 }
 
+// focus on only this test
+#[test]
 // [Invalid] Down -> Down
 fn test_down_to_down() {
   let state = PushState::Down(BUTTON_2);

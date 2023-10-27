@@ -130,6 +130,7 @@ impl PushState {
   pub fn transition(&self, event: &ClickEvent) -> (Self, Option<BLEEvent>) {
     use PushState::*;
 
+    println!("Transitioning from {:?} with {:?}", self, event);
     let next_state = match (event, *self) {
       // The button was released after being pressed
       // [Ok] Pressed -> Released (updated)
@@ -147,7 +148,7 @@ impl PushState {
       ([.., id, _], Up(_)) => Down(*id)
     };
 
-    let next_event = match (self, next_state) {
+    let next_event = match (self /* curr_state */, next_state) {
       // Meta key was pressed together with another key
       (Up(META_1), Down(id)) => META_LOOKUP_1.get(&id),
 
@@ -155,7 +156,10 @@ impl PushState {
       (Up(META_2), Down(id)) => META_LOOKUP_2.get(&id),
 
       // A regular key was pressed
-      (_, Down(id)) => REGULAR_LOOKUP.get(&id),
+      (Up(_), Down(id)) => REGULAR_LOOKUP.get(&id),
+
+      // A second button was pressed while the first was still pressed
+      (Down(_), Down(_)) => None,
 
       // A regular key was released
       (_, Up(_)) => None
