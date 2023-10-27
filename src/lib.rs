@@ -56,17 +56,6 @@ const KEY_MEDIA_PLAY_PAUSE: MediaKey = MediaKey(8, 0);
 const KEY_MEDIA_VOLUME_UP: MediaKey = MediaKey(32, 0);
 const KEY_MEDIA_EJECT: MediaKey = MediaKey(16, 0);
 
-const KEY_MEDIA_CONSUMER_CONTROL_CONFIGURATION: MediaKey = MediaKey(0, 64);
-const KEY_MEDIA_LOCAL_MACHINE_BROWSER: MediaKey = MediaKey(0, 1);
-const KEY_MEDIA_EMAIL_READER: MediaKey = MediaKey(0, 128);
-const KEY_MEDIA_WWW_BOOKMARKS: MediaKey = MediaKey(0, 4);
-const KEY_MEDIA_WWW_HOME: MediaKey = MediaKey(128, 0);
-const KEY_MEDIA_CALCULATOR: MediaKey = MediaKey(0, 2);
-const KEY_MEDIA_WWW_SEARCH: MediaKey = MediaKey(0, 8);
-const KEY_MEDIA_WWW_STOP: MediaKey = MediaKey(0, 16);
-const KEY_MEDIA_WWW_BACK: MediaKey = MediaKey(0, 32);
-const KEY_MEDIA_STOP: MediaKey = MediaKey(4, 0);
-
 pub const BUTTON_1: u8 = 0x04; // Red (Meta)
 pub const BUTTON_2: u8 = 0x50; // Black (Volume down)
 pub const BUTTON_3: u8 = 0x51; // Blue (Prev track)
@@ -241,4 +230,54 @@ fn transition(curr_event: &ClickEvent) -> Result<()> {
   }
 
   Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Mutex, MutexGuard};
+    use mockall::{mock, predicate::*};
+
+    mock! {
+        pub ActiveState {}
+
+        impl ActiveState {
+            fn transition(&self, event: &ClickEvent) -> (ClickEvent, Option<ClickEvent>);
+        }
+
+        impl MutexGuard<'_, ClickEvent> for ActiveState {
+            fn deref_mut(&mut self) -> &mut ClickEvent;
+        }
+    }
+
+    mock! {
+        pub BLEEventQueue {}
+
+        impl BLEEventQueue {
+            fn try_send(&self, event: ClickEvent) -> Result<(), ClickEvent>;
+        }
+    }
+
+    #[test]
+    fn test_successful_transition() {
+        // Mock dependencies
+        let mut mock_state = MockActiveState::new();
+        mock_state.expect_transition()
+            .returning(|_| (ClickEvent {}, Some(ClickEvent {}))); // Modify as per your logic
+
+        // Assuming ACTIVE_STATE is a Mutex
+        ACTIVE_STATE = Mutex::new(mock_state);
+
+        let mock_queue = MockBLEEventQueue::new();
+        mock_queue.expect_try_send()
+            .returning(|_| Ok(())); // Modify as per your logic
+        BLE_EVENT_QUEUE.0 = mock_queue;
+
+        // Call the function
+        let result = transition(&ClickEvent {});
+
+        assert!(result.is_ok());
+    }
+
+    // Add more tests for failure scenarios, edge cases, etc.
 }

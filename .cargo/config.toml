@@ -3,6 +3,9 @@
 # target = "xtensa-esp32-espidf"
 target = "aarch64-apple-darwin"
 
+[target.aarch64-apple-darwin]
+rustflags = ["-Z", "macro-backtrace"]
+
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
@@ -10,8 +13,6 @@ rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 [target.xtensa-esp32-espidf]
 # linker = "ldproxy"
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
-
-[target.aarch64-apple-darwin]
 
 [unstable]
 build-std = ["core", "panic_abort", "alloc", "std"]
