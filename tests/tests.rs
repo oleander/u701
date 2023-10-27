@@ -69,3 +69,36 @@ fn test_meta_up_to_regular_up() {
   assert_matches!(next_state, PushState::Up(META_1));
   assert_matches!(next_event, None);
 }
+
+#[test]
+// [Incomplete] Up(Meta) -> Down(Meta)
+fn test_meta_up_to_meta_down() {
+    let state = PushState::Up(META_1);
+    let event: ClickEvent = [0, 0, META_1, 0];
+    let (next_state, next_event) = state.transition(&event);
+
+    assert_matches!(next_state, PushState::Down(META_1));
+    assert_matches!(next_event, None);
+}
+
+#[test]
+// [Invalid] Down -> Down(Meta)
+fn test_regular_down_to_meta_down() {
+    let state = PushState::Down(BUTTON_2);
+    let event: ClickEvent = [0, 0, META_1, 0];
+    let (next_state, next_event) = state.transition(&event);
+
+    assert_matches!(next_state, PushState::Down(BUTTON_2));
+    assert_matches!(next_event, None);
+}
+
+#[test]
+// [Invalid] Down(Meta) -> Down(Meta)
+fn test_meta_down_to_regular_down() {
+    let state = PushState::Down(META_1);
+    let event: ClickEvent = [0, 0, BUTTON_2, 0];
+    let (next_state, next_event) = state.transition(&event);
+
+    assert_matches!(next_state, PushState::Down(META_1));
+    assert_matches!(next_event, None);
+}
