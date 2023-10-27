@@ -11,14 +11,14 @@ clean:
 	pio run --target clean -e $(ENVIROMENT)
 	pio run --target clean
 build:
-	. ~/export-esp.sh && cargo pio build -r
+	cargo pio build -r
 upload: erase
-	. ~/export-esp.sh && cargo pio exec -- run -t upload -e $(ENVIROMENT) --monitor-port $(PORT)
+	cargo pio exec -- run -t upload -e $(ENVIROMENT) --monitor-port $(PORT)
 ota:
-	. ~/export-esp.sh && cargo pio exec -- run -t upload -e ota
+	cargo pio exec -- run -t upload -e ota
 erase:
 	esptool.py erase_region 0x9000 0x5000
 monitor:
 	./tools/monitor.sh -b 115200 -p $(PORT)
 menuconfig:
-	. ~/export-esp.sh && cargo pio espidf menuconfig -r true
+	cargo pio espidf menuconfig -r true

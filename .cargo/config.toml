@@ -1,4 +1,3 @@
-# Enable 64 bit: --cfg espidf_time64
 [build]
 # target = "xtensa-esp32-espidf"
 target = "aarch64-apple-darwin"
