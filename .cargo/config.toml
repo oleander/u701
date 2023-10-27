@@ -1,16 +1,7 @@
 [build]
 # target = "xtensa-esp32-espidf"
+# target = "riscv32imc-esp-espidf"
 target = "aarch64-apple-darwin"
-
-[target.aarch64-apple-darwin]
-rustflags = ["-Z", "macro-backtrace"]
-
-[target.riscv32imc-esp-espidf]
-linker = "ldproxy"
-rustflags = ["-Z", "macro-backtrace"]
-
-[target.xtensa-esp32-espidf]
-rustflags = ["-Z", "macro-backtrace"]
 
 [unstable]
 build-std = ["std", "panic_abort", "alloc"]
