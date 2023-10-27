@@ -77,7 +77,7 @@ fn test_meta_up_to_meta_down() {
     let event: ClickEvent = [0, 0, META_1, 0];
     let (next_state, next_event) = state.transition(&event);
 
-    assert_matches!(next_state, PushState::Down(META_1));
+    assert_matches!(next_state, PushState::Up(META_1));
     assert_matches!(next_event, None);
 }
 
@@ -102,3 +102,4 @@ fn test_meta_down_to_regular_down() {
     assert_matches!(next_state, PushState::Down(META_1));
     assert_matches!(next_event, None);
 }
+

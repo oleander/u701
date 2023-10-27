@@ -141,12 +141,16 @@ impl PushState {
       // [Bug] Released -> Released (ignored)
       ([.., 0, _], Up(id)) => Up(id),
 
+      ([.., META_1 | META_2, _], prev @ Up(META_1 | META_2)) => prev,
+
       // The button was pressed after being released
       // [Ok] Released -> Pressed (updated)
       ([.., id, _], Up(_)) => Down(*id)
     };
 
     let next_event = match (self /* curr_state */, next_state) {
+      (Up(META_1 | META_2), Down(META_1 | META_2)) => None,
+
       // Meta key was pressed together with another key
       (Up(META_1), Down(id)) => META_LOOKUP_1.get(&id),
 
