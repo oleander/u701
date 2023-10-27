@@ -11,3 +11,6 @@ rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [target.xtensa-esp32-espidf]
 rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
+
+[unstable]
+build-std = ["std", "panic_abort"]
