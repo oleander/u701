@@ -11,7 +11,7 @@ clean:
 	pio run --target clean -e $(ENVIROMENT)
 	pio run --target clean
 build:
-	cargo pio build
+	cargo pio build -r
 upload: erase
 	cargo pio exec -- run -t upload -e $(ENVIROMENT) --monitor-port $(PORT)
 ota:

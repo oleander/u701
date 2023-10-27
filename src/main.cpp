@@ -138,7 +138,7 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
     auto deviceName        = advertised->getName();
 
     if (deviceMacAddress != buttonMacAddress) {
-      return Log.noticeln("[WRONG] %s", deviceMacAsString);
+      return Log.noticeln("[WRONG]");
     }
 
     Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
