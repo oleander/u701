@@ -228,12 +228,12 @@ pub extern "C" fn process_ble_events() {
 fn transition(curr_event: &ClickEvent) -> Result<()> {
   println!("Received event: {:?}", curr_event);
 
-  let Ok(mut active_state) = ACTIVE_STATE.lock() else {
+  let Ok(mut state_guard) = ACTIVE_STATE.lock() else {
     bail!("Failed to lock mutex");
   };
 
-  let (next_state, next_event) = active_state.transition(curr_event);
-  *active_state = next_state;
+  let (next_state, next_event) = state_guard.transition(curr_event);
+  *state_guard = next_state;
 
   if let Some(event) = next_event {
     BLE_EVENT_QUEUE.0.try_send(event).map_err(|e| anyhow!(e))?;
