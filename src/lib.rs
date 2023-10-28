@@ -3,14 +3,17 @@
 #![feature(assert_matches)]
 
 extern crate lazy_static;
+extern crate env_logger;
 extern crate anyhow;
+extern crate log;
 
 use thingbuf::mpsc::{StaticChannel, StaticReceiver, StaticSender};
 use thingbuf::mpsc::errors::TrySendError;
-use lazy_static::lazy_static;
+use log::{debug, error, info};
 use std::collections::HashMap;
-use std::sync::Mutex;
+use lazy_static::lazy_static;
 use anyhow::{bail, Result};
+use std::sync::Mutex;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
@@ -130,7 +133,7 @@ impl PushState {
   pub fn transition(&self, event: &ClickEvent) -> (Self, Option<BLEEvent>) {
     use PushState::*;
 
-    println!("Transitioning from {:?} with {:?}", self, event);
+    info!("Transitioning from {:?} with {:?}", self, event);
     let next_state = match (event, *self) {
       // The button was released after being pressed
       // [Ok] Pressed -> Released (updated)
@@ -182,15 +185,16 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
-  println!("Setup rust");
+  env_logger::init();
+  info!("Setup rust");
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
-  println!("Received event from C++");
+  info!("Received event from C++");
 
   if len != CLICK_EVENT_SIZE {
-    return eprintln!("[BUG] Unexpected event size, got {} (expected {})", len, CLICK_EVENT_SIZE);
+    return error!("[BUG] Unexpected event size, got {} (expected {})", len, CLICK_EVENT_SIZE);
   }
 
   let event_slice = std::slice::from_raw_parts(event, len);
@@ -198,7 +202,7 @@ pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
   click_event.copy_from_slice(event_slice);
 
   if let Err(e) = transition(&click_event) {
-    println!("Failed to transition: {:?}", e);
+    info!("Failed to transition: {:?}", e);
   }
 }
 
@@ -206,12 +210,12 @@ pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
 pub extern "C" fn process_ble_events() {
   match BLE_EVENT_QUEUE.1.try_recv() {
     Ok(BLEEvent::MediaKey(report)) => {
-      println!("Sending media key report: {:?}", report);
+      info!("Sending media key report: {:?}", report);
       let reversed_report = report.reverse();
       unsafe { ble_keyboard_write(reversed_report.as_ptr()) };
     },
     Ok(BLEEvent::Letter(index)) => {
-      println!("Sending letter: {:?}", index);
+      info!("Sending letter: {:?}", index);
       let letter = (b'a' + index - 1) as char;
       unsafe { ble_keyboard_print(&letter as *const _ as *const u8) };
     },
@@ -220,7 +224,7 @@ pub extern "C" fn process_ble_events() {
 }
 
 fn transition(curr_event: &ClickEvent) -> Result<()> {
-  println!("Received event: {:?}", curr_event);
+  info!("Received event: {:?}", curr_event);
 
   let mut state_guard = match ACTIVE_STATE.lock() {
     Ok(guard) => guard,
