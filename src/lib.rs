@@ -113,7 +113,7 @@ lazy_static! {
     table
   };
 
-  static ref STATIC_CHANNEL: StaticChannel<BLEEvent, 4> = StaticChannel::<BLEEvent, 4>::new();
+  static ref STATIC_CHANNEL: StaticChannel<BLEEvent, 4> = StaticChannel::new();
   static ref BLE_EVENT_QUEUE: (StaticSender<BLEEvent>, StaticReceiver<BLEEvent>) = STATIC_CHANNEL.split();
   static ref ACTIVE_STATE: Mutex<PushState> = Mutex::new(PushState::Up(0));
 }
