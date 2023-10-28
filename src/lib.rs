@@ -9,7 +9,7 @@ extern crate log;
 
 use thingbuf::mpsc::{StaticChannel, StaticReceiver, StaticSender};
 use thingbuf::mpsc::errors::TrySendError;
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use anyhow::{bail, Result};
@@ -185,7 +185,7 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn setup_rust() {
-  env_logger::init();
+  env_logger::builder().filter(None, log::LevelFilter::Debug).init();
   info!("Setup rust");
 }
 
@@ -202,7 +202,7 @@ pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
   click_event.copy_from_slice(event_slice);
 
   if let Err(e) = transition(&click_event) {
-    info!("Failed to transition: {:?}", e);
+    warn!("Failed to transition: {:?}", e);
   }
 }
 
