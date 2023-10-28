@@ -204,7 +204,7 @@ pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
   let mut click_event = [0u8; CLICK_EVENT_SIZE];
   click_event.copy_from_slice(event_slice);
 
-  if let Err(e) = transition(&click_event) {
+  if let Err(e) = handle_click_event(&click_event) {
     warn!("Failed to transition: {:?}", e);
   }
 }
@@ -226,7 +226,7 @@ pub extern "C" fn process_ble_events() {
   }
 }
 
-fn transition(curr_event: &ClickEvent) -> Result<()> {
+fn handle_click_event(curr_event: &ClickEvent) -> Result<()> {
   info!("Received event: {:?}", curr_event);
 
   let mut state_guard = match ACTIVE_STATE.lock() {
