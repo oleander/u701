@@ -213,9 +213,7 @@ pub extern "C" fn process_ble_events() {
       let letter = (b'a' + index - 1) as char;
       unsafe { ble_keyboard_print(&letter as *const _ as *const u8) };
     },
-    Err(e) => {
-      eprintln!("Failed to receive event: {:?}", e);
-    }
+    Err(_) => ()
   }
 }
 
