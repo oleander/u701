@@ -5,7 +5,7 @@
 extern crate lazy_static;
 extern crate anyhow;
 
-use thingbuf::mpsc::{self, Receiver, Sender};
+use thingbuf::mpsc::{StaticChannel, StaticReceiver};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -114,7 +114,7 @@ lazy_static! {
   };
 
   static ref ACTIVE_STATE: Mutex<PushState> = Mutex::new(PushState::Up(0));
-  static ref BLE_EVENT_QUEUE: (Sender<BLEEvent>, Receiver<BLEEvent>) = mpsc::channel(10);
+  static ref BLE_EVENT_QUEUE: (StaticSender<BLEEvent>, StaticReceiver<BLEEvent>) = StaticChannel::new().split();
 }
 
 impl PushState {
