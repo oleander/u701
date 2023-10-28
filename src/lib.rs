@@ -8,8 +8,7 @@ extern crate anyhow;
 extern crate log;
 
 use thingbuf::mpsc::{StaticChannel, StaticReceiver, StaticSender};
-use thingbuf::mpsc::errors::TrySendError;
-use thingbuf::mpsc::errors::TryRecvError;
+use thingbuf::mpsc::errors::{TryRecvError, TrySendError};
 use log::{debug, error, info, warn};
 use std::collections::HashMap;
 use lazy_static::lazy_static;
