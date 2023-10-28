@@ -193,8 +193,8 @@ pub extern "C" fn setup_rust() {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn transition_from_cpp(event: *const u8, len: usize) {
-  info!("Received event from C++");
+pub unsafe extern "C" fn handle_external_click_event(event: *const u8, len: usize) {
+  info!("Received BLE click event");
 
   if len != CLICK_EVENT_SIZE {
     return error!("[BUG] Unexpected event size, got {} (expected {})", len, CLICK_EVENT_SIZE);

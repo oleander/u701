@@ -59,7 +59,7 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   Log.traceln("[Click] Received length: %d", length);
   Log.traceln("[Click] Received isNotify: %d", isNotify);
 
-  transition_from_cpp(data, length);
+  handle_external_click_event(data, length);
 }
 
 void setupKeyboard() {
