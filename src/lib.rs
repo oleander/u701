@@ -9,6 +9,7 @@ extern crate log;
 
 use thingbuf::mpsc::{StaticChannel, StaticReceiver, StaticSender};
 use thingbuf::mpsc::errors::TrySendError;
+use thingbuf::mpsc::errors::TryRecvError;
 use log::{debug, error, info, warn};
 use std::collections::HashMap;
 use lazy_static::lazy_static;
@@ -222,7 +223,11 @@ pub extern "C" fn process_ble_events() {
       let letter = (b'a' + index - 1) as char;
       unsafe { ble_keyboard_print(&letter as *const _ as *const u8) };
     },
-    Err(e) => debug!("No event to process: {:?}", e)
+    Err(TryRecvError::Closed) => {
+      error!("[BUG] Event queue is closed");
+      panic!("[BUG] Event queue is closed");
+    },
+    Err(_) => ()
   }
 }
 
