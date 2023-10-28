@@ -173,6 +173,9 @@ impl PushState {
       (_, Up(_)) => None
     };
 
+    debug!("Next state: {:?}", next_state);
+    debug!("Next event: {:?}", next_event);
+
     (next_state, next_event.cloned())
   }
 }
@@ -219,7 +222,7 @@ pub extern "C" fn process_ble_events() {
       let letter = (b'a' + index - 1) as char;
       unsafe { ble_keyboard_print(&letter as *const _ as *const u8) };
     },
-    Err(_) => ()
+    Err(e) => debug!("No event to process: {:?}", e)
   }
 }
 
@@ -236,10 +239,19 @@ fn transition(curr_event: &ClickEvent) -> Result<()> {
 
   if let Some(event) = next_event {
     match BLE_EVENT_QUEUE.0.try_send(event) {
-      Err(TrySendError::Closed(_)) => bail!("[BUG] Event queue is closed"),
-      Err(TrySendError::Full(_)) => bail!("[BUG] Event queue is full"),
-      Err(unkown) => bail!("[BUG] Unknown error: {:?}", unkown),
-      Ok(_) => ()
+      Err(TrySendError::Closed(_)) => {
+        error!("[BUG] Event queue is closed");
+        bail!("[BUG] Event queue is closed");
+      },
+      Err(TrySendError::Full(_)) => {
+        error!("[BUG] Event queue is full");
+        bail!("[BUG] Event queue is full")
+      },
+      Err(unkown) => {
+        error!("[BUG] Unknown error: {:?}", unkown);
+        bail!("[BUG] Unknown error: {:?}", unkown)
+      },
+      Ok(_) => debug!("Event sent successfully")
     }
   }
 
