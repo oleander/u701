@@ -7,11 +7,10 @@ extern crate anyhow;
 
 use thingbuf::mpsc::{StaticChannel, StaticReceiver, StaticSender};
 use thingbuf::mpsc::errors::TrySendError;
-use thingbuf::mpsc::errors::TryRecvError::Closed;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[repr(C)]
@@ -233,9 +232,9 @@ fn transition(curr_event: &ClickEvent) -> Result<()> {
 
   if let Some(event) = next_event {
     match BLE_EVENT_QUEUE.0.try_send(event) {
-      Err(TrySendError::Disconnected(_)) => bail!("[BUG] Event queue is disconnected"),
       Err(TrySendError::Closed(_)) => bail!("[BUG] Event queue is closed"),
       Err(TrySendError::Full(_)) => bail!("[BUG] Event queue is full"),
+      Err(unkown) => bail!("[BUG] Unknown error: {:?}", unkown),
       Ok(_) => ()
     }
   }
