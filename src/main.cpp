@@ -5,12 +5,12 @@
 #include "utility.h"
 
 #include <ArduinoLog.h>
-#include <BleKeyboard.h>
-#include <WiFi.h>
 #include <ArduinoOTA.h>
+#include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
+#include <WiFi.h>
 // #include <WiFi.h>
 // #include <ArduinoOTA.h>
 // #include <esp_task_wdt.h>
@@ -32,6 +32,7 @@ BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 extern "C" void process_ble_events();
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
+  keyboard.setBatteryLevel(c[0]);
   if (keyboard.isConnected()) {
     keyboard.write(c);
   }
@@ -64,6 +65,25 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   handle_external_click_event(data, length);
 }
 
+static void onBatteryEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
+  if (length != 1) {
+    Log.traceln("Received length should be 1, got %d (will continue anyway)", length);
+  }
+
+  if (!isNotify) {
+    Log.traceln("Received invalid isNotify: %d (expected true)", isNotify);
+    return;
+  }
+
+  Log.traceln("[Battery] Received length: %d", length);
+  Log.traceln("[Battery] Received isNotify: %d", isNotify);
+  Log.traceln("[Battery] Received battery level: %d", data[0]);
+
+  if (keyboard.isConnected()) {
+    keyboard.setBatteryLevel(data[0]);
+  }
+}
+
 void setupKeyboard() {
   Log.noticeln("Enable Keyboard");
   keyboard.begin();
@@ -71,10 +91,10 @@ void setupKeyboard() {
 
 void setupSerial() {
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_SILENT, &Serial);
+  // Log.begin(LOG_LEVEL_SILENT, &Serial);
   // #ifdef RELEASE
   // #else
-  // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   // #endif
 
   Log.noticeln("Starting ESP32 ...");
@@ -91,7 +111,8 @@ void setupClient() {
   }
 
   Log.noticeln("Setting client callbacks ...");
-  client->setClientCallbacks(new ClientCallback());
+  static ClientCallback clientCallbackInstance;
+  client->setClientCallbacks(&clientCallbackInstance);
 
   Log.noticeln("[Connecting]");
   if (!client->connect()) {
@@ -105,32 +126,49 @@ void setupClient() {
   }
 
   for (auto &service: *services) {
-    if (!service->getUUID().equals(hidService)) continue;
-
     Log.noticeln("Discovering characteristics ...");
     auto characteristics = service->getCharacteristics(true);
-    if (characteristics->empty()) {
-      restart("[BUG] No characteristics found");
-    }
 
     for (auto &characteristic: *characteristics) {
-      if (!characteristic->getUUID().equals(reportUUID)) continue;
-
-      if (!characteristic->canNotify()) {
-        restart("[BUG] Characteristic cannot notify");
+      if (service->getUUID().equals(batteryService)) {
+        if (characteristic->getUUID().equals(batteryChar)) {
+          if (characteristic->canNotify()) {
+            if (characteristic->subscribe(true, onBatteryEvent, true)) {
+              Log.noticeln("[BATTERY] Subscribed to notifications");
+            } else {
+              Log.errorln("[BUG] [BATTERY] Failed to subscribe to notifications");
+            }
+          } else {
+            Log.warningln("[BUG] [BATTERY] Cannot subscribe to notifications");
+          }
+        } else {
+          Log.warningln("[BUG] Unknown battery characteristic");
+        }
+      } else {
+        Log.warningln("[BUG] Unknown battery service");
       }
 
-      auto status = characteristic->subscribe(true, onEvent, true);
-      if (!status) {
-        restart("[BUG] Failed to subscribe to notifications");
+      if (service->getUUID().equals(hidService)) {
+        if (characteristic->getUUID().equals(reportUUID)) {
+          if (characteristic->canNotify()) {
+            if (characteristic->subscribe(true, onEvent, true)) {
+              Log.noticeln("[Click] Subscribed to notifications");
+            } else {
+              Log.errorln("[BUG] [Click] Failed to subscribe to notifications");
+            }
+          } else {
+            Log.warningln("[BUG] [Click] Cannot subscribe to notifications");
+          }
+        } else {
+          Log.warningln("[BUG] Unknown report characteristic");
+        }
+      } else {
+        Log.warningln("[BUG] Unknown report service");
       }
-
-      Log.noticeln("Subscribed to notifications");
-      return;
     }
   }
 
-  restart("[BUG] No report characteristic found");
+  Log.noticeln("Subcribed to all characteristics");
 }
 
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
@@ -159,7 +197,8 @@ void setupScan() {
   Log.noticeln("Starting BLE scan ...");
 
   auto scan = NimBLEDevice::getScan();
-  scan->setAdvertisedDeviceCallbacks(new Callbacks());
+  static Callbacks scanCallbackInstance;
+  scan->setAdvertisedDeviceCallbacks(&scanCallbackInstance);
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
