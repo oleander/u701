@@ -45,7 +45,7 @@ extern "C" bool ble_keyboard_is_connected() {
 }
 
 /* Add function isActive to the State struct */
-static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
+static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 4) {
     Log.traceln("Received length should be 4, got %d (will continue anyway)", length);
   }
@@ -61,7 +61,7 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   handle_external_click_event(data, length);
 }
 
-static void onBatteryEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
+static void handleBatteryUpdate(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 1) {
     Log.traceln("Received length should be 1, got %d", length);
     return;
@@ -81,12 +81,12 @@ static void onBatteryEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t len
   }
 }
 
-void setupKeyboard() {
+void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
   keyboard.begin();
 }
 
-void setupSerial() {
+void initializeSerialCommunication() {
   Serial.begin(SERIAL_BAUD_RATE);
   // Log.begin(LOG_LEVEL_SILENT, &Serial);
   // #ifdef RELEASE
@@ -101,7 +101,7 @@ void setupSerial() {
  * Sets up the client to connect to the BLE device with the specified MAC address.
  * If the connection fails or no services/characteristics are found, the device will restart.
  */
-void setupClient() {
+void connectToClientDevice() {
   Log.noticeln("Connecting to");
   if (client == nullptr) {
     restart("[BUG] Device not found, will reboot");
@@ -130,7 +130,7 @@ void setupClient() {
       if (service->getUUID().equals(batteryService)) {
         if (characteristic->getUUID().equals(batteryChar)) {
           if (characteristic->canNotify()) {
-            if (characteristic->subscribe(true, onBatteryEvent, true)) {
+            if (characteristic->subscribe(true, handleBatteryUpdate, true)) {
               Log.noticeln("[BATTERY] Subscribed to notifications");
             } else {
               Log.errorln("[BUG] [BATTERY] Failed to subscribe to notifications");
@@ -148,7 +148,7 @@ void setupClient() {
       if (service->getUUID().equals(hidService)) {
         if (characteristic->getUUID().equals(reportUUID)) {
           if (characteristic->canNotify()) {
-            if (characteristic->subscribe(true, onEvent, true)) {
+            if (characteristic->subscribe(true, handleButtonClick, true)) {
               Log.noticeln("[Click] Subscribed to notifications");
             } else {
               Log.errorln("[BUG] [Click] Failed to subscribe to notifications");
@@ -190,7 +190,7 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
  * If the device is found, the scan will stop and the client will be set up.
  * The scan interval is set high to save power
  */
-void setupScan() {
+void startBLEScanForDevice() {
   Log.noticeln("Starting BLE scan ...");
 
   auto scan = NimBLEDevice::getScan();
@@ -204,7 +204,7 @@ void setupScan() {
   Log.noticeln("Scan finished");
 }
 
-void setupWiFi() {
+void configureWiFi() {
   Log.noticeln("Starting WiFi ...");
 
   WiFi.config(ip, gateway, subnet);
@@ -216,12 +216,12 @@ void setupWiFi() {
 }
 
 void setup() {
-  setupSerial();
-  setupWiFi();
-  setupKeyboard();
+  initializeSerialCommunication();
+  configureWiFi();
+  initializeKeyboard();
   setup_rust();
-  setupScan();
-  setupClient();
+  startBLEScanForDevice();
+  connectToClientDevice();
 }
 
 void loop() {
