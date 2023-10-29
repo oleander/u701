@@ -32,7 +32,6 @@ BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 extern "C" void process_ble_events();
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
-  keyboard.setBatteryLevel(c[0]);
   if (keyboard.isConnected()) {
     keyboard.write(c);
   }
@@ -67,7 +66,8 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 
 static void onBatteryEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 1) {
-    Log.traceln("Received length should be 1, got %d (will continue anyway)", length);
+    Log.traceln("Received length should be 1, got %d", length);
+    return;
   }
 
   if (!isNotify) {
@@ -173,18 +173,18 @@ void setupClient() {
 
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
-    auto deviceMacAddress  = advertised->getAddress();
-    auto deviceMacAsString = deviceMacAddress.toString().c_str();
-    auto deviceName        = advertised->getName();
+    auto macAddr = advertised->getAddress();
 
-    if (deviceMacAddress != buttonMacAddress) {
+    if (macAddr != buttonMacAddress) {
       return Log.noticeln("[WRONG]");
     }
 
-    Log.noticeln("[CORRECT] %s @ %s", deviceMacAsString, deviceName);
-
-    client = NimBLEDevice::createClient(deviceMacAddress);
+    client = NimBLEDevice::createClient(macAddr);
     advertised->getScan()->stop();
+
+    auto mac  = macAddr.toString().c_str();
+    auto name = advertised->getName();
+    Log.noticeln("[CORRECT] %s @ %s", mac, name);
   }
 };
 
@@ -207,18 +207,24 @@ void setupScan() {
   Log.noticeln("Scan finished");
 }
 
-void setup() {
-  setupSerial();
-  setupKeyboard();
-  setup_rust();
-  setupScan();
-  setupClient();
+void setupWiFi() {
+  Log.noticeln("Starting WiFi ...");
 
   WiFi.config(ip, gateway, subnet);
   WiFi.setTxPower(WIFI_POWER_11dBm);
   WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
+
   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
   ArduinoOTA.begin();
+}
+
+void setup() {
+  setupSerial();
+  setupWiFi();
+  setupKeyboard();
+  setup_rust();
+  setupScan();
+  setupClient();
 }
 
 void loop() {
