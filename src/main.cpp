@@ -106,7 +106,7 @@ void setupSerial() {
  */
 void setupClient() {
   Log.noticeln("Connecting to");
-  if (!client) {
+  if (client == nullptr) {
     restart("[BUG] Device not found, will reboot");
   }
 
