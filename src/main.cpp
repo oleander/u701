@@ -11,9 +11,6 @@
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
 #include <WiFi.h>
-// #include <WiFi.h>
-// #include <ArduinoOTA.h>
-// #include <esp_task_wdt.h>
 
 #include "shared.h"
 
