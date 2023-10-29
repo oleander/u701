@@ -183,5 +183,5 @@ void setup() {
 void loop() {
   // ArduinoOTA.handle();
   process_ble_events();
-  sleep(10);
+  // sleep(10);
 }
