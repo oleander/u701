@@ -184,6 +184,7 @@ extern "C" {
   fn ble_keyboard_print(xs: *const u8);
   fn ble_keyboard_write(xs: *const u8);
   fn ble_keyboard_is_connected() -> bool;
+  fn sleep(ms: u32);
 }
 
 #[no_mangle]
