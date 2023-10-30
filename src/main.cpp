@@ -12,11 +12,17 @@
 #include <NimBLEUtils.h>
 #include <WiFi.h>
 
-#include "shared.h"
-
 IPAddress ip(192, 168, 4, 1);
 IPAddress gateway(192, 168, 4, 1);
 IPAddress subnet(255, 255, 255, 0);
+
+static NimBLEUUID reportUUID("2A4D");
+static NimBLEUUID cccdUUID("2902");
+static NimBLEUUID hidService("1812");
+static NimBLEUUID batteryServiceUUID("180F");
+static NimBLEUUID batteryLevelCharUUID("2A19");
+
+static NimBLEClient *client;
 
 /* Removes warnings */
 #undef LOG_LEVEL_INFO
@@ -89,11 +95,7 @@ void initializeKeyboard() {
 void initializeSerialCommunication() {
   Serial.begin(SERIAL_BAUD_RATE);
   // Log.begin(LOG_LEVEL_SILENT, &Serial);
-  // #ifdef RELEASE
-  // #else
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  // #endif
-
   Log.noticeln("Starting ESP32 ...");
 }
 
@@ -188,12 +190,10 @@ void startBLEScanForDevice() {
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
   scan->start(0, false);
-
-  Log.noticeln("Scan finished");
 }
 
 void configureWiFi() {
-  Log.noticeln("Starting WiFi ...");
+  Log.noticeln("Configuring WiFi ...");
 
   WiFi.config(ip, gateway, subnet);
   WiFi.setTxPower(WIFI_POWER_11dBm);
