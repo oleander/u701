@@ -110,6 +110,10 @@ void connectToClientDevice() {
 
   static ClientCallback clientCallbackInstance;
   client->setClientCallbacks(&clientCallbackInstance);
+  if (client->isConnected()) {
+    return Log.noticeln("Already connected to device");
+  }
+
   if (!client->connect()) {
     restart("Timeout connecting to the device");
   }
@@ -118,30 +122,33 @@ void connectToClientDevice() {
   for (auto &service: *client->getServices(true)) {
     Log.noticeln("Discovering characteristics ...");
     for (auto &characteristic: *service->getCharacteristics(true)) {
+      auto currentServiceUUID = service->getUUID().toString().c_str();
+      auto currentCharUUID    = characteristic->getUUID().toString().c_str();
+
       // Register for battery level updates
       if (!service->getUUID().equals(batteryServiceUUID)) {
-        Log.noticeln("[Battery] Unknown battery service");
+        Log.warningln("[Battery] Unknown battery service: %s", currentServiceUUID);
       } else if (!characteristic->getUUID().equals(batteryLevelCharUUID)) {
-        Log.noticeln("[Battery] Unknown battery characteristic");
+        Log.warningln("[Battery] Unknown battery characteristic: %s", currentCharUUID);
       } else if (!characteristic->canNotify()) {
-        Log.noticeln("[Battery] Cannot subscribe to notifications");
+        Log.warningln("[Battery] Cannot subscribe to notifications: %s", currentCharUUID);
       } else if (!characteristic->subscribe(true, handleBatteryUpdate, true)) {
-        Log.errorln("[BUG] [Battery] Failed to subscribe to notifications");
+        Log.errorln("[BUG] [Battery] Failed to subscribe to notifications: %s", currentCharUUID);
       } else {
-        Log.noticeln("[Battery] Subscribed to notifications");
+        Log.noticeln("[Battery] Subscribed to notifications: %s", currentCharUUID);
       }
 
       // Register for click events
       if (!service->getUUID().equals(hidService)) {
-        Log.warningln("[Click] Unknown report service");
+        Log.warningln("[Click] Unknown report service: %s", currentServiceUUID);
       } else if (!characteristic->getUUID().equals(reportUUID)) {
-        Log.warningln("[Click] Unknown report characteristic");
+        Log.warningln("[Click] Unknown report characteristic: %s", currentCharUUID);
       } else if (!characteristic->canNotify()) {
-        Log.warningln("[Click] Cannot subscribe to notifications");
+        Log.warningln("[Click] Cannot subscribe to notifications: %s", currentCharUUID);
       } else if (!characteristic->subscribe(true, handleButtonClick, true)) {
-        Log.errorln("[Click] [Bug] Failed to subscribe to notifications");
+        Log.errorln("[Click] [Bug] Failed to subscribe to notifications: %s", currentCharUUID);
       } else {
-        Log.noticeln("[Click] Subscribed to notifications");
+        Log.noticeln("[Click] Subscribed to notifications: %s", currentCharUUID);
       }
     }
   }
@@ -203,10 +210,6 @@ void setup() {
   startBLEScanForDevice();
   connectToClientDevice();
   configureWiFi();
-
-  // if (keyboard.isConnected()) {
-  //   keyboard.setBatteryLevel(50);
-  // }
 }
 
 void loop() {
