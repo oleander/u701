@@ -1,8 +1,8 @@
 import os
 Import("env")
 
-def after_build(source, target, env):
-    print("=> After build: COnnecting to ESP32...")
+def connect_to_esp32_wifi(source, target, env):
+    print("=> After build: Connecting to ESP32...")
 
     config = env.GetProjectConfig()
 
@@ -15,8 +15,8 @@ def after_build(source, target, env):
         print("=> WiFi not found, retrying...")
         os.system("m wifi connect %s %s" % (ssid, password))
 
-def after_upload(source, target, env):
-    print("=> After upload: Resoring home WiFi...")
+def restore_wifi(source, target, env):
+    print("=> After upload: Restoring home WiFi...")
 
     config = env.GetProjectConfig()
 
@@ -25,5 +25,6 @@ def after_upload(source, target, env):
 
     os.system("m wifi connect %s %s" % (wifi_name, wifi_password))
 
-env.AddPostAction("$UPLOADCMD", after_upload)
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", after_build)
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.elf", connect_to_esp32_wifi)
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", connect_to_esp32_wifi)
+env.AddPostAction("$UPLOADCMD", restore_wifi)

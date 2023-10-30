@@ -102,65 +102,46 @@ void initializeSerialCommunication() {
  * If the connection fails or no services/characteristics are found, the device will restart.
  */
 void connectToClientDevice() {
-  Log.noticeln("Connecting to");
+  Log.noticeln("[Connecting] to Terrain Command ...");
+
   if (client == nullptr) {
-    restart("[BUG] Device not found, will reboot");
+    restart("Device not found, will reboot");
   }
 
-  Log.noticeln("Setting client callbacks ...");
   static ClientCallback clientCallbackInstance;
   client->setClientCallbacks(&clientCallbackInstance);
-
-  Log.noticeln("[Connecting]");
   if (!client->connect()) {
     restart("Timeout connecting to the device");
   }
 
   Log.noticeln("Discovering services ...");
-  auto services = client->getServices(true);
-  if (services->empty()) {
-    restart("[BUG] No services found, will retry");
-  }
-
-  for (auto &service: *services) {
+  for (auto &service: *client->getServices(true)) {
     Log.noticeln("Discovering characteristics ...");
-    auto characteristics = service->getCharacteristics(true);
-
-    for (auto &characteristic: *characteristics) {
-      if (service->getUUID().equals(batteryService)) {
-        if (characteristic->getUUID().equals(batteryChar)) {
-          if (characteristic->canNotify()) {
-            if (characteristic->subscribe(true, handleBatteryUpdate, true)) {
-              Log.noticeln("[BATTERY] Subscribed to notifications");
-            } else {
-              Log.errorln("[BUG] [BATTERY] Failed to subscribe to notifications");
-            }
-          } else {
-            Log.warningln("[BUG] [BATTERY] Cannot subscribe to notifications");
-          }
-        } else {
-          Log.warningln("[BUG] Unknown battery characteristic");
-        }
+    for (auto &characteristic: *service->getCharacteristics(true)) {
+      // Register for battery level updates
+      if (!service->getUUID().equals(batteryServiceUUID)) {
+        Log.noticeln("[Battery] Unknown battery service");
+      } else if (!characteristic->getUUID().equals(batteryLevelCharUUID)) {
+        Log.noticeln("[Battery] Unknown battery characteristic");
+      } else if (!characteristic->canNotify()) {
+        Log.noticeln("[Battery] Cannot subscribe to notifications");
+      } else if (!characteristic->subscribe(true, handleBatteryUpdate, true)) {
+        Log.errorln("[BUG] [Battery] Failed to subscribe to notifications");
       } else {
-        Log.warningln("[BUG] Unknown battery service");
+        Log.noticeln("[Battery] Subscribed to notifications");
       }
 
-      if (service->getUUID().equals(hidService)) {
-        if (characteristic->getUUID().equals(reportUUID)) {
-          if (characteristic->canNotify()) {
-            if (characteristic->subscribe(true, handleButtonClick, true)) {
-              Log.noticeln("[Click] Subscribed to notifications");
-            } else {
-              Log.errorln("[BUG] [Click] Failed to subscribe to notifications");
-            }
-          } else {
-            Log.warningln("[BUG] [Click] Cannot subscribe to notifications");
-          }
-        } else {
-          Log.warningln("[BUG] Unknown report characteristic");
-        }
+      // Register for click events
+      if (!service->getUUID().equals(hidService)) {
+        Log.warningln("[Click] Unknown report service");
+      } else if (!characteristic->getUUID().equals(reportUUID)) {
+        Log.warningln("[Click] Unknown report characteristic");
+      } else if (!characteristic->canNotify()) {
+        Log.warningln("[Click] Cannot subscribe to notifications");
+      } else if (!characteristic->subscribe(true, handleButtonClick, true)) {
+        Log.errorln("[Click] [Bug] Failed to subscribe to notifications");
       } else {
-        Log.warningln("[BUG] Unknown report service");
+        Log.noticeln("[Click] Subscribed to notifications");
       }
     }
   }
@@ -217,11 +198,15 @@ void configureWiFi() {
 
 void setup() {
   initializeSerialCommunication();
-  configureWiFi();
   initializeKeyboard();
   setup_rust();
   startBLEScanForDevice();
   connectToClientDevice();
+  configureWiFi();
+
+  // if (keyboard.isConnected()) {
+  //   keyboard.setBatteryLevel(50);
+  // }
 }
 
 void loop() {
