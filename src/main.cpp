@@ -4,8 +4,11 @@ const int numberOfButtons       = 8;
 const int pins[numberOfButtons] = {2, 3, 4, 5, 6, 7, 8, 9};
 OneButton buttons[numberOfButtons];
 
+extern "C" void handle_click(int buttonIndex);
+
 static void handleClick(void *param) {
-  OneButton *oneButton = static_cast<OneButton *>(param);
+  int buttonIndex = static_cast<int>(reinterpret_cast<intptr_t>(param));
+  handle_click(buttonIndex);
 }
 
 void setup() {
