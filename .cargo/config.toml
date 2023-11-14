@@ -1,14 +1,19 @@
 [build]
 # target = "xtensa-esp32-espidf"
 # target = "riscv32imc-esp-espidf"
-target = "aarch64-apple-darwin"
+# target = "aarch64-apple-darwin"
+
+target = "thumbv7em-none-eabihf"
+
+# [target.thumbv7em-none-eabihf]
+
 
 [unstable]
-build-std = ["std", "panic_abort", "alloc"]
+build-std = ["panic_abort", "alloc"]
 
-[profile.release]
-opt-level = "z"
-lto = true
+# [profile.release]
+# opt-level = "z"
+# lto = true
 
 [env]
 RUST_LOG = "debug"
