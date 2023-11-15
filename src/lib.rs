@@ -7,10 +7,13 @@ extern crate spin;
 extern crate hashbrown;
 extern crate alloc;
 
+// lock_api
+extern crate lock_api;
+use lock_api::Mutex;
+
 use log::*;
 use lazy_static::*;
 use anyhow::*;
-use spin::Spin;
 use hashbrown::HashMap;
 use core::option::Option::{None, Some};
 use core::result::Result::Ok;
@@ -91,7 +94,7 @@ lazy_static! {
     table
   };
 
-  static ref STATE: Spin::Mutex<Option<State>> = Spin::Mutex::new(State::Undefined);
+  static ref STATE: Mutex<Option<State>> = Mutex::new(State::Undefined);
 }
 
 fn send(event: Option<BLEEvent>) {
