@@ -70,7 +70,17 @@ class Cargo:
 
         if self.__rust_bindgen_enabled:
             env["ENV"]["CARGO_PIO_BUILD_BINDGEN_RUN"] = "True"
-            env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = self.__rust_bindgen_extra_clang_args
+
+            # rust_bindgen_extra_clang_args = -I${platform.get_package_dir("framework-arduinoespressif32")}/tools/sdk/include/esp32
+
+
+            # env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = self.__rust_bindgen_extra_clang_args
+            base_path = env.PioPlatform().get_package_dir("framework-arduinoespressif32")
+            pkg_path = os.path.join(base_path, "tools", "sdk", "include", "esp32")
+            # print debug info
+            print("base_path: ", base_path)
+            print("pkg_path: ", pkg_path)
+            env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = f"-I{pkg_path}"
 
         env["ENV"]["CARGO_PIO_BUILD_PIO_PLATFORM_DIR"] = env.PioPlatform().get_dir()[0]
         env["ENV"]["CARGO_PIO_BUILD_PIO_FRAMEWORK_DIR"] = env.PioPlatform().get_package_dir(env.PioPlatform().frameworks[env.GetProjectOption("framework")[0]]["package"])

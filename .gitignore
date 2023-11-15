@@ -7,3 +7,4 @@
 CMakeFiles/
 .env
 sdkconfig.release
+sdkconfig.debug
