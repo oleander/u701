@@ -20,6 +20,7 @@ use crate::types::*;
 use anyhow::Result;
 use log::*;
 
+#[allow(dead_code)]
 extern "C" fn init() {
   esp_idf_sys::link_patches();
   esp_idf_svc::log::EspLogger::initialize_default();

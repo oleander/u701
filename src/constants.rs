@@ -16,16 +16,6 @@ pub const PLAY_PAUSE: MediaControlKey = MediaControlKey(8, 0);
 pub const VOLUME_UP: MediaControlKey = MediaControlKey(32, 0);
 pub const EJECT: MediaControlKey = MediaControlKey(16, 0);
 
-enum ButtonEvent {
-  Shortcut(u8),
-  VolumeDown,
-  PrevTrack,
-  PlayPause,
-  NextTrack,
-  VolumeUp,
-  Eject
-}
-
 lazy_static! {
   // Button 2-4 & 6-8
   pub static ref REGULAR_BUTTON_EVENTS: HashMap<ButtonIdentifier, BluetoothEvent> = {
