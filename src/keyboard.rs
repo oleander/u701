@@ -6,7 +6,7 @@ use esp32_nimble::hid::*;
 use esp32_nimble::utilities::mutex::Mutex;
 use esp32_nimble::{BLECharacteristic, BLEDevice, BLEHIDDevice, BLEServer};
 use esp_idf_sys as _;
-use std::sync::Arc;
+use alloc::sync::Arc;
 
 const KEYBOARD_ID: u8 = 0x01;
 const MEDIA_KEYS_ID: u8 = 0x02;
@@ -268,9 +268,9 @@ impl Keyboard {
   }
 
   pub fn send_media_key(&mut self, keys: [u8; 2]) {
-    self.input_keyboard.lock().set_values(keys).notify();
+    self.input_keyboard.lock().set_value(&keys).notify();
     esp_idf_hal::delay::Ets::delay_ms(7);
-    self.input_keyboard.lock().set_values([0, 0]).notify();
+    self.input_keyboard.lock().set_value(&[0, 0]).notify();
   }
 
   fn press(&mut self, char: u8) {
