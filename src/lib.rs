@@ -73,7 +73,7 @@ enum BluetoothEvent {
 
 lazy_static! {
   // Button 2-4 & 6-8
-   static ref REGULAR_LOOKUP: HashMap<ButtonIdentifier, BluetoothEvent> = {
+   static ref REGULAR_BUTTON_EVENTS: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(ButtonIdentifier::A2, BluetoothEvent::MediaControlKey(VOLUME_DOWN_KEY));
     table.insert(ButtonIdentifier::A3, BluetoothEvent::MediaControlKey(PREV_TRACK));
@@ -85,7 +85,7 @@ lazy_static! {
   };
 
   // Button 1
-   static ref META_LOOKUP_1: HashMap<ButtonIdentifier, BluetoothEvent> = {
+   static ref META_BUTTON_EVENTS_ONE: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(ButtonIdentifier::A2, BluetoothEvent::Letter(2));
     table.insert(ButtonIdentifier::A3, BluetoothEvent::Letter(3));
@@ -97,7 +97,7 @@ lazy_static! {
   };
 
   // Button 6
-  static ref META_LOOKUP_2: HashMap<ButtonIdentifier, BluetoothEvent> = {
+  static ref META_BUTTON_EVENTS_TWO: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(ButtonIdentifier::A2, BluetoothEvent::Letter(10));
     table.insert(ButtonIdentifier::A3, BluetoothEvent::Letter(11));
@@ -108,7 +108,7 @@ lazy_static! {
     table
   };
 
-  static ref STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
+  static ref CURRENT_INPUT_STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
 }
 
 fn send(event: Option<BluetoothEvent>) {
@@ -144,16 +144,16 @@ impl InputState {
       (from @ InputState::Meta(_), to @ InputState::Meta(_)) => return Err(ButtonError::InvalidButton(from.clone(), to)),
 
       // [OK] Meta 1 -> Regular
-      (InputState::Meta(MetaButton::M1), InputState::Regular(button)) => META_LOOKUP_1.get(&button),
+      (InputState::Meta(MetaButton::M1), InputState::Regular(button)) => META_BUTTON_EVENTS_ONE.get(&button),
 
       // [OK] Meta 2 -> Regular
-      (InputState::Meta(MetaButton::M2), InputState::Regular(button)) => META_LOOKUP_2.get(&button),
+      (InputState::Meta(MetaButton::M2), InputState::Regular(button)) => META_BUTTON_EVENTS_TWO.get(&button),
 
       // [OK] Regular -> Meta
       (_, InputState::Meta(_)) => None,
 
       // [OK] Regular -> Regular
-      (_, InputState::Regular(button)) => REGULAR_LOOKUP.get(&button),
+      (_, InputState::Regular(button)) => REGULAR_BUTTON_EVENTS.get(&button),
 
       // [BUG] ?? -> Undefined
       (_, InputState::Undefined) => {
@@ -172,7 +172,7 @@ fn handle_click(index: u8) {
     None => return error!("Invalid button index: {}", index)
   };
 
-  let mut state_guard = STATE.lock();
+  let mut state_guard = CURRENT_INPUT_STATE.lock();
   let (event, new_state) = match state_guard.transition_to(curr_state) {
     Ok(result) => result,
     Err(e) => return error!("Invalid button transition: {:?}", e)
