@@ -116,16 +116,7 @@ lazy_static! {
   static ref KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard::new());
 }
 
-fn send_bluetooth_event(event: BluetoothEvent) {
-  match event {
-    BluetoothEvent::MediaControlKey(key) => {
-      KEYBOARD.lock().send_media_key(key.into());
-    },
-    BluetoothEvent::Letter(letter) => {
-      KEYBOARD.lock().send_char(letter);
-    }
-  }
-}
+
 
 impl InputState {
   // use Meta::*;
@@ -194,7 +185,15 @@ fn handle_button_click(index: u8) {
 
   *state_guard = new_state;
 
-  if let Some(event) = event {
-    send_bluetooth_event(event);
+  match event {
+    Some(BluetoothEvent::MediaControlKey(key)) => {
+      KEYBOARD.lock().send_media_key(key.into());
+    },
+    Some(BluetoothEvent::Letter(letter)) => {
+      KEYBOARD.lock().send_char(letter);
+    },
+    None => {
+      warn!("No event for button click: {:?}", curr_state);
+    }
   }
 }
