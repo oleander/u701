@@ -120,7 +120,7 @@ impl State {
     }
   }
 
-  fn transition_to(self, next: State) -> Result<Optional<BLEEvent>, ButtonError> {
+  fn transition_to(self, next: State) -> Result<Option<BLEEvent>, ButtonError> {
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
       (from @ State::Meta(_), to @ State::Meta(_)) => {
