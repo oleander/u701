@@ -7,8 +7,7 @@ OneButton buttons[numberOfButtons];
 extern "C" void handle_click(int buttonIndex);
 
 static void handleClick(void *param) {
-  int buttonIndex = static_cast<int>(reinterpret_cast<intptr_t>(param));
-  handle_click(buttonIndex);
+  handle_click(static_cast<int>(reinterpret_cast<intptr_t>(param)));
 }
 
 void setup() {
