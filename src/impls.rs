@@ -1,4 +1,5 @@
-use crate::types::{InputState, InvalidButtonTransitionError, BluetoothEvent, MetaButton, ButtonIdentifier::*, *};
+use crate::types::{BluetoothEvent, InputState, InvalidButtonTransitionError, MetaButton, *};
+use crate::types::ButtonIdentifier::*;
 use crate::constants::*;
 
 impl From<MediaControlKey> for [u8; 2] {

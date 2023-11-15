@@ -6,7 +6,6 @@ use crate::types::{BluetoothEvent, InputState, InvalidButtonTransitionError, Met
 use crate::keyboard::Keyboard;
 use crate::types::ButtonIdentifier::*;
 
-
 #[global_allocator]
 pub static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
 pub const VOLUME_DOWN_KEY: MediaControlKey = MediaControlKey(64, 0);
