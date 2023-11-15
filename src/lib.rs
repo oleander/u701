@@ -17,6 +17,7 @@ use core::option::Option::{None, Some};
 use core::result::Result::Ok;
 use crate::constants::*;
 use crate::types::*;
+use anyhow::Result;
 use log::*;
 
 extern "C" fn init() {
@@ -26,6 +27,7 @@ extern "C" fn init() {
   info!("Starting up...");
 }
 
+#[no_mangle]
 extern "C" fn rust_handle_button_click(index: u8) {
   let Some(curr_state) = InputState::from(index) else {
     return error!("Invalid button index: {}", index);
@@ -33,6 +35,12 @@ extern "C" fn rust_handle_button_click(index: u8) {
 
   if let Err(e) = handle_button_click(curr_state) {
     error!("Error handling button click: {:?}", e);
+  }
+}
+
+impl From<InvalidButtonTransitionError> for anyhow::Error {
+  fn from(e: InvalidButtonTransitionError) -> Self {
+    anyhow::anyhow!("Invalid button transition: {:?}", e)
   }
 }
 
