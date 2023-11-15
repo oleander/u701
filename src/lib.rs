@@ -1,5 +1,4 @@
 #![no_std]
-#![feature(alloc_error_handler)]
 
 extern crate log;
 extern crate lazy_static;
@@ -22,18 +21,13 @@ use linked_list_allocator::LockedHeap;
 #[global_allocator]
 static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
 
-#[alloc_error_handler]
-fn on_alloc_error(layout: alloc::alloc::Layout) -> ! {
-  panic!("allocation error: {:?}", layout)
-}
-
-#[panic_handler]
-fn on_panic(_info: &core::panic::PanicInfo) -> ! {
-  loop {}
-}
-
 #[derive(Clone, Debug, Copy)]
 struct MediaControlKey(u8, u8);
+
+#[derive(Debug)]
+enum InvalidButtonTransitionError {
+  InvalidButton(InputState, InputState)
+}
 
 const VOLUME_DOWN_KEY: MediaControlKey = MediaControlKey(64, 0);
 const NEXT_TRACK: MediaControlKey = MediaControlKey(1, 0);
@@ -114,13 +108,8 @@ lazy_static! {
   static ref CURRENT_INPUT_STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
 }
 
-fn send_bluetooth_event(event: Option<BluetoothEvent>) {
+fn send_bluetooth_event(event: BluetoothEvent) {
   // todo!("Send event: {:?}", event);
-}
-
-#[derive(Debug)]
-enum InvalidButtonTransitionError {
-  InvalidButton(InputState, InputState)
 }
 
 impl InputState {
@@ -159,11 +148,11 @@ impl InputState {
       // [OK] Meta 2 -> Regular
       (Meta(M2), Regular(button)) => META_BUTTON_EVENTS_TWO.get(&button),
 
-      // [OK] Regular -> Meta
-      (_, Meta(_)) => None,
-
       // [OK] Regular -> Regular
       (_, Regular(button)) => REGULAR_BUTTON_EVENTS.get(&button),
+
+      // [OK] Regular -> Meta
+      (_, Meta(_)) => None,
 
       // [BUG] ?? -> Undefined
       (_, Undefined) => {
@@ -189,5 +178,8 @@ fn handle_button_click(index: u8) {
   };
 
   *state_guard = new_state;
-  send_bluetooth_event(event);
+
+  if let Some(event) = event {
+    send_bluetooth_event(event);
+  }
 }
