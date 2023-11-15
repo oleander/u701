@@ -4,6 +4,8 @@ edition = "2021"
 name = "u701"
 
 [dependencies]
+anyhow = "1.0.75"
+lazy_static = "1.4.0"
 # thingbuf = { version = "0.1.4", default-features = false, features = ["static"] }
 # lazy_static = { version = "1.4.0", default-features = false }
 # env_logger = { version = "0.10.0", default-features = false }
