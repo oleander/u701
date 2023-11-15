@@ -43,7 +43,7 @@ const VOLUME_UP: MediaControlKey = MediaControlKey(32, 0);
 const EJECT: MediaControlKey = MediaControlKey(16, 0);
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Copy)]
-enum R {
+enum ButtonIdentifier {
   A2,
   A3,
   A4,
@@ -61,7 +61,7 @@ enum M {
 #[derive(Clone, Debug, Copy)]
 enum State {
   Meta(M),
-  Regular(R),
+  Regular(ButtonIdentifier),
   Undefined
 }
 
@@ -73,38 +73,38 @@ enum BLEEvent {
 
 lazy_static! {
   // Button 2-4 & 6-8
-   static ref REGULAR_LOOKUP: HashMap<R, BLEEvent> = {
+   static ref REGULAR_LOOKUP: HashMap<ButtonIdentifier, BLEEvent> = {
     let mut table = HashMap::new();
-    table.insert(R::A2, BLEEvent::MediaControlKey(VOLUME_DOWN_KEY));
-    table.insert(R::A3, BLEEvent::MediaControlKey(PREV_TRACK));
-    table.insert(R::A4, BLEEvent::MediaControlKey(PLAY_PAUSE));
-    table.insert(R::B2, BLEEvent::MediaControlKey(VOLUME_UP));
-    table.insert(R::B3, BLEEvent::MediaControlKey(NEXT_TRACK));
-    table.insert(R::B4, BLEEvent::MediaControlKey(EJECT));
+    table.insert(ButtonIdentifier::A2, BLEEvent::MediaControlKey(VOLUME_DOWN_KEY));
+    table.insert(ButtonIdentifier::A3, BLEEvent::MediaControlKey(PREV_TRACK));
+    table.insert(ButtonIdentifier::A4, BLEEvent::MediaControlKey(PLAY_PAUSE));
+    table.insert(ButtonIdentifier::B2, BLEEvent::MediaControlKey(VOLUME_UP));
+    table.insert(ButtonIdentifier::B3, BLEEvent::MediaControlKey(NEXT_TRACK));
+    table.insert(ButtonIdentifier::B4, BLEEvent::MediaControlKey(EJECT));
     table
   };
 
   // Button 1
-   static ref META_LOOKUP_1: HashMap<R, BLEEvent> = {
+   static ref META_LOOKUP_1: HashMap<ButtonIdentifier, BLEEvent> = {
     let mut table = HashMap::new();
-    table.insert(R::A2, BLEEvent::Letter(2));
-    table.insert(R::A3, BLEEvent::Letter(3));
-    table.insert(R::A4, BLEEvent::Letter(4));
-    table.insert(R::B2, BLEEvent::Letter(6));
-    table.insert(R::B3, BLEEvent::Letter(7));
-    table.insert(R::B4, BLEEvent::Letter(8));
+    table.insert(ButtonIdentifier::A2, BLEEvent::Letter(2));
+    table.insert(ButtonIdentifier::A3, BLEEvent::Letter(3));
+    table.insert(ButtonIdentifier::A4, BLEEvent::Letter(4));
+    table.insert(ButtonIdentifier::B2, BLEEvent::Letter(6));
+    table.insert(ButtonIdentifier::B3, BLEEvent::Letter(7));
+    table.insert(ButtonIdentifier::B4, BLEEvent::Letter(8));
     table
   };
 
   // Button 6
-  static ref META_LOOKUP_2: HashMap<R, BLEEvent> = {
+  static ref META_LOOKUP_2: HashMap<ButtonIdentifier, BLEEvent> = {
     let mut table = HashMap::new();
-    table.insert(R::A2, BLEEvent::Letter(10));
-    table.insert(R::A3, BLEEvent::Letter(11));
-    table.insert(R::A4, BLEEvent::Letter(12));
-    table.insert(R::B2, BLEEvent::Letter(14));
-    table.insert(R::B3, BLEEvent::Letter(15));
-    table.insert(R::B4, BLEEvent::Letter(16));
+    table.insert(ButtonIdentifier::A2, BLEEvent::Letter(10));
+    table.insert(ButtonIdentifier::A3, BLEEvent::Letter(11));
+    table.insert(ButtonIdentifier::A4, BLEEvent::Letter(12));
+    table.insert(ButtonIdentifier::B2, BLEEvent::Letter(14));
+    table.insert(ButtonIdentifier::B3, BLEEvent::Letter(15));
+    table.insert(ButtonIdentifier::B4, BLEEvent::Letter(16));
     table
   };
 
@@ -127,13 +127,13 @@ impl State {
   fn from(id: u8) -> Option<Self> {
     match id {
       1 => Some(State::Meta(M::M1)),
-      2 => Some(State::Regular(R::A2)),
-      3 => Some(State::Regular(R::A3)),
-      4 => Some(State::Regular(R::A4)),
+      2 => Some(State::Regular(ButtonIdentifier::A2)),
+      3 => Some(State::Regular(ButtonIdentifier::A3)),
+      4 => Some(State::Regular(ButtonIdentifier::A4)),
       5 => Some(State::Meta(M::M2)),
-      6 => Some(State::Regular(R::B2)),
-      7 => Some(State::Regular(R::B3)),
-      8 => Some(State::Regular(R::B4)),
+      6 => Some(State::Regular(ButtonIdentifier::B2)),
+      7 => Some(State::Regular(ButtonIdentifier::B3)),
+      8 => Some(State::Regular(ButtonIdentifier::B4)),
       _ => None
     }
   }
