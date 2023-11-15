@@ -71,8 +71,9 @@ enum BluetoothEvent {
   Letter(u8)
 }
 
+use ButtonIdentifier::*;
+
 lazy_static! {
-    use ButtonIdentifier::*;
 
   // Button 2-4 & 6-8
    static ref REGULAR_BUTTON_EVENTS: HashMap<ButtonIdentifier, BluetoothEvent> = {
