@@ -26,9 +26,11 @@ int main(void) {
 
 void setup() {
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  Log.notice("[setup] Starting up main.cpp");
 
+  Log.notice("[setup] Starting up main.cpp");
+  Log.notice("[setup] Initializing Rust");
   init(); // Rust
+  Log.notice("[setup] Finished initializing Rust");
 
   for (int i = 0; i < numberOfButtons; ++i) {
     buttons[i] = OneButton(pins[i]);
@@ -37,6 +39,8 @@ void setup() {
   for (int i = 0; i < numberOfButtons; ++i) {
     buttons[i].attachClick(handleClick, reinterpret_cast<void *>(static_cast<intptr_t>(i)));
   }
+
+  Log.notice("[setup] Finished setting up main.cpp");
 }
 
 void loop() {
