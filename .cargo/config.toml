@@ -12,3 +12,4 @@ lto = true
 
 [env]
 RUST_LOG = "debug"
+ESP_IDF_VERSION = "v4.6.6"
