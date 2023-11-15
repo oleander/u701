@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(alloc_error_handler)]
 
 extern crate log;
 extern crate lazy_static;
@@ -15,12 +16,23 @@ use hashbrown::HashMap;
 use core::option::Option::{None, Some};
 use core::result::Result::Ok;
 
+extern crate linked_list_allocator;
+use linked_list_allocator::LockedHeap;
+
+#[global_allocator]
+static ALLOCATOR: LockedHeap = LockedHeap::empty();
+
+#[alloc_error_handler]
+fn alloc_error_handler(layout: alloc::alloc::Layout) -> ! {
+  panic!("allocation error: {:?}", layout)
+}
+
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 struct MediaKey(u8, u8);
 
 const KEY_MEDIA_VOLUME_DOWN: MediaKey = MediaKey(64, 0);
@@ -30,7 +42,7 @@ const KEY_MEDIA_PLAY_PAUSE: MediaKey = MediaKey(8, 0);
 const KEY_MEDIA_VOLUME_UP: MediaKey = MediaKey(32, 0);
 const KEY_MEDIA_EJECT: MediaKey = MediaKey(16, 0);
 
-#[derive(Eq, Hash, PartialEq, Clone, Debug)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug, Copy)]
 enum R {
   A2,
   A3,
@@ -40,20 +52,20 @@ enum R {
   B4
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 enum M {
   M1,
   M2
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 enum State {
   Meta(M),
   Regular(R),
   Undefined
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 enum BLEEvent {
   MediaKey(MediaKey),
   Letter(u8)
@@ -141,7 +153,14 @@ impl State {
       (_, State::Meta(_)) => None,
 
       // [OK] Regular -> Regular
-      (_, State::Regular(button)) => REGULAR_LOOKUP.get(&button)
+      (_, State::Regular(button)) => REGULAR_LOOKUP.get(&button),
+
+      // [BUG] ?? -> Undefined
+      (_, State::Undefined) => {
+        panic!("[BUG] Cannot transition to undefined state")
+      }
+
+
     };
 
     Ok((event.cloned(), next))
