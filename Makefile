@@ -23,4 +23,4 @@ erase:
 monitor:
 	./tools/monitor.sh -b 115200 -p $(PORT)
 menuconfig:
-	cargo pio espidf menuconfig -r true
+	cargo pio espidf menuconfig
