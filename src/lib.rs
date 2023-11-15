@@ -54,7 +54,7 @@ fn handle_button_click(curr_state: InputState) -> Result<()> {
       KEYBOARD.lock().send_media_key(key.into());
     },
     Some(BluetoothEvent::Letter(letter)) => {
-      KEYBOARD.lock().send_char(letter);
+      KEYBOARD.lock().send_shortcut(letter);
     },
     None => {
       warn!("No event for button click: {:?}", curr_state);
