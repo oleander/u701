@@ -30,6 +30,7 @@ fn handle_button_click(index: u8) {
   };
 
   let mut state_guard = CURRENT_INPUT_STATE.lock();
+
   let (event, new_state) = match state_guard.transition_to(curr_state) {
     Ok(result) => result,
     Err(e) => return error!("Invalid button transition: {:?}", e)
