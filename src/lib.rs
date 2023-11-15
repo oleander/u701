@@ -28,7 +28,7 @@ fn on_alloc_error(layout: alloc::alloc::Layout) -> ! {
 }
 
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
+fn on_panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
