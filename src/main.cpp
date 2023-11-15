@@ -1,8 +1,9 @@
-#include <OneButton.h>
+#include <Arduino.h>
 #include <ArduinoLog.h>
+#include <OneButton.h>
 
-const int numberOfButtons       = 8;
-const int pins[numberOfButtons] = {6, 8, 10, 14, 15, 16, 19};
+const int numberOfButtons       = 1;
+const int pins[numberOfButtons] = {10};//, 8, 10, 14, 15, 16, 19};
 OneButton buttons[numberOfButtons];
 
 extern "C" void rust_handle_button_click(int buttonIndex);
@@ -12,7 +13,17 @@ static void handleClick(void *param) {
   rust_handle_button_click(static_cast<int>(reinterpret_cast<intptr_t>(param)));
 }
 
-int main(void) {
+// int main(void) {
+//   setup();
+
+//   Log.notice("[main] Entering main loop");
+
+//   while (true) {
+//     loop();
+//   }
+// }
+
+void app_main(void) {
   setup();
 
   Log.notice("[main] Entering main loop");
@@ -23,6 +34,7 @@ int main(void) {
 }
 
 void setup() {
+  Serial.begin(115200);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
 
   Log.notice("[setup] Starting up main.cpp");
@@ -42,4 +54,6 @@ void loop() {
   for (int i = 0; i < numberOfButtons; ++i) {
     buttons[i].tick();
   }
+
+  delay(10);
 }
