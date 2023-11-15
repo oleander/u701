@@ -1,4 +1,4 @@
-use crate::types::*;
+use crate::types::{InputState, InvalidButtonTransitionError, BluetoothEvent, MetaButton, ButtonIdentifier::*, *};
 use crate::constants::*;
 
 impl From<MediaControlKey> for [u8; 2] {
@@ -8,7 +8,7 @@ impl From<MediaControlKey> for [u8; 2] {
 }
 
 impl InputState {
-  fn from(id: u8) -> Option<Self> {
+  pub fn from(id: u8) -> Option<Self> {
     use InputState::*;
     use MetaButton::*;
 
@@ -25,7 +25,7 @@ impl InputState {
     }
   }
 
-  fn transition_to(&self, next: InputState) -> Result<(Option<BluetoothEvent>, InputState), InvalidButtonTransitionError> {
+  pub fn transition_to(&self, next: InputState) -> Result<(Option<BluetoothEvent>, InputState), InvalidButtonTransitionError> {
     use InvalidButtonTransitionError::*;
     use MetaButton::*;
     use InputState::*;
