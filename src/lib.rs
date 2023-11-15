@@ -43,7 +43,9 @@ enum State {
   Undefined
 }
 
-impl PrevButton {
+enum BLEEvent {
+  MediaKey(MediaKey),
+  Letter(u8)
 }
 
 lazy_static! {
@@ -94,6 +96,7 @@ fn send(event: Optional<BLEEvent>) {
 impl State {
   use Meta::*;
   use Button::*;
+
   fn from(id: u8) -> Option<Self> {
     match id {
       1 => Some(Meta(M1)),
@@ -181,7 +184,7 @@ fn handle_click(index: u8) {
     return error!("Invalid button: {}", index);
   };
 
-  match PREV_BUTTON_PRESS.lock().unwrap().transition_to(curr_state) {
+  match STATE.lock().unwrap().transition_to(curr_state) {
     Ok(event) => send(event),
     Err(e) => error!("Error: {}", e)
   }
