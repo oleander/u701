@@ -8,3 +8,4 @@ CMakeFiles/
 .env
 sdkconfig.release
 sdkconfig.debug
+src/CMakeLists.txt
