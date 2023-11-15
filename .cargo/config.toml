@@ -7,7 +7,7 @@ target = "riscv32imc-esp-espidf"
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
 runner = "espflash flash -b 921600 -p /dev/cu.wchusbserial110 --chip esp32c3 --monitor"
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]#, "--cfg", "espidf_time64"]
+rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace", "--cfg", "espidf_time64"]
 
 [target.xtensa-esp32-espidf]
 linker = "ldproxy"
@@ -18,7 +18,7 @@ rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 [unstable]
 build-std = ["panic_abort", "alloc", "core", "std"]
 
-# [env]
+[env]
 # RUST_LOG = "debug"
 # LIBCLANG_PATH="/Users/linusoleander/.rustup/toolchains/esp/xtensa-esp32-elf-clang/esp-16.0.0-20230516/esp-clang/lib"
-# ESP_IDF_VERSION = "tag:v4.4.6"
+ESP_IDF_VERSION = "tag:v5.1.1"
