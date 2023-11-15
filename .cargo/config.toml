@@ -7,7 +7,7 @@ target = "riscv32imc-esp-espidf"
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
 runner = "espflash flash -b 921600 -p /dev/cu.wchusbserial110 --chip esp32c3 --monitor"
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace", "--cfg", "espidf_time64"]
+rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]#, "--cfg", "espidf_time64"]
 
 [target.xtensa-esp32-espidf]
 linker = "ldproxy"

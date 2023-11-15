@@ -2,7 +2,7 @@
 #include <ArduinoLog.h>
 
 const int numberOfButtons       = 8;
-const int pins[numberOfButtons] = {4, 13, 14, 27, 25, 26, 32, 33};
+const int pins[numberOfButtons] = {6, 8, 10, 14, 15, 16, 19};
 OneButton buttons[numberOfButtons];
 
 extern "C" void rust_handle_button_click(int buttonIndex);
@@ -20,8 +20,6 @@ int main(void) {
   while (true) {
     loop();
   }
-
-  return 0;
 }
 
 void setup() {
@@ -33,10 +31,7 @@ void setup() {
   Log.notice("[setup] Finished initializing Rust");
 
   for (int i = 0; i < numberOfButtons; ++i) {
-    buttons[i] = OneButton(pins[i]);
-  }
-
-  for (int i = 0; i < numberOfButtons; ++i) {
+    buttons[i] = OneButton(pins[i], true, true);
     buttons[i].attachClick(handleClick, reinterpret_cast<void *>(static_cast<intptr_t>(i)));
   }
 

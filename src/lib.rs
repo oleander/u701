@@ -26,6 +26,10 @@ extern "C" fn init() {
   esp_idf_svc::log::EspLogger::initialize_default();
 
   info!("Starting up...");
+
+  if KEYBOARD.lock().connected() {
+    info!("Keyboard is already connected");
+  }
 }
 
 #[no_mangle]

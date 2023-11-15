@@ -88,7 +88,7 @@ pub struct Keyboard {
 impl Keyboard {
   pub fn new() -> Self {
     let device = BLEDevice::take();
-    device.security().set_auth(AuthReq::Bond | AuthReq::Mitm).set_io_cap(SecurityIOCap::NoInputNoOutput);
+    // device.security().set_auth(AuthReq::all()).set_io_cap(SecurityIOCap::NoInputNoOutput);
 
     let server = device.get_server();
     let mut hid = BLEHIDDevice::new(server);
@@ -107,7 +107,7 @@ impl Keyboard {
 
     let ble_advertising = device.get_advertising();
     ble_advertising
-      .name("u701")
+      .name("x701")
       .appearance(0x03C1)
       .add_service_uuid(hid.hid_service().lock().uuid())
       .scan_response(false);
