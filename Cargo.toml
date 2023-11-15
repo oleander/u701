@@ -5,7 +5,7 @@ name = "u701"
 
 [dependencies]
 anyhow = { version = "1.0.75", default-features = false }
-hashbrown = { version = "0.11.2", default-features = false }
+hashbrown = { version = "0.11.2", default-features = true }
 lazy_static = { version = "1.4.0", default-features = false, features = ["spin_no_std"] }
 # thingbuf = { version = "0.1.4", default-features = false, features = ["static"] }
 # lazy_static = { version = "1.4.0", default-features = false }

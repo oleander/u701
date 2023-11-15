@@ -20,6 +20,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
+#[derive(Clone)]
 struct MediaKey(u8, u8);
 
 const KEY_MEDIA_VOLUME_DOWN: MediaKey = MediaKey(64, 0);
@@ -29,7 +30,7 @@ const KEY_MEDIA_PLAY_PAUSE: MediaKey = MediaKey(8, 0);
 const KEY_MEDIA_VOLUME_UP: MediaKey = MediaKey(32, 0);
 const KEY_MEDIA_EJECT: MediaKey = MediaKey(16, 0);
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 enum R {
   A2,
   A3,
@@ -39,17 +40,20 @@ enum R {
   B4
 }
 
+#[derive(Clone)]
 enum M {
   M1,
   M2
 }
 
+#[derive(Clone)]
 enum State {
   Meta(M),
   Regular(R),
   Undefined
 }
 
+#[derive(Clone)]
 enum BLEEvent {
   MediaKey(MediaKey),
   Letter(u8)
@@ -92,7 +96,7 @@ lazy_static! {
     table
   };
 
-  static ref STATE: Mutex<Option<State>> = Mutex::new(State::Undefined);
+  static ref STATE: Mutex<State> = Mutex::new(State::Undefined);
 }
 
 fn send(event: Option<BLEEvent>) {
@@ -121,10 +125,10 @@ impl State {
     }
   }
 
-  fn transition_to(self, next: State) -> Result<Option<BLEEvent>, ButtonError> {
+  fn transition_to(&self, next: State) -> Result<(Option<BLEEvent>, State), ButtonError> {
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
-      (from @ State::Meta(_), to @ State::Meta(_)) => ButtonError::InvalidButton(from, to),
+      (from @ State::Meta(_), to @ State::Meta(_)) => return Err(ButtonError::InvalidButton(from.clone(), to)),
 
       // [OK] Meta 1 -> Regular
       (State::Meta(M::M1), State::Regular(button)) => META_LOOKUP_1.get(&button),
@@ -136,23 +140,33 @@ impl State {
       (_, State::Meta(_)) => None,
 
       // [OK] Regular -> Regular
-      (_, button) => REGULAR_LOOKUP.get(&button)
+      (_, State::Regular(button)) => REGULAR_LOOKUP.get(&button)
     };
 
-    self = next;
-
-    Ok(event)
+    Ok((event.cloned(), next))
   }
 }
 
 #[no_mangle]
 fn handle_click(index: u8) {
-  let Some(curr_state) = State::from(index) else {
-    return error!("Invalid button: {}", index);
+  let curr_state = match State::from(index) {
+    Some(state) => state,
+    None => {
+      // Logging in no-std environment requires a logger backend implementation.
+      // error!("Invalid button: {}", index);
+      return;
+    }
   };
 
-  match STATE.lock().unwrap().transition_to(curr_state) {
-    Ok(event) => send(event),
-    Err(e) => error!("Error: {}", e)
-  }
+  let mut state_guard = STATE.lock();
+  let (event, new_state) = match state_guard.transition_to(curr_state) {
+    Ok(result) => result,
+    Err(e) => {
+      // error!("Error: {}", e);
+      return;
+    }
+  };
+
+  *state_guard = new_state;
+    send(event);
 }
