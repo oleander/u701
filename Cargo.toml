@@ -8,11 +8,12 @@ name = "u701"
 spin = { version = "0.9.8", default-features = false, features = ["mutex", "spin_mutex"] }
 lazy_static = { version = "1.4.0", default-features = false, features = ["spin_no_std"] }
 esp32-nimble = { git = "https://github.com/taks/esp32-nimble.git", branch = "develop" }
+esp-idf-sys = { version = "0.33.7", features = ["native", "binstart"] }
 anyhow = { version = "1.0.75", default-features = false }
 log = { version = "0.4.20", default-features = false }
 linked_list_allocator = "0.10.5"
-esp-idf-sys = { version = "0.33.7", features = ["native", "binstart"] }
 esp-idf-hal = "0.42.5"
+esp-idf-svc = "0.47.3"
 hashbrown = "0.11.2"
 libc = "0.2.150"
 

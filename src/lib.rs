@@ -19,6 +19,13 @@ use crate::constants::*;
 use crate::types::*;
 use log::*;
 
+extern "C" fn init() {
+  esp_idf_sys::link_patches();
+  esp_idf_svc::log::EspLogger::initialize_default();
+
+  info!("Starting up...");
+}
+
 #[no_mangle]
 fn handle_button_click(index: u8) {
   let curr_state = match InputState::from(index) {
@@ -46,16 +53,4 @@ fn handle_button_click(index: u8) {
       warn!("No event for button click: {:?}", curr_state);
     }
   }
-}
-
-// mod bindings {
-//   include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-// }
-
-extern "C" {
-  fn one_button_new(index: u8, is_pressed: bool, is_long_pressed: bool);
-}
-
-fn hello() {
-  unsafe { one_button_new(1, false, false); };
 }
