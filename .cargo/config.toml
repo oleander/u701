@@ -1,9 +1,9 @@
 [build]
 # target = "xtensa-esp32-espidf"
-# target = "riscv32imc-esp-espidf"
+target = "riscv32imc-esp-espidf"
 # target = "aarch64-apple-darwin"
 
-target = "thumbv7em-none-eabihf"
+# target = "thumbv7em-none-eabihf"
 
 # [target.thumbv7em-none-eabihf]
 
