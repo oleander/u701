@@ -111,12 +111,12 @@ lazy_static! {
   static ref CURRENT_INPUT_STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
 }
 
-fn send(event: Option<BluetoothEvent>) {
+fn send_bluetooth_event(event: Option<BluetoothEvent>) {
   // todo!("Send event: {:?}", event);
 }
 
 #[derive(Debug)]
-enum ButtonError {
+enum InvalidButtonTransitionError {
   InvalidButton(InputState, InputState)
 }
 
@@ -138,10 +138,10 @@ impl InputState {
     }
   }
 
-  fn transition_to(&self, next: InputState) -> Result<(Option<BluetoothEvent>, InputState), ButtonError> {
+  fn transition_to(&self, next: InputState) -> Result<(Option<BluetoothEvent>, InputState), InvalidButtonTransitionError> {
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
-      (from @ InputState::Meta(_), to @ InputState::Meta(_)) => return Err(ButtonError::InvalidButton(from.clone(), to)),
+      (from @ InputState::Meta(_), to @ InputState::Meta(_)) => return Err(InvalidButtonTransitionError::InvalidButton(from.clone(), to)),
 
       // [OK] Meta 1 -> Regular
       (InputState::Meta(MetaButton::M1), InputState::Regular(button)) => META_BUTTON_EVENTS_ONE.get(&button),
@@ -166,7 +166,7 @@ impl InputState {
 }
 
 #[no_mangle]
-fn handle_click(index: u8) {
+fn handle_button_click(index: u8) {
   let curr_state = match InputState::from(index) {
     Some(state) => state,
     None => return error!("Invalid button index: {}", index)
@@ -179,5 +179,5 @@ fn handle_click(index: u8) {
   };
 
   *state_guard = new_state;
-  send(event);
+  send_bluetooth_event(event);
 }
