@@ -1,7 +1,7 @@
 .PHONY: build clean upload monitor erase
 
 # PORT := $(shell ls /dev/* | grep "tty.usbserial" | head -n 1)
-PORT := "/dev/cu.wchusbserial110"
+PORT := "/dev/cu.SLAB_USBtoUART"
 # do not override ENVIROMENT
 ENVIROMENT ?= "release"
 

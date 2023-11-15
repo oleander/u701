@@ -13,17 +13,7 @@ static void handleClick(void *param) {
   rust_handle_button_click(static_cast<int>(reinterpret_cast<intptr_t>(param)));
 }
 
-// int main(void) {
-//   setup();
-
-//   Log.notice("[main] Entering main loop");
-
-//   while (true) {
-//     loop();
-//   }
-// }
-
-void app_main(void) {
+int main(void) {
   setup();
 
   Log.notice("[main] Entering main loop");
@@ -32,6 +22,16 @@ void app_main(void) {
     loop();
   }
 }
+
+// void app_main(void) {
+//   setup();
+
+//   Log.notice("[main] Entering main loop");
+
+//   while (true) {
+//     loop();
+//   }
+// }
 
 void setup() {
   Serial.begin(115200);
