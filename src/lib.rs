@@ -59,7 +59,7 @@ enum MetaButton {
 }
 
 #[derive(Clone, Debug, Copy)]
-enum State {
+enum InputState {
   Meta(MetaButton),
   Regular(ButtonIdentifier),
   Undefined
@@ -108,7 +108,7 @@ lazy_static! {
     table
   };
 
-  static ref STATE: Mutex<State> = Mutex::new(State::Undefined);
+  static ref STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
 }
 
 fn send(event: Option<BLEEvent>) {
@@ -117,46 +117,46 @@ fn send(event: Option<BLEEvent>) {
 
 #[derive(Debug)]
 enum ButtonError {
-  InvalidButton(State, State)
+  InvalidButton(InputState, InputState)
 }
 
-impl State {
+impl InputState {
   // use Meta::*;
   // use Button::*;
 
   fn from(id: u8) -> Option<Self> {
     match id {
-      1 => Some(State::Meta(MetaButton::M1)),
-      2 => Some(State::Regular(ButtonIdentifier::A2)),
-      3 => Some(State::Regular(ButtonIdentifier::A3)),
-      4 => Some(State::Regular(ButtonIdentifier::A4)),
-      5 => Some(State::Meta(MetaButton::M2)),
-      6 => Some(State::Regular(ButtonIdentifier::B2)),
-      7 => Some(State::Regular(ButtonIdentifier::B3)),
-      8 => Some(State::Regular(ButtonIdentifier::B4)),
+      1 => Some(InputState::Meta(MetaButton::M1)),
+      2 => Some(InputState::Regular(ButtonIdentifier::A2)),
+      3 => Some(InputState::Regular(ButtonIdentifier::A3)),
+      4 => Some(InputState::Regular(ButtonIdentifier::A4)),
+      5 => Some(InputState::Meta(MetaButton::M2)),
+      6 => Some(InputState::Regular(ButtonIdentifier::B2)),
+      7 => Some(InputState::Regular(ButtonIdentifier::B3)),
+      8 => Some(InputState::Regular(ButtonIdentifier::B4)),
       _ => None
     }
   }
 
-  fn transition_to(&self, next: State) -> Result<(Option<BLEEvent>, State), ButtonError> {
+  fn transition_to(&self, next: InputState) -> Result<(Option<BLEEvent>, InputState), ButtonError> {
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
-      (from @ State::Meta(_), to @ State::Meta(_)) => return Err(ButtonError::InvalidButton(from.clone(), to)),
+      (from @ InputState::Meta(_), to @ InputState::Meta(_)) => return Err(ButtonError::InvalidButton(from.clone(), to)),
 
       // [OK] Meta 1 -> Regular
-      (State::Meta(MetaButton::M1), State::Regular(button)) => META_LOOKUP_1.get(&button),
+      (InputState::Meta(MetaButton::M1), InputState::Regular(button)) => META_LOOKUP_1.get(&button),
 
       // [OK] Meta 2 -> Regular
-      (State::Meta(MetaButton::M2), State::Regular(button)) => META_LOOKUP_2.get(&button),
+      (InputState::Meta(MetaButton::M2), InputState::Regular(button)) => META_LOOKUP_2.get(&button),
 
       // [OK] Regular -> Meta
-      (_, State::Meta(_)) => None,
+      (_, InputState::Meta(_)) => None,
 
       // [OK] Regular -> Regular
-      (_, State::Regular(button)) => REGULAR_LOOKUP.get(&button),
+      (_, InputState::Regular(button)) => REGULAR_LOOKUP.get(&button),
 
       // [BUG] ?? -> Undefined
-      (_, State::Undefined) => {
+      (_, InputState::Undefined) => {
         panic!("[BUG] Cannot transition to undefined state")
       }
     };
@@ -167,7 +167,7 @@ impl State {
 
 #[no_mangle]
 fn handle_click(index: u8) {
-  let curr_state = match State::from(index) {
+  let curr_state = match InputState::from(index) {
     Some(state) => state,
     None => return error!("Invalid button index: {}", index)
   };
