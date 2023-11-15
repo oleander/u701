@@ -66,52 +66,52 @@ enum InputState {
 }
 
 #[derive(Clone, Debug, Copy)]
-enum BLEEvent {
+enum BluetoothEvent {
   MediaControlKey(MediaControlKey),
   Letter(u8)
 }
 
 lazy_static! {
   // Button 2-4 & 6-8
-   static ref REGULAR_LOOKUP: HashMap<ButtonIdentifier, BLEEvent> = {
+   static ref REGULAR_LOOKUP: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
-    table.insert(ButtonIdentifier::A2, BLEEvent::MediaControlKey(VOLUME_DOWN_KEY));
-    table.insert(ButtonIdentifier::A3, BLEEvent::MediaControlKey(PREV_TRACK));
-    table.insert(ButtonIdentifier::A4, BLEEvent::MediaControlKey(PLAY_PAUSE));
-    table.insert(ButtonIdentifier::B2, BLEEvent::MediaControlKey(VOLUME_UP));
-    table.insert(ButtonIdentifier::B3, BLEEvent::MediaControlKey(NEXT_TRACK));
-    table.insert(ButtonIdentifier::B4, BLEEvent::MediaControlKey(EJECT));
+    table.insert(ButtonIdentifier::A2, BluetoothEvent::MediaControlKey(VOLUME_DOWN_KEY));
+    table.insert(ButtonIdentifier::A3, BluetoothEvent::MediaControlKey(PREV_TRACK));
+    table.insert(ButtonIdentifier::A4, BluetoothEvent::MediaControlKey(PLAY_PAUSE));
+    table.insert(ButtonIdentifier::B2, BluetoothEvent::MediaControlKey(VOLUME_UP));
+    table.insert(ButtonIdentifier::B3, BluetoothEvent::MediaControlKey(NEXT_TRACK));
+    table.insert(ButtonIdentifier::B4, BluetoothEvent::MediaControlKey(EJECT));
     table
   };
 
   // Button 1
-   static ref META_LOOKUP_1: HashMap<ButtonIdentifier, BLEEvent> = {
+   static ref META_LOOKUP_1: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
-    table.insert(ButtonIdentifier::A2, BLEEvent::Letter(2));
-    table.insert(ButtonIdentifier::A3, BLEEvent::Letter(3));
-    table.insert(ButtonIdentifier::A4, BLEEvent::Letter(4));
-    table.insert(ButtonIdentifier::B2, BLEEvent::Letter(6));
-    table.insert(ButtonIdentifier::B3, BLEEvent::Letter(7));
-    table.insert(ButtonIdentifier::B4, BLEEvent::Letter(8));
+    table.insert(ButtonIdentifier::A2, BluetoothEvent::Letter(2));
+    table.insert(ButtonIdentifier::A3, BluetoothEvent::Letter(3));
+    table.insert(ButtonIdentifier::A4, BluetoothEvent::Letter(4));
+    table.insert(ButtonIdentifier::B2, BluetoothEvent::Letter(6));
+    table.insert(ButtonIdentifier::B3, BluetoothEvent::Letter(7));
+    table.insert(ButtonIdentifier::B4, BluetoothEvent::Letter(8));
     table
   };
 
   // Button 6
-  static ref META_LOOKUP_2: HashMap<ButtonIdentifier, BLEEvent> = {
+  static ref META_LOOKUP_2: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
-    table.insert(ButtonIdentifier::A2, BLEEvent::Letter(10));
-    table.insert(ButtonIdentifier::A3, BLEEvent::Letter(11));
-    table.insert(ButtonIdentifier::A4, BLEEvent::Letter(12));
-    table.insert(ButtonIdentifier::B2, BLEEvent::Letter(14));
-    table.insert(ButtonIdentifier::B3, BLEEvent::Letter(15));
-    table.insert(ButtonIdentifier::B4, BLEEvent::Letter(16));
+    table.insert(ButtonIdentifier::A2, BluetoothEvent::Letter(10));
+    table.insert(ButtonIdentifier::A3, BluetoothEvent::Letter(11));
+    table.insert(ButtonIdentifier::A4, BluetoothEvent::Letter(12));
+    table.insert(ButtonIdentifier::B2, BluetoothEvent::Letter(14));
+    table.insert(ButtonIdentifier::B3, BluetoothEvent::Letter(15));
+    table.insert(ButtonIdentifier::B4, BluetoothEvent::Letter(16));
     table
   };
 
   static ref STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
 }
 
-fn send(event: Option<BLEEvent>) {
+fn send(event: Option<BluetoothEvent>) {
   // todo!("Send event: {:?}", event);
 }
 
@@ -138,7 +138,7 @@ impl InputState {
     }
   }
 
-  fn transition_to(&self, next: InputState) -> Result<(Option<BLEEvent>, InputState), ButtonError> {
+  fn transition_to(&self, next: InputState) -> Result<(Option<BluetoothEvent>, InputState), ButtonError> {
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
       (from @ InputState::Meta(_), to @ InputState::Meta(_)) => return Err(ButtonError::InvalidButton(from.clone(), to)),
