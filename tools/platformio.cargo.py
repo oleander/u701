@@ -70,17 +70,38 @@ class Cargo:
 
         if self.__rust_bindgen_enabled:
             env["ENV"]["CARGO_PIO_BUILD_BINDGEN_RUN"] = "True"
+            # platform = env.PioPlatform() 
+            # platform.dump_used_packages()
+            # packages = platform.get_installed_packages()
+            
+        #     print("CARGO_PIO_BUILD_INC_FLAGS", env["ENV"]["CARGO_PIO_BUILD_INC_FLAGS"])
+            
+        #     include_paths = []
+        #     for package in packages:
+        #         print("package: ", package.get_safe_dirname())
+        #         name = package.get_safe_dirname()
+        #         package_dir = platform.get_package_dir(name)
+        #         if package_dir:
+        #             for root, dirs, files in os.walk(package_dir):
+        #                 for file in files:
+        #                     if file.endswith('.h'):
+        #                         include_paths.append(root)
+        #                         break  # no need to continue in this dir
 
-            # rust_bindgen_extra_clang_args = -I${platform.get_package_dir("framework-arduinoespressif32")}/tools/sdk/include/esp32
+        # # Deduplicate and format the include paths
+        # include_paths = set(include_paths)  # removes duplicates
+        # formatted_includes = ' '.join(f'-I{path}' for path in include_paths)
+        env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = env["ENV"]["CARGO_PIO_BUILD_INC_FLAGS"]
 
-
-            # env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = self.__rust_bindgen_extra_clang_args
-            base_path = env.PioPlatform().get_package_dir("framework-arduinoespressif32")
-            pkg_path = os.path.join(base_path, "tools", "sdk", "include", "esp32")
-            # print debug info
-            print("base_path: ", base_path)
-            print("pkg_path: ", pkg_path)
-            env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = f"-I{pkg_path}"
+            
+            # for package in packages:
+            #     print("package: ", package)
+            # # env.PioPlatform().get_package_dir("tool-cbindgen")
+            # # base_path = env.PioPlatform().get_package_dir("framework-arduinoespressif32")
+            # pkg_path = os.path.join(base_path, "cores", "esp32")
+            # print("base_path: ", base_path)
+            # print("pkg_path: ", pkg_path)
+            # env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = f"-I{pkg_path} -I.pio/libdeps/release/ArduinoLog/ArduinoLog.h -I.pio/libdeps/release/OneButton/src/OneButton.h"
 
         env["ENV"]["CARGO_PIO_BUILD_PIO_PLATFORM_DIR"] = env.PioPlatform().get_dir()[0]
         env["ENV"]["CARGO_PIO_BUILD_PIO_FRAMEWORK_DIR"] = env.PioPlatform().get_package_dir(env.PioPlatform().frameworks[env.GetProjectOption("framework")[0]]["package"])

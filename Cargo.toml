@@ -1,6 +1,7 @@
 [package]
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 name = "u701"
 
 [dependencies]
@@ -13,8 +14,10 @@ linked_list_allocator = "0.10.5"
 esp-idf-sys = { version = "0.33.7", features = ["native", "binstart"] }
 esp-idf-hal = "0.42.5"
 hashbrown = "0.11.2"
+libc = "0.2.150"
 
 [build-dependencies]
+clang-sys = "1.6.1"
 embuild = "0.31.4"
 bindgen = "0.69.1"
 glob = "0.3.1"

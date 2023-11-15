@@ -47,3 +47,11 @@ fn handle_button_click(index: u8) {
     }
   }
 }
+
+mod bindings {
+  include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
+
+fn hello() {
+  unsafe { one_button_new(1, false, false); };
+}
