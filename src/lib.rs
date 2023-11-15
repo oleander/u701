@@ -45,9 +45,16 @@ impl From<InvalidButtonTransitionError> for anyhow::Error {
 }
 
 fn handle_button_click(curr_state: InputState) -> Result<()> {
+  info!("Handling button click: {:?}", curr_state);
+
   let mut state_guard = CURRENT_INPUT_STATE.lock();
+  debug!("Current state: {:?}", *state_guard);
+
   let (event, new_state) = state_guard.transition_to(curr_state)?;
   *state_guard = new_state;
+
+  info!("New state: {:?}", *state_guard);
+  info!("New event: {:?}", event);
 
   match event {
     Some(BluetoothEvent::MediaControlKey(key)) => {
