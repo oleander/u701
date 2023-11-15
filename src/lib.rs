@@ -109,10 +109,26 @@ lazy_static! {
   };
 
   static ref CURRENT_INPUT_STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
+  static ref KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard::new());
+}
+
+
+// MediaControlKey into [u8; 2]
+impl From<MediaControlKey> for [u8; 2] {
+  fn from(key: MediaControlKey) -> Self {
+    [key.0, key.1]
+  }
 }
 
 fn send_bluetooth_event(event: BluetoothEvent) {
-  // todo!("Send event: {:?}", event);
+  match event {
+    BluetoothEvent::MediaControlKey(key) => {
+      KEYBOARD.lock().send_media_key(key.into());
+    },
+    BluetoothEvent::Letter(letter) => {
+      KEYBOARD.lock().send_char(letter);
+    }
+  }
 }
 
 impl InputState {
