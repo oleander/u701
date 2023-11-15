@@ -139,24 +139,28 @@ impl InputState {
   }
 
   fn transition_to(&self, next: InputState) -> Result<(Option<BluetoothEvent>, InputState), InvalidButtonTransitionError> {
+    use MetaButton::*;
+    use InputState::*;
+    use InvalidButtonTransitionError::*;
+
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
-      (from @ InputState::Meta(_), to @ InputState::Meta(_)) => return Err(InvalidButtonTransitionError::InvalidButton(from.clone(), to)),
+      (from @ Meta(_), to @ Meta(_)) => return Err(InvalidButton(from.clone(), to)),
 
       // [OK] Meta 1 -> Regular
-      (InputState::Meta(MetaButton::M1), InputState::Regular(button)) => META_BUTTON_EVENTS_ONE.get(&button),
+      (Meta(M1), Regular(button)) => META_BUTTON_EVENTS_ONE.get(&button),
 
       // [OK] Meta 2 -> Regular
-      (InputState::Meta(MetaButton::M2), InputState::Regular(button)) => META_BUTTON_EVENTS_TWO.get(&button),
+      (Meta(M2), Regular(button)) => META_BUTTON_EVENTS_TWO.get(&button),
 
       // [OK] Regular -> Meta
-      (_, InputState::Meta(_)) => None,
+      (_, Meta(_)) => None,
 
       // [OK] Regular -> Regular
-      (_, InputState::Regular(button)) => REGULAR_BUTTON_EVENTS.get(&button),
+      (_, Regular(button)) => REGULAR_BUTTON_EVENTS.get(&button),
 
       // [BUG] ?? -> Undefined
-      (_, InputState::Undefined) => {
+      (_, Undefined) => {
         panic!("[BUG] Cannot transition to undefined state")
       }
     };
