@@ -126,9 +126,9 @@ impl Keyboard {
   }
 
   pub fn send_media_key(&mut self, keys: [u8; 2]) {
-    self.input_keyboard.lock().set_value(&keys).notify();
+    self.input_media_keys.lock().set_value(&keys).notify();
     esp_idf_hal::delay::Ets::delay_ms(7);
-    self.input_keyboard.lock().set_value(&[0, 0]).notify();
+    self.input_media_keys.lock().set_value(&[0, 0]).notify();
   }
 
   pub fn send_shortcut(&mut self, offset: u8) {

@@ -2,7 +2,7 @@
 #include <ArduinoLog.h>
 
 const int numberOfButtons       = 8;
-const int pins[numberOfButtons] = {2, 3, 4, 5, 6, 7, 8, 9};
+const int pins[numberOfButtons] = {4, 13, 14, 27, 25, 26, 32, 33};
 OneButton buttons[numberOfButtons];
 
 extern "C" void rust_handle_button_click(int buttonIndex);
