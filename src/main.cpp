@@ -10,7 +10,7 @@ static void handleClick(void *param) {
   handle_button_click(static_cast<int>(reinterpret_cast<intptr_t>(param)));
 }
 
-void setup() {
+int main() {
   for (int i = 0; i < numberOfButtons; ++i) {
     buttons[i] = OneButton(pins[i]);
   }
@@ -18,6 +18,12 @@ void setup() {
   for (int i = 0; i < numberOfButtons; ++i) {
     buttons[i].attachClick(handleClick, reinterpret_cast<void *>(static_cast<intptr_t>(i)));
   }
+
+  while(true) {
+    loop();
+  }
+
+  return 0;
 }
 
 void loop() {
