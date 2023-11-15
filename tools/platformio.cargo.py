@@ -91,7 +91,7 @@ class Cargo:
         # # Deduplicate and format the include paths
         # include_paths = set(include_paths)  # removes duplicates
         # formatted_includes = ' '.join(f'-I{path}' for path in include_paths)
-        env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = env["ENV"]["CARGO_PIO_BUILD_INC_FLAGS"]
+        # env["ENV"]["CARGO_PIO_BUILD_BINDGEN_EXTRA_CLANG_ARGS"] = env["ENV"]["CARGO_PIO_BUILD_INC_FLAGS"]
 
             
             # for package in packages:

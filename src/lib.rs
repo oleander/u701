@@ -48,8 +48,12 @@ fn handle_button_click(index: u8) {
   }
 }
 
-mod bindings {
-  include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+// mod bindings {
+//   include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+// }
+
+extern "C" {
+  fn one_button_new(index: u8, is_pressed: bool, is_long_pressed: bool);
 }
 
 fn hello() {
