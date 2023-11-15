@@ -6,6 +6,9 @@ extern crate anyhow;
 extern crate spin;
 extern crate hashbrown;
 extern crate alloc;
+extern crate linked_list_allocator;
+
+mod keyboard;
 
 use log::*;
 use spin::Mutex;
@@ -14,8 +17,8 @@ use anyhow::*;
 use hashbrown::HashMap;
 use core::option::Option::{None, Some};
 use core::result::Result::Ok;
+use crate::keyboard::Keyboard;
 
-extern crate linked_list_allocator;
 use linked_list_allocator::LockedHeap;
 
 #[global_allocator]

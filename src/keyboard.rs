@@ -215,7 +215,7 @@ struct KeyReport {
   keys:      [u8; 6]
 }
 
-struct Keyboard {
+pub struct Keyboard {
   server:           &'static mut BLEServer,
   input_keyboard:   Arc<Mutex<BLECharacteristic>>,
   output_keyboard:  Arc<Mutex<BLECharacteristic>>,
@@ -263,7 +263,7 @@ impl Keyboard {
   }
 
   pub fn send_char(&mut self, letter: u8) {
-    self.press(*letter);
+    self.press(letter);
     self.release();
   }
 
