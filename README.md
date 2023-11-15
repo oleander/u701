@@ -7,6 +7,18 @@ A BLE proxy written in Rust making the terrain command device work with iOS.
 1. Connect to the hidden WiFi network `u701` using `11111111` as password.
 2. Run `cargo pio exec -- run --target upload -e ota`
 
+## SDKConfig
+
+```
+CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL_DEBUG=y
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=7000
+CONFIG_ARDUHAL_LOG_COLORS=y
+CONFIG_AUTOSTART_ARDUINO=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_FREERTOS_HZ=1000
+CONFIG_BT_ENABLED=y
+```
+
 ## Setup
 
 1. `rustup update`
