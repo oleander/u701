@@ -23,7 +23,7 @@ use linked_list_allocator::LockedHeap;
 static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 #[alloc_error_handler]
-fn alloc_error_handler(layout: alloc::alloc::Layout) -> ! {
+fn on_alloc_error(layout: alloc::alloc::Layout) -> ! {
   panic!("allocation error: {:?}", layout)
 }
 
