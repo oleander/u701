@@ -18,7 +18,6 @@ use hashbrown::HashMap;
 use core::option::Option::{None, Some};
 use core::result::Result::Ok;
 use crate::keyboard::Keyboard;
-
 use linked_list_allocator::LockedHeap;
 
 #[global_allocator]
@@ -77,9 +76,8 @@ enum BluetoothEvent {
 use ButtonIdentifier::*;
 
 lazy_static! {
-
   // Button 2-4 & 6-8
-   static ref REGULAR_BUTTON_EVENTS: HashMap<ButtonIdentifier, BluetoothEvent> = {
+  static ref REGULAR_BUTTON_EVENTS: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(A2, BluetoothEvent::MediaControlKey(VOLUME_DOWN_KEY));
     table.insert(A3, BluetoothEvent::MediaControlKey(PREV_TRACK));
@@ -90,8 +88,8 @@ lazy_static! {
     table
   };
 
-  // Button 1
-   static ref META_BUTTON_EVENTS_ONE: HashMap<ButtonIdentifier, BluetoothEvent> = {
+  // Button 1 (Meta 1)
+  static ref META_BUTTON_EVENTS_ONE: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(A2, BluetoothEvent::Letter(2));
     table.insert(A3, BluetoothEvent::Letter(3));
@@ -102,7 +100,7 @@ lazy_static! {
     table
   };
 
-  // Button 6
+  // Button 5 (Meta 2)
   static ref META_BUTTON_EVENTS_TWO: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(A2, BluetoothEvent::Letter(10));
@@ -117,8 +115,6 @@ lazy_static! {
   static ref CURRENT_INPUT_STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
   static ref KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard::new());
 }
-
-
 
 fn send_bluetooth_event(event: BluetoothEvent) {
   match event {
