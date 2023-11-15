@@ -11,9 +11,9 @@ rustflags = [
     "-C",
     "default-linker-libraries",
     "-Z",
-    "macro-backtrace",
-    "--cfg",
-    "espidf_time64",
+    "macro-backtrace"
+    # "--cfg",
+    # "espidf_time64",
 ]
 
 [target.xtensa-esp32-espidf]
@@ -28,4 +28,4 @@ build-std = ["panic_abort", "alloc", "core", "std"]
 [env]
 # RUST_LOG = "debug"
 # LIBCLANG_PATH="/Users/linusoleander/.rustup/toolchains/esp/xtensa-esp32-elf-clang/esp-16.0.0-20230516/esp-clang/lib"
-ESP_IDF_VERSION = "branch:release/v5.0"
+# ESP_IDF_VERSION = "branch:release/v5.0"
