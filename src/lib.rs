@@ -35,12 +35,12 @@ fn on_panic(_info: &core::panic::PanicInfo) -> ! {
 #[derive(Clone, Debug, Copy)]
 struct MediaControlKey(u8, u8);
 
-const KEY_MEDIA_VOLUME_DOWN: MediaControlKey = MediaControlKey(64, 0);
-const KEY_MEDIA_NEXT_TRACK: MediaControlKey = MediaControlKey(1, 0);
-const KEY_MEDIA_PREV_TRACK: MediaControlKey = MediaControlKey(2, 0);
-const KEY_MEDIA_PLAY_PAUSE: MediaControlKey = MediaControlKey(8, 0);
-const KEY_MEDIA_VOLUME_UP: MediaControlKey = MediaControlKey(32, 0);
-const KEY_MEDIA_EJECT: MediaControlKey = MediaControlKey(16, 0);
+const VOLUME_DOWN_KEY: MediaControlKey = MediaControlKey(64, 0);
+const NEXT_TRACK: MediaControlKey = MediaControlKey(1, 0);
+const PREV_TRACK: MediaControlKey = MediaControlKey(2, 0);
+const PLAY_PAUSE: MediaControlKey = MediaControlKey(8, 0);
+const VOLUME_UP: MediaControlKey = MediaControlKey(32, 0);
+const EJECT: MediaControlKey = MediaControlKey(16, 0);
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Copy)]
 enum R {
@@ -75,12 +75,12 @@ lazy_static! {
   // Button 2-4 & 6-8
    static ref REGULAR_LOOKUP: HashMap<R, BLEEvent> = {
     let mut table = HashMap::new();
-    table.insert(R::A2, BLEEvent::MediaControlKey(KEY_MEDIA_VOLUME_DOWN));
-    table.insert(R::A3, BLEEvent::MediaControlKey(KEY_MEDIA_PREV_TRACK));
-    table.insert(R::A4, BLEEvent::MediaControlKey(KEY_MEDIA_PLAY_PAUSE));
-    table.insert(R::B2, BLEEvent::MediaControlKey(KEY_MEDIA_VOLUME_UP));
-    table.insert(R::B3, BLEEvent::MediaControlKey(KEY_MEDIA_NEXT_TRACK));
-    table.insert(R::B4, BLEEvent::MediaControlKey(KEY_MEDIA_EJECT));
+    table.insert(R::A2, BLEEvent::MediaControlKey(VOLUME_DOWN_KEY));
+    table.insert(R::A3, BLEEvent::MediaControlKey(PREV_TRACK));
+    table.insert(R::A4, BLEEvent::MediaControlKey(PLAY_PAUSE));
+    table.insert(R::B2, BLEEvent::MediaControlKey(VOLUME_UP));
+    table.insert(R::B3, BLEEvent::MediaControlKey(NEXT_TRACK));
+    table.insert(R::B4, BLEEvent::MediaControlKey(EJECT));
     table
   };
 
