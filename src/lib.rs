@@ -14,12 +14,9 @@ mod types;
 mod impls;
 
 use core::option::Option::{None, Some};
-use crate::keyboard::Keyboard;
 use core::result::Result::Ok;
 use crate::constants::*;
-use ButtonIdentifier::*;
 use crate::types::*;
-use anyhow::*;
 use log::*;
 
 #[no_mangle]

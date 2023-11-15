@@ -2,7 +2,7 @@ use hashbrown::HashMap;
 use spin::Mutex;
 use lazy_static::*;
 use linked_list_allocator::LockedHeap;
-use crate::types::{BluetoothEvent, InputState, InvalidButtonTransitionError, MetaButton, *, *};
+use crate::types::{BluetoothEvent, InputState, *};
 use crate::keyboard::Keyboard;
 use crate::types::ButtonIdentifier::*;
 
