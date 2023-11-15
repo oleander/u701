@@ -125,23 +125,27 @@ impl InputState {
   // use Button::*;
 
   fn from(id: u8) -> Option<Self> {
+    use InputState::*;
+    use MetaButton::*;
+    use ButtonIdentifier::*;
+
     match id {
-      1 => Some(InputState::Meta(MetaButton::M1)),
-      2 => Some(InputState::Regular(ButtonIdentifier::A2)),
-      3 => Some(InputState::Regular(ButtonIdentifier::A3)),
-      4 => Some(InputState::Regular(ButtonIdentifier::A4)),
-      5 => Some(InputState::Meta(MetaButton::M2)),
-      6 => Some(InputState::Regular(ButtonIdentifier::B2)),
-      7 => Some(InputState::Regular(ButtonIdentifier::B3)),
-      8 => Some(InputState::Regular(ButtonIdentifier::B4)),
+      1 => Some(Meta(M1)),
+      2 => Some(Regular(A2)),
+      3 => Some(Regular(A3)),
+      4 => Some(Regular(A4)),
+      5 => Some(Meta(M2)),
+      6 => Some(Regular(B2)),
+      7 => Some(Regular(B3)),
+      8 => Some(Regular(B4)),
       _ => None
     }
   }
 
   fn transition_to(&self, next: InputState) -> Result<(Option<BluetoothEvent>, InputState), InvalidButtonTransitionError> {
+    use InvalidButtonTransitionError::*;
     use MetaButton::*;
     use InputState::*;
-    use InvalidButtonTransitionError::*;
 
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
