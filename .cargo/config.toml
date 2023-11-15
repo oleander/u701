@@ -9,7 +9,7 @@ target = "thumbv7em-none-eabihf"
 
 
 [unstable]
-build-std = ["panic_abort", "alloc"]
+build-std = ["panic_abort", "alloc", "core", "std"]
 
 # [profile.release]
 # opt-level = "z"

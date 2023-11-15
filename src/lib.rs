@@ -3,10 +3,13 @@
 extern crate log;
 extern crate lazy_static;
 extern crate anyhow;
+extern crate hashbrown;
 
 use log::*;
 use lazy_static::*;
 use anyhow::*;
+use hashbrown::HashMap;
+use core::option::Option::{Some, None};
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
@@ -82,6 +85,11 @@ lazy_static! {
 
   static ref STATE: Mutex<Option<State>> = Mutex::new(Undefined);
 }
+
+fn send(event: Optional<BLEEvent>) {
+  // todo!("Send event: {:?}", event);
+}
+
 
 impl State {
   use Meta::*;
