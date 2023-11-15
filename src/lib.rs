@@ -20,7 +20,7 @@ extern crate linked_list_allocator;
 use linked_list_allocator::LockedHeap;
 
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 #[alloc_error_handler]
 fn alloc_error_handler(layout: alloc::alloc::Layout) -> ! {
