@@ -12,17 +12,12 @@ mod keyboard;
 mod constants;
 
 use core::option::Option::{None, Some};
-use linked_list_allocator::LockedHeap;
 use crate::keyboard::Keyboard;
-use core::result::Result::Ok;
-
-use constants::*;
-use spin::Mutex;
+use crate::constants::*;
 use anyhow::*;
 use log::*;
 
-#[global_allocator]
-static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
+
 
 #[derive(Clone, Debug, Copy)]
 struct MediaControlKey(u8, u8);
@@ -38,12 +33,6 @@ enum InvalidButtonTransitionError {
   InvalidButton(InputState, InputState)
 }
 
-const VOLUME_DOWN_KEY: MediaControlKey = MediaControlKey(64, 0);
-const NEXT_TRACK: MediaControlKey = MediaControlKey(1, 0);
-const PREV_TRACK: MediaControlKey = MediaControlKey(2, 0);
-const PLAY_PAUSE: MediaControlKey = MediaControlKey(8, 0);
-const VOLUME_UP: MediaControlKey = MediaControlKey(32, 0);
-const EJECT: MediaControlKey = MediaControlKey(16, 0);
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Copy)]
 enum ButtonIdentifier {

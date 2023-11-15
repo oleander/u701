@@ -1,5 +1,16 @@
 use hashbrown::HashMap;
+use spin::Mutex;
 use lazy_static::*;
+use linked_list_allocator::LockedHeap;
+
+#[global_allocator]
+pub static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
+pub const VOLUME_DOWN_KEY: MediaControlKey = MediaControlKey(64, 0);
+pub const NEXT_TRACK: MediaControlKey = MediaControlKey(1, 0);
+pub const PREV_TRACK: MediaControlKey = MediaControlKey(2, 0);
+pub const PLAY_PAUSE: MediaControlKey = MediaControlKey(8, 0);
+pub const VOLUME_UP: MediaControlKey = MediaControlKey(32, 0);
+pub const EJECT: MediaControlKey = MediaControlKey(16, 0);
 
 lazy_static! {
   // Button 2-4 & 6-8
