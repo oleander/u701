@@ -10,6 +10,8 @@ clean:
 	cargo clean -r
 	pio run --target clean -e $(ENVIROMENT)
 	pio run --target clean
+superclean: clean
+	rm -rf .pio .embuild
 build:
 	cargo pio build -r
 upload: erase
