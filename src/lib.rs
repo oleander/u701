@@ -124,29 +124,19 @@ impl State {
   fn transition_to(self, next: State) -> Result<Option<BLEEvent>, ButtonError> {
     let event = match (self, next) {
       // [INVALID] Meta -> Meta
-      (from @ State::Meta(_), to @ State::Meta(_)) => {
-        ButtonError::InvalidButton(from, to)
-      },
+      (from @ State::Meta(_), to @ State::Meta(_)) => ButtonError::InvalidButton(from, to),
 
       // [OK] Meta 1 -> Regular
-      (State::Meta(M::M1), State::Regular(button)) => {
-        META_LOOKUP_1.get(&button)
-      },
+      (State::Meta(M::M1), State::Regular(button)) => META_LOOKUP_1.get(&button),
 
       // [OK] Meta 2 -> Regular
-      (State::Meta(M::M2), State::Regular(button)) => {
-        META_LOOKUP_2.get(&button)
-      }
+      (State::Meta(M::M2), State::Regular(button)) => META_LOOKUP_2.get(&button),
 
       // [OK] Regular -> Meta
-      (_, State::Meta(_)) => {
-        None
-      },
+      (_, State::Meta(_)) => None,
 
       // [OK] Regular -> Regular
-      (_, button) => {
-        REGULAR_LOOKUP.get(&button)
-      }
+      (_, button) => REGULAR_LOOKUP.get(&button)
     };
 
     self = next;
