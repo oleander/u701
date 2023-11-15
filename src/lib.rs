@@ -159,8 +159,6 @@ impl State {
       (_, State::Undefined) => {
         panic!("[BUG] Cannot transition to undefined state")
       }
-
-
     };
 
     Ok((event.cloned(), next))
