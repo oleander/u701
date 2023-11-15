@@ -7,11 +7,8 @@ extern crate spin;
 extern crate hashbrown;
 extern crate alloc;
 
-// lock_api
-extern crate lock_api;
-use lock_api::Mutex;
-
 use log::*;
+use spin::Mutex;
 use lazy_static::*;
 use anyhow::*;
 use hashbrown::HashMap;
@@ -32,6 +29,7 @@ const KEY_MEDIA_PLAY_PAUSE: MediaKey = MediaKey(8, 0);
 const KEY_MEDIA_VOLUME_UP: MediaKey = MediaKey(32, 0);
 const KEY_MEDIA_EJECT: MediaKey = MediaKey(16, 0);
 
+#[derive(Eq, Hash, PartialEq)]
 enum R {
   A2,
   A3,
