@@ -26,20 +26,19 @@ extern "C" fn init() {
   info!("Starting up...");
 }
 
-#[no_mangle]
-fn handle_button_click(index: u8) {
-  let curr_state = match InputState::from(index) {
-    Some(state) => state,
-    None => return error!("Invalid button index: {}", index)
+extern "C" fn rust_handle_button_click(index: u8) {
+  let Some(curr_state) = InputState::from(index) else {
+    return error!("Invalid button index: {}", index);
   };
 
+  if let Err(e) = handle_button_click(curr_state) {
+    error!("Error handling button click: {:?}", e);
+  }
+}
+
+fn handle_button_click(curr_state: InputState) -> Result<()> {
   let mut state_guard = CURRENT_INPUT_STATE.lock();
-
-  let (event, new_state) = match state_guard.transition_to(curr_state) {
-    Ok(result) => result,
-    Err(e) => return error!("Invalid button transition: {:?}", e)
-  };
-
+  let (event, new_state) = state_guard.transition_to(curr_state)?;
   *state_guard = new_state;
 
   match event {
@@ -52,5 +51,7 @@ fn handle_button_click(index: u8) {
     None => {
       warn!("No event for button click: {:?}", curr_state);
     }
-  }
+  };
+
+  Ok(())
 }
