@@ -53,14 +53,14 @@ enum ButtonIdentifier {
 }
 
 #[derive(Clone, Debug, Copy)]
-enum M {
+enum MetaButton {
   M1,
   M2
 }
 
 #[derive(Clone, Debug, Copy)]
 enum State {
-  Meta(M),
+  Meta(MetaButton),
   Regular(ButtonIdentifier),
   Undefined
 }
@@ -126,11 +126,11 @@ impl State {
 
   fn from(id: u8) -> Option<Self> {
     match id {
-      1 => Some(State::Meta(M::M1)),
+      1 => Some(State::Meta(MetaButton::M1)),
       2 => Some(State::Regular(ButtonIdentifier::A2)),
       3 => Some(State::Regular(ButtonIdentifier::A3)),
       4 => Some(State::Regular(ButtonIdentifier::A4)),
-      5 => Some(State::Meta(M::M2)),
+      5 => Some(State::Meta(MetaButton::M2)),
       6 => Some(State::Regular(ButtonIdentifier::B2)),
       7 => Some(State::Regular(ButtonIdentifier::B3)),
       8 => Some(State::Regular(ButtonIdentifier::B4)),
@@ -144,10 +144,10 @@ impl State {
       (from @ State::Meta(_), to @ State::Meta(_)) => return Err(ButtonError::InvalidButton(from.clone(), to)),
 
       // [OK] Meta 1 -> Regular
-      (State::Meta(M::M1), State::Regular(button)) => META_LOOKUP_1.get(&button),
+      (State::Meta(MetaButton::M1), State::Regular(button)) => META_LOOKUP_1.get(&button),
 
       // [OK] Meta 2 -> Regular
-      (State::Meta(M::M2), State::Regular(button)) => META_LOOKUP_2.get(&button),
+      (State::Meta(MetaButton::M2), State::Regular(button)) => META_LOOKUP_2.get(&button),
 
       // [OK] Regular -> Meta
       (_, State::Meta(_)) => None,
