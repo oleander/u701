@@ -27,6 +27,12 @@ static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
 #[derive(Clone, Debug, Copy)]
 struct MediaControlKey(u8, u8);
 
+impl From<MediaControlKey> for [u8; 2] {
+  fn from(key: MediaControlKey) -> Self {
+    [key.0, key.1]
+  }
+}
+
 #[derive(Debug)]
 enum InvalidButtonTransitionError {
   InvalidButton(InputState, InputState)
@@ -113,12 +119,6 @@ lazy_static! {
 }
 
 
-// MediaControlKey into [u8; 2]
-impl From<MediaControlKey> for [u8; 2] {
-  fn from(key: MediaControlKey) -> Self {
-    [key.0, key.1]
-  }
-}
 
 fn send_bluetooth_event(event: BluetoothEvent) {
   match event {
