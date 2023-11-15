@@ -1,7 +1,9 @@
+
 use hashbrown::HashMap;
 use spin::Mutex;
 use lazy_static::*;
 use linked_list_allocator::LockedHeap;
+use crate::types::*;
 
 #[global_allocator]
 pub static GLOBAL_ALLOCATOR: LockedHeap = LockedHeap::empty();
@@ -14,7 +16,7 @@ pub const EJECT: MediaControlKey = MediaControlKey(16, 0);
 
 lazy_static! {
   // Button 2-4 & 6-8
-  static ref REGULAR_BUTTON_EVENTS: HashMap<ButtonIdentifier, BluetoothEvent> = {
+  pub static ref REGULAR_BUTTON_EVENTS: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(A2, BluetoothEvent::MediaControlKey(VOLUME_DOWN_KEY));
     table.insert(A3, BluetoothEvent::MediaControlKey(PREV_TRACK));
@@ -26,7 +28,7 @@ lazy_static! {
   };
 
   // Button 1 (Meta 1)
-  static ref META_BUTTON_EVENTS_ONE: HashMap<ButtonIdentifier, BluetoothEvent> = {
+  pub static ref META_BUTTON_EVENTS_ONE: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(A2, BluetoothEvent::Letter(2));
     table.insert(A3, BluetoothEvent::Letter(3));
@@ -38,7 +40,7 @@ lazy_static! {
   };
 
   // Button 5 (Meta 2)
-  static ref META_BUTTON_EVENTS_TWO: HashMap<ButtonIdentifier, BluetoothEvent> = {
+  pub static ref META_BUTTON_EVENTS_TWO: HashMap<ButtonIdentifier, BluetoothEvent> = {
     let mut table = HashMap::new();
     table.insert(A2, BluetoothEvent::Letter(10));
     table.insert(A3, BluetoothEvent::Letter(11));
@@ -49,6 +51,6 @@ lazy_static! {
     table
   };
 
-  static ref CURRENT_INPUT_STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
-  static ref KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard::new());
+  pub static ref CURRENT_INPUT_STATE: Mutex<InputState> = Mutex::new(InputState::Undefined);
+  pub static ref KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard::new());
 }
