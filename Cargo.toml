@@ -15,8 +15,9 @@ esp-idf-hal = "0.42.5"
 hashbrown = "0.11.2"
 
 [build-dependencies]
-glob = "0.3.1"
 embuild = "0.31.4"
+bindgen = "0.69.1"
+glob = "0.3.1"
 
 [lib]
 crate-type = ["staticlib", "lib"]

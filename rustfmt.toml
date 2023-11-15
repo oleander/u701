@@ -20,5 +20,5 @@ newline_style = "Auto"
 group_imports = "One"
 fn_call_width = 100
 hard_tabs = false
-max_width = 170
+max_width = 120
 tab_spaces = 2

@@ -1,6 +1,8 @@
 [build]
 target = "xtensa-esp32-espidf"
 # target = "riscv32imc-esp-espidf"
+# target = "aarch64-apple-darwin"
+# target = "thumbv7em-none-eabihf"
 
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
@@ -10,16 +12,12 @@ rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace", "--cfg",
 [target.xtensa-esp32-espidf]
 linker = "ldproxy"
 runner = "espflash flash -b 921600 -p /dev/tty.SLAB_USBtoUART --monitor"
-# rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
-rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace", "--cfg", "espidf_time64"]
-
-# target = "aarch64-apple-darwin"
-# target = "thumbv7em-none-eabihf"
+rustflags = ["-C", "default-linker-libraries", "-Z", "macro-backtrace"]
 
 [unstable]
 build-std = ["panic_abort", "alloc", "core", "std"]
 
 [env]
 RUST_LOG = "debug"
-LIBCLANG_PATH="/Users/linusoleander/.rustup/toolchains/esp/xtensa-esp32-elf-clang/esp-16.0.0-20230516/esp-clang/lib"
+# LIBCLANG_PATH="/Users/linusoleander/.rustup/toolchains/esp/xtensa-esp32-elf-clang/esp-16.0.0-20230516/esp-clang/lib"
 ESP_IDF_VERSION = "tag:v4.4.6"
