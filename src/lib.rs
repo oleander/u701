@@ -20,7 +20,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct MediaKey(u8, u8);
 
 const KEY_MEDIA_VOLUME_DOWN: MediaKey = MediaKey(64, 0);
@@ -30,7 +30,7 @@ const KEY_MEDIA_PLAY_PAUSE: MediaKey = MediaKey(8, 0);
 const KEY_MEDIA_VOLUME_UP: MediaKey = MediaKey(32, 0);
 const KEY_MEDIA_EJECT: MediaKey = MediaKey(16, 0);
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug)]
 enum R {
   A2,
   A3,
@@ -40,20 +40,20 @@ enum R {
   B4
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum M {
   M1,
   M2
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum State {
   Meta(M),
   Regular(R),
   Undefined
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum BLEEvent {
   MediaKey(MediaKey),
   Letter(u8)
@@ -103,6 +103,7 @@ fn send(event: Option<BLEEvent>) {
   // todo!("Send event: {:?}", event);
 }
 
+#[derive(Debug)]
 enum ButtonError {
   InvalidButton(State, State)
 }
@@ -151,22 +152,15 @@ impl State {
 fn handle_click(index: u8) {
   let curr_state = match State::from(index) {
     Some(state) => state,
-    None => {
-      // Logging in no-std environment requires a logger backend implementation.
-      // error!("Invalid button: {}", index);
-      return;
-    }
+    None => return error!("Invalid button index: {}", index)
   };
 
   let mut state_guard = STATE.lock();
   let (event, new_state) = match state_guard.transition_to(curr_state) {
     Ok(result) => result,
-    Err(e) => {
-      // error!("Error: {}", e);
-      return;
-    }
+    Err(e) => return error!("Invalid button transition: {:?}", e)
   };
 
   *state_guard = new_state;
-    send(event);
+  send(event);
 }
