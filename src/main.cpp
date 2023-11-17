@@ -69,22 +69,22 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
 
 static void handleBatteryUpdate(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 1) {
-    Log.traceln("Received length should be 1, got %d", length);
-    return;
+    return Log.traceln("[Battery] Received length should be 1, got %d", length);
   }
 
   if (!isNotify) {
-    Log.traceln("Received invalid isNotify: %d (expected true)", isNotify);
-    return;
+    return Log.traceln("[Battery] Received invalid isNotify: %d (expected true)", isNotify);
   }
 
   Log.traceln("[Battery] Received length: %d", length);
   Log.traceln("[Battery] Received isNotify: %d", isNotify);
   Log.traceln("[Battery] Received battery level: %d", data[0]);
 
-  if (keyboard.isConnected()) {
-    keyboard.setBatteryLevel(data[0]);
+  if (!keyboard.isConnected()) {
+    return restart("iPhone has disconnected, will reboot");
   }
+
+  keyboard.setBatteryLevel(data[0]);
 }
 
 void initializeKeyboard() {
@@ -131,7 +131,7 @@ void connectToClientDevice() {
   }
 
   if (!client->connect()) {
-    restart("Timeout connecting to the device");
+    restart("Could not connect to the Terrain Command");
   }
 
   Log.noticeln("Discovering services ...");
@@ -177,15 +177,14 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
     auto macAddr = advertised->getAddress();
 
     if (macAddr != buttonMacAddress) {
-      return Log.noticeln("[WRONG]");
+      Serial.print(".");
+      return;
     }
 
     client = NimBLEDevice::createClient(macAddr);
     advertised->getScan()->stop();
 
-    auto mac  = macAddr.toString().c_str();
-    auto name = advertised->getName();
-    Log.noticeln("[CORRECT] %s @ %s", mac, name);
+    Log.noticeln("[SCAN] Terrain Command found");
   }
 };
 
