@@ -89,7 +89,21 @@ static void handleBatteryUpdate(BLERemoteCharacteristic *_, uint8_t *data, size_
 
 void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
+
+  keyboard.setBatteryLevel(100);
+  keyboard.setDelay(12);
   keyboard.begin();
+
+  Log.noticeln("Waiting for keyboard to connect ...");
+
+  while (!keyboard.isConnected()) {
+    Serial.print(".");
+    delay(100);
+  }
+
+  auto waitingTimeinSeconds = 5;
+  Log.noticeln("iPhone connected, but will wait %d seconds to be sure", waitingTimeinSeconds);
+  delay(waitingTimeinSeconds * 1000);
 }
 
 void initializeSerialCommunication() {

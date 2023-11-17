@@ -22,3 +22,5 @@ monitor:
 	./tools/monitor.sh -b 115200 -p $(PORT)
 menuconfig:
 	cargo pio espidf menuconfig -r true
+update:
+	pio pkg update
