@@ -227,7 +227,9 @@ pub extern "C" fn process_ble_events() {
       error!("[BUG] Event queue is closed");
       panic!("[BUG] Event queue is closed");
     },
-    Err(_) => ()
+    Err(e) => {
+      error!("Failed to receive event: {:?}", e)
+    }
   }
 }
 
