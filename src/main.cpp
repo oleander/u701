@@ -213,17 +213,13 @@ extern "C" void configure_ota() {
   WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
 
   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
-  ArduinoOTA.begin();
-
-  // Restart when ArduinoOTA is done
-  ArduinoOTA.onStart([]() {
-    Log.noticeln("Starting OTA update ...");
-  });
 
   ArduinoOTA.onEnd([]() {
     Log.noticeln("OTA update finished, will reboot");
     restart("OTA update finished, will reboot");
   });
+
+  ArduinoOTA.begin();
 }
 
 void setup() {
