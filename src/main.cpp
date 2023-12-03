@@ -101,7 +101,7 @@ void initializeKeyboard() {
     delay(100);
   }
 
-  auto waitingTimeinSeconds = 5;
+  auto waitingTimeinSeconds = 2;
   Log.noticeln("iPhone connected, but will wait %d seconds to be sure", waitingTimeinSeconds);
   delay(waitingTimeinSeconds * 1000);
 }
@@ -214,6 +214,16 @@ extern "C" void configure_ota() {
 
   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
   ArduinoOTA.begin();
+
+  // Restart when ArduinoOTA is done
+  ArduinoOTA.onStart([]() {
+    Log.noticeln("Starting OTA update ...");
+  });
+
+  ArduinoOTA.onEnd([]() {
+    Log.noticeln("OTA update finished, will reboot");
+    restart("OTA update finished, will reboot");
+  });
 }
 
 void setup() {
@@ -227,7 +237,7 @@ void setup() {
 void loop() {
   if (is_ota_enabled()) {
     ArduinoOTA.handle();
+  } else {
+    process_ble_events();
   }
-
-  process_ble_events();
 }

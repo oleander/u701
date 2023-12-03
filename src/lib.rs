@@ -248,7 +248,7 @@ pub extern "C" fn process_ble_events() {
 }
 
 fn handle_click_event(curr_event: &ClickEvent) -> Result<()> {
-  if [0, 0, META_2, META_1] == *curr_event {
+  if [0, 0, META_1, META_2] == *curr_event {
     toggle_ota();
 
     if  is_ota_enabled() {
