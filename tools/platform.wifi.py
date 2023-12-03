@@ -9,6 +9,7 @@ def connect_to_esp32_wifi(source, target, env):
     password = config.get("custom", "esp_wifi_password")
     ssid = config.get("custom", "esp_wifi_ssid")
 
+    print("=> Press [Left Red] then [Right Red] to enter OTA mode")
     print("=> Trying to connect to WiFi %s..." % ssid)
 
     while os.popen("m wifi status").read().find(ssid) == -1:
