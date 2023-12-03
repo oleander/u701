@@ -4,4 +4,4 @@
 
 #include <ArduinoLog.h>
 
-void restart(const char *reason);
+extern "C" void restart(const char *reason);

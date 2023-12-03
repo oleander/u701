@@ -6,6 +6,7 @@ extern crate lazy_static;
 extern crate env_logger;
 extern crate anyhow;
 extern crate log;
+extern crate libc;
 
 use thingbuf::mpsc::{StaticChannel, StaticReceiver, StaticSender};
 use thingbuf::mpsc::errors::{TryRecvError, TrySendError};
@@ -184,6 +185,8 @@ extern "C" {
   fn ble_keyboard_print(xs: *const u8);
   fn ble_keyboard_write(xs: *const u8);
   fn ble_keyboard_is_connected() -> bool;
+  fn configure_ota();
+  fn restart(reason: *const libc::wchar_t);
   fn sleep(ms: u32);
 }
 
@@ -192,6 +195,17 @@ pub extern "C" fn setup_rust() {
   env_logger::builder().filter(None, log::LevelFilter::Debug).init();
   info!("Setup rust");
 }
+
+static OTA_STATE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[no_mangle]
+pub extern "C" fn is_ota_enabled() -> bool {
+  OTA_STATE.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+pub fn toggle_ota() {
+  OTA_STATE.fetch_xor(true, std::sync::atomic::Ordering::Relaxed);
+} 
 
 #[no_mangle]
 pub unsafe extern "C" fn handle_external_click_event(event: *const u8, len: usize) {
@@ -234,6 +248,19 @@ pub extern "C" fn process_ble_events() {
 }
 
 fn handle_click_event(curr_event: &ClickEvent) -> Result<()> {
+  if [0, 0, META_2, META_1] == *curr_event {
+    toggle_ota();
+
+    if  is_ota_enabled() {
+      info!("OTA enabled");
+      unsafe { configure_ota(); }
+    } else {
+      unsafe { restart("OTA disabled\0".as_ptr() as *const _); }
+    }
+
+    return Ok(());
+  }
+
   info!("Received event: {:?}", curr_event);
 
   let mut state_guard = match ACTIVE_STATE.lock() {

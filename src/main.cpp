@@ -205,7 +205,7 @@ void startBLEScanForDevice() {
   scan->start(0, false);
 }
 
-void configureWiFi() {
+extern "C" void configure_ota() {
   Log.noticeln("Configuring WiFi ...");
 
   WiFi.config(ip, gateway, subnet);
@@ -222,10 +222,12 @@ void setup() {
   setup_rust();
   startBLEScanForDevice();
   connectToClientDevice();
-  configureWiFi();
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  if (is_ota_enabled()) {
+    ArduinoOTA.handle();
+  }
+
   process_ble_events();
 }
