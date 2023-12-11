@@ -2,6 +2,8 @@
 #![feature(assert_matches)]
 #![allow(dead_code)]
 
+mod ffi;
+
 extern crate lazy_static;
 extern crate env_logger;
 extern crate anyhow;
@@ -15,6 +17,7 @@ use machine::{Data, State};
 use std::sync::Mutex;
 use anyhow::Result;
 use anyhow::bail;
+use ffi::*;
 
 lazy_static! {
   static ref STATE: Mutex<State> = Mutex::new(State::default());
@@ -61,34 +64,3 @@ pub fn on_event(event: Option<&[u8; 4]>) {
   }
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
-  on_event(std::slice::from_raw_parts(event, len).try_into().ok());
-}
-
-#[no_mangle]
-#[tokio::main]
-async extern "C" fn app_main() -> i32 {
-  env_logger::builder().filter(None, log::LevelFilter::Debug).init();
-
-  info!("[app_main] Calling setup");
-  unsafe { init_arduino(); }
-
-  info!("[app_main] Entering main loop");
-  if let Err(e) = main().await {
-    error!("[error] Error: {:?}", e);
-    return 1;
-  }
-
-  return 0;
-}
-
-extern "C" {
-  fn c_unwind(reason: *const libc::wchar_t);
-  fn ble_keyboard_is_connected() -> bool;
-  fn ble_keyboard_print(xs: *const u8);
-  fn ble_keyboard_write(xs: *const u8);
-  fn configure_ota();
-  fn init_arduino();
-  fn sleep(ms: u32);
-}
