@@ -11,14 +11,14 @@ pub mod media {
 }
 
 pub mod buttons {
-  pub const M1: u8 = 0; // A0 (2)
-  pub const A2: u8 = 1; // A1 (3)
-  pub const A3: u8 = 2; // A2 (4)
-  pub const A4: u8 = 3; // A3 (5)
-  pub const M2: u8 = 7; // 7 (7)
-  pub const B2: u8 = 11; // 11 (11)
-  pub const B3: u8 = 11; // 15 (15)
-  pub const B4: u8 = 27; // 27 (27)
+  pub const M1: u8 = 0x04; // Corresponds to BUTTON_1: Red (Meta)
+  pub const A2: u8 = 0x50; // Corresponds to BUTTON_2: Black (Volume down)
+  pub const A3: u8 = 0x51; // Corresponds to BUTTON_3: Blue (Prev track)
+  pub const A4: u8 = 0x52; // Corresponds to BUTTON_4: Black (Play/Pause)
+  pub const M2: u8 = 0x29; // Corresponds to BUTTON_5: Red (Meta)
+  pub const B2: u8 = 0x4F; // Corresponds to BUTTON_6: Black (Volume up)
+  pub const B3: u8 = 0x05; // Corresponds to BUTTON_7: Blue (Next track)
+  pub const B4: u8 = 0x28; // Corresponds to BUTTON_8: Black (Toggle AC)
 }
 
 use buttons::*;
