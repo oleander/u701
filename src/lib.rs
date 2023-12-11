@@ -22,7 +22,7 @@ lazy_static! {
 }
 
 extern "C" {
-  fn restart(reason: *const libc::wchar_t);
+  fn c_unwind(reason: *const libc::wchar_t);
   fn ble_keyboard_is_connected() -> bool;
   fn ble_keyboard_print(xs: *const u8);
   fn ble_keyboard_write(xs: *const u8);
@@ -87,6 +87,6 @@ pub unsafe extern "C" fn c_tick() {
 
 fn unwind(reason: &str) -> ! {
   error!("{}", reason);
-  unsafe { restart(reason.as_ptr() as *const libc::wchar_t) };
+  unsafe { c_unwind(reason.as_ptr() as *const libc::wchar_t) };
   unreachable!()
 }
