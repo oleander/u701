@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use lazy_static::*;
+use buttons::*;
+use media::*;
 
 pub mod media {
   pub const VOLUME_DOWN: [u8; 2] = [64, 0];
@@ -21,9 +23,6 @@ pub mod buttons {
   pub const B4: u8 = 0x28; // Corresponds to BUTTON_8: Black (Toggle AC)
 }
 
-use buttons::*;
-use media::*;
-
 lazy_static! {
   pub static ref EVENT: HashMap<u8, [u8; 2]> = {
     let mut table = HashMap::new();
@@ -35,6 +34,7 @@ lazy_static! {
     table.insert(B4, EJECT);
     table
   };
+
   pub static ref META: HashMap<u8, HashMap<u8, u8>> = {
     let mut meta1 = HashMap::new();
     meta1.insert(A2, 48); // '1' + 48 = 'a'

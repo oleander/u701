@@ -22,3 +22,9 @@ tokio = { version = "1.35.0", default-features = true, features = ["rt-multi-thr
 crate-type = ["staticlib", "lib"]
 path = "src/lib.rs"
 name = "u701"
+
+[profile.release]
+codegen-units = 1
+opt-level = 3
+debug = false
+lto = true
