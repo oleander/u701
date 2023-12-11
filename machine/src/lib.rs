@@ -137,8 +137,8 @@ mod tests {
   use std::assert_matches;
   use std::assert_matches::assert_matches;
   use super::*;
-  use constants::buttons::{A2, M1, M2};
-  use constants::media::VOLUME_DOWN;
+  use constants::buttons::{A2, M1, M2, B2};
+  use constants::media::{VOLUME_DOWN, VOLUME_UP};
 
   #[test]
   fn test_regular_key_press() {
@@ -147,6 +147,30 @@ mod tests {
     let result = state.event(A2);
     // Replace with expected result
     assert_matches!(result, Some(Data::Write(VOLUME_DOWN)));
+  }
+
+  #[test]
+  fn test_regular_key_press_release() {
+    let mut state = State::default();
+    // Simulate a regular key press
+    state.event(A2);
+    // Simulate a regular key release
+    let result = state.event(0);
+    // Expected to reset after release
+    assert_eq!(result, Some(Data::Reset));
+  }
+
+  #[test]
+  fn test_regular_key_press_release_press() {
+    let mut state = State::default();
+    // Simulate a regular key press
+    state.event(A2);
+    // Simulate a regular key release
+    state.event(0);
+    // Simulate a regular key press
+    let result = state.event(B2);
+    // Replace with expected result
+    assert_matches!(result, Some(Data::Write(VOLUME_UP)));
   }
 
   #[test]
