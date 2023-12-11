@@ -27,16 +27,24 @@ impl State {
   pub fn transition(&mut self, next: u8) -> Option<Data> {
     *self = match (self.clone(), next) {
       // Meta -> Meta: ignore new
-      (state @ State::Meta(_), M1 | M2) => state,
+      (state @ State::Meta(_), M1 | M2) => {
+        state
+      },
 
       // Any -> Meta: ignore previous
-      (_, meta_id @ (M1 | M2)) => State::Meta(meta_id),
+      (_, meta_id @ (M1 | M2)) => {
+        State::Meta(meta_id)
+      },
 
       // Meta -> Regular: run shortcut
-      (State::Meta(meta_id), event_id) => State::Combo(meta_id, event_id),
+      (State::Meta(meta_id), event_id) => {
+        State::Combo(meta_id, event_id)
+      },
 
       // Regular -> Regular: run key
-      (_, media_id) => State::Key(media_id)
+      (_, media_id) => {
+        State::Key(media_id)
+      }
     };
 
     match self {
@@ -63,10 +71,9 @@ impl Default for State {
 
 #[cfg(test)]
 mod tests {
-  use std::assert_matches::assert_matches;
-  use super::*;
   use super::constants::buttons::*;
   use super::constants::media::*;
+  use super::*;
 
   #[test]
   fn test_new() {
