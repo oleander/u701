@@ -13,7 +13,7 @@ extern "C" {
 }
 
 #[no_mangle]
-#[tokio::main(flavor = "multi_thread", worker_threads = 2)]
+#[tokio::main]
 pub async extern "C" fn app_main() -> i32 {
   env_logger::builder().filter(None, log::LevelFilter::Info).init();
 
