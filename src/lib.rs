@@ -23,14 +23,14 @@ async fn main() -> Result<()> {
   let mut receiver = CHANNEL.1.lock().unwrap();
   let mut state = machine::State::default();
 
-  info!("Enterting loop, waiting for events");
-  while let Some(event_id) = receiver.recv().await {
-    match state.event(event_id) {
-      Some(Data::Media(keys)) => send_media_key(keys),
-      Some(Data::Short(index)) => send_shortcut(index),
-      None => warn!("No event id id for {}", event_id)
-    };
-  }
+  // info!("Enterting loop, waiting for events");
+  // while let Some(event_id) = receiver.recv().await {
+  //   match state.event(event_id) {
+  //     Some(Data::Media(keys)) => send_media_key(keys),
+  //     Some(Data::Short(index)) => send_shortcut(index),
+  //     None => warn!("No event id id for {}", event_id)
+  //   };
+  // }
 
   bail!("Event loop ended");
 }

@@ -20,17 +20,17 @@ pub struct State {
   curr: Pos
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 enum KeyEvent {
-  Key(u8),      // For regular keys like "C"
-  Modifier(u8), // For keys like "Ctrl"
-  Combo(u8, u8) // For keys like "Ctrl + C"
+  Key(u8),       // For regular keys like "C"
+  Modifier(u8),  // For keys like "Ctrl"
+  Combo(u8, u8)  // For keys like "Ctrl + C"
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Pos {
   Up(KeyEvent),
-  Down(KeyEvent),
+  Down(KeyEvent)
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -56,37 +56,27 @@ impl State {
       // 1. Key pressed
       // 2. Modifier pressed
       // Res: Combine key (1) and modifier (2)
-      (Down(Key(key_id)), meta_id @ (M1 | M2)) => {
-        Down(Combo(meta_id, key_id))
-      },
+      (Down(Key(key_id)), meta_id @ (M1 | M2)) => Down(Combo(meta_id, key_id)),
 
       // 1. Modifier pressed
       // 2. Modifier pressed again
       // Res: Keep 1 pressed
-      (meta @ Down(Modifier(_)), M1 | M2) => {
-        meta
-      },
+      (meta @ Down(Modifier(_)), M1 | M2) => meta,
 
       // 1. Any key pressed
       // 2. Key released
       // Res: Set key (1) released
-      (Down(key), 0) => {
-        Up(key)
-      }
+      (Down(key), 0) => Up(key),
 
       // 1. Modifier pressed
       // 2. Key pressed
       // Res: Keep key (2 + mod) pressed
-      (Down(Modifier(meta_id)), key_id) => {
-        Up(Combo(meta_id, key_id))
-      },
+      (Down(Modifier(meta_id)), key_id) => Up(Combo(meta_id, key_id)),
 
       // 1. Combo key pressed
       // 2. Key is pressed
       // Res: Ignore second key press
-      (prev @ Down(Combo(_, _)), _) => {
-        prev
-      },
+      (prev @ Down(Combo(_, _)), _) => prev,
 
       // 1. Key released
       // 2. Key released again
@@ -96,9 +86,7 @@ impl State {
       // 1. Key released
       // 2. Key pressed
       // Res: Keep (2) pressed
-      (Up(_), id) => {
-        Down(Key(id))
-      },
+      (Up(_), id) => Down(Key(id)),
 
       // 1. Regular key pressed
       // 2. Regular key pressed again
@@ -116,29 +104,19 @@ impl State {
 
     match self.transition(next) {
       // Modifier + Regular key pressed
-      Down(Combo(meta_id, key_id)) => {
-        META.get(&(meta_id | key_id)).map(|&keys| Data::Print(keys)).into()
-      },
+      Down(Combo(meta_id, key_id)) => META.get(&(meta_id | key_id)).map(|&keys| Data::Print(keys)).into(),
 
       // Regular key pressed
-      Down(Key(key_id)) => {
-        EVENT.get(&key_id).map(|&index| Data::Write(index)).into()
-      },
+      Down(Key(key_id)) => EVENT.get(&key_id).map(|&index| Data::Write(index)).into(),
 
       // Meta key pressed
-      Down(Modifier(_)) => {
-        None
-      },
+      Down(Modifier(_)) => None,
 
       // Regular key released
-      Up(Key(_) | Combo(_, _)) => {
-        Some(Data::Reset)
-      },
+      Up(Key(_) | Combo(_, _)) => Some(Data::Reset),
 
       // Meta key released
-      Up(Modifier(_)) => {
-        None
-      }
+      Up(Modifier(_)) => None
     }
   }
 }
@@ -147,4 +125,54 @@ impl Default for State {
   fn default() -> Self {
     Self::new(Pos::Up(KeyEvent::Key(0)))
   }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::assert_matches;
+
+    use super::*;
+    use constants::buttons::{M1, M2, A2};
+
+    #[test]
+    fn test_regular_key_press() {
+        let mut state = State::default();
+        // Simulate a regular key press
+        let result = state.event(A2);
+        // Replace with expected result
+        assert_matches!(result, Some(Data::Print(_)));
+    }
+
+    // #[test]
+    // fn test_modifier_key_press() {
+    //     let mut state = State::default();
+    //     // Simulate a modifier key press
+    //     let result = state.event(KEY_ID_MODIFIER);
+    //     // Usually, a modifier key press alone doesn't produce Data
+    //     assert_eq!(result, None);
+    // }
+
+    // #[test]
+    // fn test_combo_key_press() {
+    //     let mut state = State::default();
+    //     // Press modifier key
+    //     state.event(KEY_ID_MODIFIER);
+    //     // Press regular key
+    //     let result = state.event(KEY_ID_REGULAR);
+    //     // Replace with expected result for combo key press
+    //     assert_eq!(result, Some(Data::Print(/* Expected value */)));
+    // }
+
+    // #[test]
+    // fn test_key_release() {
+    //     let mut state = State::default();
+    //     // Simulate a key press
+    //     state.event(KEY_ID_REGULAR);
+    //     // Simulate a key release
+    //     let result = state.event(0);
+    //     // Expected to reset after release
+    //     assert_eq!(result, Some(Data::Reset));
+    // }
+
+    // ... more tests for other scenarios ...
 }
