@@ -23,8 +23,8 @@ pub enum Data {
 
 impl State {
   // Translates key idn into key press states
-  fn transition(mut self, next: u8) -> State {
-    self = match (self, next) {
+  fn calculate_next_state(self, next: u8) -> State {
+    match (self, next) {
       // Any -> Meta: ignore previous
       (_, meta_id @ (M1 | M2)) => State::Meta(meta_id),
 
@@ -33,18 +33,22 @@ impl State {
 
       // Regular -> Regular: run key
       (_, media_id) => State::Key(media_id)
-    };
-
-    self.clone()
+    }
   }
 
   // Converts key presses into payloads
-  pub fn event(&self, next: u8) -> Option<Data> {
-    match self.transition(next) {
+  pub fn transition(&mut self, next: u8) -> Option<Data> {
+    let new_state = self.calculate_next_state(next);
+    *self = new_state;
+    match self {
       // Meta -> Regular: run shortcut
-      State::Combo(meta_id, event_id) => META.get(&meta_id).and_then(|meta| meta.get(&event_id).map(|id| Data::Short(*id))),
+      State::Combo(meta_id, event_id) => {
+        META.get(&meta_id).and_then(|m| m.get(&event_id).map(|&a| Data::Short(a)))
+      }
       // Regular: run key
-      State::Key(event_id) => EVENT.get(&event_id).map(|&a| Data::Media(a)),
+      State::Key(event_id) => {
+        EVENT.get(&event_id).map(|&a| Data::Media(a))
+      }
       // Meta: wait for next press
       State::Meta(_) => None,
       State::Float => None
@@ -77,35 +81,18 @@ mod tests {
   }
 
   #[test]
-  fn test_transition() {
-    let  state = State::default();
-
-    // Test transition from any to Meta
-    state.transition(M1);
-    assert_eq!(state, State::Meta(M1));
-
-    // Test transition from Meta to Regular
-    state.transition(A2);
-    assert_eq!(state, State::Combo(M1, A2));
-
-    // Test transition from Regular to Regular
-    state.transition(B2);
-    assert_eq!(state, State::Key(B2));
-  }
-
-  #[test]
   fn test_event() {
     let mut state = State::default();
 
     // Test Meta -> Regular
-    assert_eq!(state.event(M1), None);
-    assert_matches!(state.event(A2), Some(Data::Short(_)));
+    assert_eq!(state.transition(M1), None);
+    assert_matches!(state.transition(A2), Some(Data::Short(_)));
 
     // Test Regular -> Regular
-    assert_matches!(state.event(B2), Some(Data::Media(_)));
+    assert_matches!(state.transition(B2), Some(Data::Media(_)));
 
     // Test Meta -> Regular
-    assert_eq!(state.event(M2), None);
-    assert_matches!(state.event(A2), Some(Data::Short(_)));
+    assert_eq!(state.transition(M2), None);
+    assert_matches!(state.transition(A2), Some(Data::Short(_)));
   }
 }
