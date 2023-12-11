@@ -1,7 +1,3 @@
-#![allow(clippy::missing_safety_doc)]
-#![feature(assert_matches)]
-#![allow(dead_code)]
-
 mod ffi;
 
 extern crate lazy_static;
@@ -13,14 +9,13 @@ extern crate log;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use lazy_static::lazy_static;
 use log::{error, info, warn};
-use machine::{Data, State};
+use machine::Data;
 use std::sync::Mutex;
 use anyhow::Result;
 use anyhow::bail;
 use ffi::*;
 
 lazy_static! {
-  static ref STATE: Mutex<State> = Mutex::new(State::default());
   static ref CHANNEL: (UnboundedSender<u8>, Mutex<UnboundedReceiver<u8>>) = {
     let (send, rev) = tokio::sync::mpsc::unbounded_channel();
     let rev = Mutex::new(rev);

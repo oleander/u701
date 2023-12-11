@@ -6,10 +6,8 @@ pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
 }
 
 extern "C" {
-  pub fn ble_keyboard_is_connected() -> bool;
   pub fn ble_keyboard_print(xs: *const u8);
   pub fn ble_keyboard_write(xs: *const u8);
-  pub fn sleep(ms: u32);
   pub fn init_arduino();
 }
 
