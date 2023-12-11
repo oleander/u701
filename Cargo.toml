@@ -39,7 +39,7 @@ opt-level = "z"
 [profile.release]
 codegen-units = 1
 opt-level = 3
-debug = true
+debug = false
 lto = true
 
 [profile.dev.package."*"]
