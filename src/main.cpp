@@ -226,14 +226,13 @@ extern "C" void configure_ota() {
   ArduinoOTA.begin();
 }
 
-void setup() {
+extern "C" void setup() {
   initializeSerialCommunication();
   initializeKeyboard();
-  setup_rust();
   startBLEScanForDevice();
   connectToClientDevice();
 }
 
-void loop() {
-  // c_tick();
-}
+// void loop() {
+//   // c_tick();
+// }

@@ -8,10 +8,10 @@ extern crate anyhow;
 extern crate libc;
 extern crate log;
 
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use lazy_static::lazy_static;
 use log::{error, info, warn};
 use machine::{Data, State};
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use std::sync::Mutex;
 use anyhow::Result;
 use anyhow::bail;
@@ -67,7 +67,11 @@ pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
 #[tokio::main]
 async extern "C" fn app_main() -> i32 {
   env_logger::builder().filter(None, log::LevelFilter::Debug).init();
-  info!("[app_main] Starting main");
+
+  info!("[app_main] Calling setup");
+  unsafe { setup(); }
+
+  info!("[app_main] Entering main loop");
   if let Err(e) = main().await {
     error!("[error] Error: {:?}", e);
     return 1;
@@ -82,5 +86,6 @@ extern "C" {
   fn ble_keyboard_print(xs: *const u8);
   fn ble_keyboard_write(xs: *const u8);
   fn configure_ota();
+  fn setup();
   fn sleep(ms: u32);
 }
