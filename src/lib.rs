@@ -8,17 +8,26 @@ extern crate anyhow;
 extern crate libc;
 extern crate log;
 
-use crossbeam_channel::TryRecvError;
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use lazy_static::lazy_static;
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use machine::{Data, State};
-use log::debug;
 use std::sync::Mutex;
 
 lazy_static! {
   static ref STATE: Mutex<State> = Mutex::new(State::default());
   static ref CHANNEL: (Sender<u8>, Receiver<u8>) = unbounded();
+}
+
+use anyhow::{Result, Context};
+
+async fn main() -> Result<()> {
+  env_logger::init();
+  info!("[main] Starting main");
+
+  loop {
+    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+  }
 }
 
 extern "C" {
@@ -89,4 +98,16 @@ fn unwind(reason: &str) -> ! {
   error!("{}", reason);
   unsafe { c_unwind(reason.as_ptr() as *const libc::wchar_t) };
   unreachable!()
+}
+
+#[no_mangle]
+#[tokio::main]
+async extern "C" fn app_main() -> usize {
+  info!("[app_main] Starting app");
+  if let Err(e) = main().await {
+    error!("[app_main] Error: {:?}", e);
+    return 1;
+  }
+
+  return 0;
 }
