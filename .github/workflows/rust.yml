@@ -31,17 +31,18 @@ jobs:
           override: true
           default: true
           components: rust-src
-
-      # - name: Install Rust for Xtensa
-      #   uses: esp-rs/xtensa-toolchain@v1.5
-      #   with:
-      #     buildtargets: riscv32imc-esp-esp
-      #     version: 1.76.0
-      #     default: true
-      #     ldproxy: true
-      - name: Build
-        run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+      - name: Run tests (main)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose  --target x86_64-unknown-linux-gnu
+      - name: Build (main)
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target riscv32imc-esp-espid
       - name: Run tests (machine)
-        run: cargo test --verbose --workspace machine
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose --workspace machine --target x86_64-unknown-linux-gnu
