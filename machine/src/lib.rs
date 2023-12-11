@@ -71,7 +71,7 @@ impl State {
       // 1. Modifier pressed
       // 2. Key pressed
       // Res: Keep key (2 + mod) pressed
-      (Down(Modifier(meta_id)), key_id) => Up(Combo(meta_id, key_id)),
+      (Down(Modifier(meta_id)), key_id) => Down(Combo(meta_id, key_id)),
 
       // 1. Combo key pressed
       // 2. Key is pressed
