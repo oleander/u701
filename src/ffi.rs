@@ -1,9 +1,4 @@
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use lazy_static::lazy_static;
-use log::{error, info, warn};
-use machine::{Data, State};
-use std::sync::Mutex;
-use anyhow::{bail, Result};
+use log::{error, info};
 
 #[no_mangle]
 pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
