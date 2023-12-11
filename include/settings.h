@@ -1,5 +1,5 @@
-// #define DEVICE_MAC          "f7:97:ac:1f:f8:c0"
-#define DEVICE_MAC          "ec:da:3b:15:fc:1e"
+#define DEVICE_MAC "f7:97:ac:1f:f8:c0"
+// #define DEVICE_MAC          "ec:da:3b:15:fc:1e"
 #define DEVICE_MANUFACTURER "Oleander"
 #define DEVICE_NAME         "u701"
 #define DEVICE_BATTERY      100
