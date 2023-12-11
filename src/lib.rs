@@ -69,7 +69,7 @@ async extern "C" fn app_main() -> i32 {
   env_logger::builder().filter(None, log::LevelFilter::Debug).init();
 
   info!("[app_main] Calling setup");
-  unsafe { setup(); }
+  unsafe { init_arduino(); }
 
   info!("[app_main] Entering main loop");
   if let Err(e) = main().await {
@@ -86,6 +86,6 @@ extern "C" {
   fn ble_keyboard_print(xs: *const u8);
   fn ble_keyboard_write(xs: *const u8);
   fn configure_ota();
-  fn setup();
+  fn init_arduino();
   fn sleep(ms: u32);
 }
