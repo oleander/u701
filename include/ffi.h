@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdint.h>
 
 extern "C" void ble_keyboard_write(uint8_t c[2]);

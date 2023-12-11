@@ -1,5 +1,4 @@
 
-#include "ClientCallback.h"
 #include "ffi.h"
 #include "settings.h"
 #include "utility.h"
@@ -32,15 +31,15 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
-void ClientCallback::onConnect(NimBLEServer *server) {
-  Log.noticeln("Connected to device!");
-}
+class ClientCallback : public NimBLEClientCallbacks {
+  void onConnect(NimBLEClient *client) override {
+    Log.noticeln("Connected to device!");
+  }
 
-void ClientCallback::onDisconnect(NimBLEClient *client) {
-  restart("Disconnected from device");
-}
-
-// extern "C" void c_tick();
+  void onDisconnect(NimBLEClient *client) override {
+    restart("Disconnected from device");
+  }
+};
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   if (keyboard.isConnected()) {
