@@ -26,6 +26,9 @@ impl State {
   // Converts key presses into payloads
   pub fn transition(&mut self, next: u8) -> Option<Data> {
     *self = match (self.clone(), next) {
+      // Meta -> Meta: ignore new
+      (state @ State::Meta(_), M1 | M2) => state,
+
       // Any -> Meta: ignore previous
       (_, meta_id @ (M1 | M2)) => State::Meta(meta_id),
 
@@ -75,25 +78,6 @@ mod tests {
   fn test_default() {
     let state = State::default();
     assert_eq!(state, State::Float);
-  }
-
-  #[test]
-  fn test_event() {
-    let mut state = State::default();
-
-    // Test Meta -> Regular
-    assert_matches!(state.transition(M1), None);
-    assert_matches!(state.transition(A2), Some(Data::Short(_)));
-
-    // Test Regular -> Regular
-    assert_matches!(state.transition(B2), Some(Data::Media(_)));
-
-    // Test Meta -> Regular
-    assert_eq!(state.transition(M2), None);
-    assert_matches!(state.transition(A2), Some(Data::Short(_)));
-
-    // Test Regular -> Regular
-    assert_matches!(state.transition(B2), Some(Data::Media(_)));
   }
 
   #[test]
@@ -153,5 +137,34 @@ mod tests {
 
     assert_eq!(state.transition(M2), None);
     assert_eq!(state.transition(B4), Some(Data::Short(5)));
+  }
+
+  #[test]
+  fn meta_1_with_meta_2() {
+    let mut state = State::default();
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(A2), Some(Data::Short(48)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(A3), Some(Data::Short(49)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(A4), Some(Data::Short(50)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(B2), Some(Data::Short(51)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(B3), Some(Data::Short(52)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(B4), Some(Data::Short(53)));
   }
 }
