@@ -32,6 +32,14 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
+void ClientCallback::onConnect(NimBLEServer *server) {
+  Log.noticeln("Connected to device!");
+}
+
+void ClientCallback::onDisconnect(NimBLEClient *client) {
+  restart("Disconnected from device");
+}
+
 // extern "C" void c_tick();
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {

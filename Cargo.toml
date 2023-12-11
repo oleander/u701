@@ -21,7 +21,7 @@ log = { version = "0.4.20", default-features = false }
 machine = { path = "machine" }
 
 [lib]
-crate-type = ["staticlib", "lib"]
+# crate-type = ["staticlib", "lib"]
 path = "src/lib.rs"
 name = "u701"
 
