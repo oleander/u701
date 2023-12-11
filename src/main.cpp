@@ -243,9 +243,9 @@ extern "C" void init_arduino() {
 }
 
 void loop() {
-  Log.noticeln("Starting ESP32 ...");
+  vTaskDelete(NULL);
 }
 
 void setup() {
-  Log.noticeln("Starting ESP32 ...");
+  vTaskDelete(NULL);
 }
