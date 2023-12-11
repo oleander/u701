@@ -108,4 +108,27 @@ mod tests {
     assert_eq!(state.transition(B3), Some(Data::Media(NEXT_TRACK)));
     assert_eq!(state.transition(B4), Some(Data::Media(EJECT)));
   }
+
+  #[test]
+  fn meta_with_regular() {
+    let mut state = State::default();
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(A2), Some(Data::Short(48)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(A3), Some(Data::Short(49)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(A4), Some(Data::Short(50)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(B2), Some(Data::Short(51)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(B3), Some(Data::Short(52)));
+
+    assert_eq!(state.transition(M1), None);
+    assert_eq!(state.transition(B4), Some(Data::Short(53)));
+  }
 }
