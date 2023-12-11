@@ -12,10 +12,10 @@ clean:
     cargo pio exec -- run --target clean
 
 build:
-    . .espup.sh && cargo pio exec -- run -e {{ENVIRONMENT}}
+    . ./.espup.sh && cargo pio exec -- run -e {{ENVIRONMENT}}
 
 upload: build erase
-    . .espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
+    . ./.espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 ota:
     cargo pio exec -- run -t upload -e ota -j {{PARALLEL}}
@@ -35,4 +35,4 @@ setup:
     espup install -t esp32c3 -f .espup.sh
 
 test:
-    source .espup.sh && cargo test
+    source ./.espup.sh && cargo test
