@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use lazy_static::*;
 
 pub mod media {
-  pub const VOLUME_DOWN_KEY: [u8; 2] = [64, 0];
+  pub const VOLUME_DOWN: [u8; 2] = [64, 0];
   pub const NEXT_TRACK: [u8; 2] = [1, 0];
   pub const PREV_TRACK: [u8; 2] = [2, 0];
   pub const PLAY_PAUSE: [u8; 2] = [8, 0];
@@ -27,7 +27,7 @@ use media::*;
 lazy_static! {
   pub static ref EVENT: HashMap<u8, [u8; 2]> = {
     let mut table = HashMap::new();
-    table.insert(A2, VOLUME_DOWN_KEY);
+    table.insert(A2, VOLUME_DOWN);
     table.insert(A3, PREV_TRACK);
     table.insert(A4, PLAY_PAUSE);
     table.insert(B2, VOLUME_UP);

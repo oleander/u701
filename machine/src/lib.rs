@@ -62,7 +62,8 @@ impl Default for State {
 mod tests {
   use std::assert_matches::assert_matches;
   use super::*;
-  use super::constants::buttons::{A2, B2, M1, M2};
+  use super::constants::buttons::*;
+  use super::constants::media::*;
 
   #[test]
   fn test_new() {
@@ -81,7 +82,7 @@ mod tests {
     let mut state = State::default();
 
     // Test Meta -> Regular
-    assert_eq!(state.transition(M1), None);
+    assert_matches!(state.transition(M1), None);
     assert_matches!(state.transition(A2), Some(Data::Short(_)));
 
     // Test Regular -> Regular
@@ -90,5 +91,16 @@ mod tests {
     // Test Meta -> Regular
     assert_eq!(state.transition(M2), None);
     assert_matches!(state.transition(A2), Some(Data::Short(_)));
+
+    // Test Regular -> Regular
+    assert_matches!(state.transition(B2), Some(Data::Media(_)));
+  }
+
+  #[test]
+  fn test_regular() {
+    let mut state = State::default();
+
+    assert_eq!(state.transition(A2), Some(Data::Media(VOLUME_DOWN)));
+    assert_eq!(state.transition(A3), Some(Data::Media(PREV_TRACK)));
   }
 }
