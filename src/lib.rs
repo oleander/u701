@@ -53,14 +53,17 @@ fn send_shortcut(index: u8) {
   unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
-  match std::slice::from_raw_parts(event, len).get(..len) {
+pub fn on_event(event: Option<&[u8; 4]>) {
+  match event {
     Some(&[_, _, 0, _]) => warn!("Button was released, ignoring"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    Some(xs) => error!("[BUG] Unexpected event {:?}", xs),
-    None => error!("[BUG] Unexpected event size, got {} (expected {})", len, 4)
+    None => error!("Nothing was received"),
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
+  on_event(std::slice::from_raw_parts(event, len).try_into().ok());
 }
 
 #[no_mangle]
