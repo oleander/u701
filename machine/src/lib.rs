@@ -110,7 +110,7 @@ mod tests {
   }
 
   #[test]
-  fn meta_with_regular() {
+  fn meta_1_with_regular() {
     let mut state = State::default();
 
     assert_eq!(state.transition(M1), None);
@@ -130,5 +130,28 @@ mod tests {
 
     assert_eq!(state.transition(M1), None);
     assert_eq!(state.transition(B4), Some(Data::Short(53)));
+  }
+
+  #[test]
+  fn meta_2_with_regular() {
+    let mut state = State::default();
+
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(A2), Some(Data::Short(0)));
+
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(A3), Some(Data::Short(1)));
+
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(A4), Some(Data::Short(2)));
+
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(B2), Some(Data::Short(3)));
+
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(B3), Some(Data::Short(4)));
+
+    assert_eq!(state.transition(M2), None);
+    assert_eq!(state.transition(B4), Some(Data::Short(5)));
   }
 }
