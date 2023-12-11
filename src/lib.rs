@@ -23,16 +23,32 @@ async fn main() -> Result<()> {
   let mut receiver = CHANNEL.1.lock().unwrap();
   let mut state = machine::State::default();
 
-  // info!("Enterting loop, waiting for events");
-  // while let Some(event_id) = receiver.recv().await {
-  //   match state.event(event_id) {
-  //     Some(Data::Media(keys)) => send_media_key(keys),
-  //     Some(Data::Short(index)) => send_shortcut(index),
-  //     None => warn!("No event id id for {}", event_id)
-  //   };
-  // }
+  info!("Enterting loop, waiting for events");
+  while let Some(event_id) = receiver.recv().await {
+    match state.event(event_id) {
+      Some(Data::Write(xs)) => ble_write(xs),
+      Some(Data::Print(n)) => ble_print(n),
+      Some(Data::Reset) => ble_reset(),
+      None => warn!("No data was produced")
+    }
+  }
 
   bail!("Event loop ended");
+}
+
+fn ble_write(xs: [u8; 2]) {
+  info!("Writing {:?}", xs);
+  unsafe { ble_keyboard_write(xs.as_ptr()); }
+}
+
+fn ble_print(index: u8) {
+  info!("Printing {}", index);
+  unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
+}
+
+fn ble_reset() {
+  info!("Resetting");
+  unsafe { ble_keyboard_reset(); }
 }
 
 pub fn on_event(event: Option<&[u8; 4]>) {

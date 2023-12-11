@@ -50,6 +50,12 @@ extern "C" bool ble_keyboard_is_connected() {
   return keyboard.isConnected();
 }
 
+extern "C" void ble_keyboard_reset() {
+  if (keyboard.isConnected()) {
+    keyboard.releaseAll();
+  }
+}
+
 /* Add function isActive to the State struct */
 static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (length != 4) {
