@@ -11,6 +11,7 @@ pub mod media {
 }
 
 pub mod buttons {
+  pub const RELEASE: u8 = 0x00;
   pub const M1: u8 = 0x04; // Corresponds to BUTTON_1: Red (Meta)
   pub const A2: u8 = 0x50; // Corresponds to BUTTON_2: Black (Volume down)
   pub const A3: u8 = 0x51; // Corresponds to BUTTON_3: Blue (Prev track)
@@ -35,26 +36,23 @@ lazy_static! {
     table.insert(B4, EJECT);
     table
   };
-  pub static ref META: HashMap<u8, HashMap<u8, u8>> = {
-    let mut meta1 = HashMap::new();
-    meta1.insert(A2, 10);
-    meta1.insert(A3, 11);
-    meta1.insert(A4, 12);
-    meta1.insert(B2, 13);
-    meta1.insert(B3, 14);
-    meta1.insert(B4, 15);
-
-    let mut meta2 = HashMap::new();
-    meta2.insert(A2, 0);
-    meta2.insert(A3, 1);
-    meta2.insert(A4, 2);
-    meta2.insert(B2, 3);
-    meta2.insert(B3, 4);
-    meta2.insert(B4, 5);
-
+  pub static ref META: HashMap<u8, u8> = {
     let mut table = HashMap::new();
-    table.insert(M1, meta1);
-    table.insert(M2, meta2);
+    table.insert(M1 | A2, 1);
+    table.insert(M1 | A3, 2);
+    table.insert(M1 | A4, 3);
+
+    table.insert(M1 | B2, 4);
+    table.insert(M1 | B3, 5);
+    table.insert(M1 | B4, 6);
+
+    table.insert(M2 | A2, 7);
+    table.insert(M2 | A3, 8);
+    table.insert(M2 | A4, 9);
+
+    table.insert(M2 | B2, 10);
+    table.insert(M2 | B3, 11);
+    table.insert(M2 | B4, 12);
     table
   };
 }

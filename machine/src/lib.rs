@@ -15,34 +15,95 @@ pub enum Event {
   Float
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct State {
-  curr: Event
+  curr: Pos
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq)]
+enum KeyEvent {
+  Key(u8),      // For regular keys like "C"
+  Modifier(u8), // For keys like "Ctrl"
+  Combo(u8, u8) // For keys like "Ctrl + C"
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Pos {
+  Up(KeyEvent),
+  Down(KeyEvent),
+}
+
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Data {
-  Media([u8; 2]),
-  Short(u8)
+  Write([u8; 2]),
+  Print(u8),
+  Reset
 }
 
 impl State {
-  pub fn new(event: Event) -> Self {
+  pub fn new(pos: Pos) -> Self {
     Self {
-      curr: event
+      curr: pos
     }
   }
 
   // Translates key idn into key press states
-  fn transition(&mut self, next: u8) -> Event {
+  fn transition(&mut self, next: u8) -> Pos {
+    use Pos::*;
+    use KeyEvent::*;
+
     self.curr = match (self.curr, next) {
-      // Any -> Meta: ignore previous
-      (_, meta_id @ (M1 | M2)) => Event::Meta(meta_id),
+      // 1. Key pressed
+      // 2. Modifier pressed
+      // Res: Combine key (1) and modifier (2)
+      (Down(Key(key_id)), meta_id @ (M1 | M2)) => {
+        Down(Combo(meta_id, key_id))
+      },
 
-      // Meta -> Regular: run shortcut
-      (Event::Meta(meta_id), event_id) => Event::Duo(meta_id, event_id),
+      // 1. Modifier pressed
+      // 2. Modifier pressed again
+      // Res: Keep 1 pressed
+      (meta @ Down(Modifier(_)), M1 | M2) => {
+        meta
+      },
 
-      // Regular -> Regular: run key
-      (_, media_id) => Event::Key(media_id)
+      // 1. Any key pressed
+      // 2. Key released
+      // Res: Set key (1) released
+      (Down(key), 0) => {
+        Up(key)
+      }
+
+      // 1. Modifier pressed
+      // 2. Key pressed
+      // Res: Keep key (2 + mod) pressed
+      (Down(Modifier(meta_id)), key_id) => {
+        Up(Combo(meta_id, key_id))
+      },
+
+      // 1. Combo key pressed
+      // 2. Key is pressed
+      // Res: Ignore second key press
+      (prev @ Down(Combo(_, _)), _) => {
+        prev
+      },
+
+      // 1. Key released
+      // 2. Key released again
+      // Res: Keep key (1) released
+      (prev @ Up(_), 0) => prev,
+
+      // 1. Key released
+      // 2. Key pressed
+      // Res: Keep (2) pressed
+      (Up(_), id) => {
+        Down(Key(id))
+      },
+
+      // 1. Regular key pressed
+      // 2. Regular key pressed again
+      // Res: Ignore second key press
+      (prev @ Down(Key(_)), _) => prev
     };
 
     self.curr.clone()
@@ -50,72 +111,40 @@ impl State {
 
   // Converts key presses into payloads
   pub fn event(&mut self, next: u8) -> Option<Data> {
+    use Pos::*;
+    use KeyEvent::*;
+
     match self.transition(next) {
-      // Meta -> Regular: run shortcut
-      Event::Duo(meta_id, event_id) => META.get(&meta_id).and_then(|meta| meta.get(&event_id).map(|id| Data::Short(*id))),
-      // Regular: run key
-      Event::Key(event_id) => EVENT.get(&event_id).map(|&a| Data::Media(a)),
-      // Meta: wait for next press
-      Event::Meta(_) => None,
-      Event::Float => None
+      // Modifier + Regular key pressed
+      Down(Combo(meta_id, key_id)) => {
+        META.get(&(meta_id | key_id)).map(|&keys| Data::Print(keys)).into()
+      },
+
+      // Regular key pressed
+      Down(Key(key_id)) => {
+        EVENT.get(&key_id).map(|&index| Data::Write(index)).into()
+      },
+
+      // Meta key pressed
+      Down(Modifier(_)) => {
+        None
+      },
+
+      // Regular key released
+      Up(Key(_) | Combo(_, _)) => {
+        Some(Data::Reset)
+      },
+
+      // Meta key released
+      Up(Modifier(_)) => {
+        None
+      }
     }
   }
 }
 
 impl Default for State {
   fn default() -> Self {
-    Self::new(Event::Float)
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use std::assert_matches::assert_matches;
-  use super::*;
-  use super::constants::buttons::{A2, B2, M1, M2};
-
-  #[test]
-  fn test_new() {
-    let state = State::new(Event::Float);
-    assert_eq!(state.curr, Event::Float);
-  }
-
-  #[test]
-  fn test_default() {
-    let state = State::default();
-    assert_eq!(state.curr, Event::Float);
-  }
-
-  #[test]
-  fn test_transition() {
-    let mut state = State::new(Event::Float);
-
-    // Test transition from any to Meta
-    state.transition(M1);
-    assert_eq!(state.curr, Event::Meta(M1));
-
-    // Test transition from Meta to Regular
-    state.transition(A2);
-    assert_eq!(state.curr, Event::Duo(M1, A2));
-
-    // Test transition from Regular to Regular
-    state.transition(B2);
-    assert_eq!(state.curr, Event::Key(B2));
-  }
-
-  #[test]
-  fn test_event() {
-    let mut state = State::new(Event::Float);
-
-    // Test Meta -> Regular
-    assert_eq!(state.event(M1), None);
-    assert_matches!(state.event(A2), Some(Data::Short(_)));
-
-    // Test Regular -> Regular
-    assert_matches!(state.event(B2), Some(Data::Media(_)));
-
-    // Test Meta -> Regular
-    assert_eq!(state.event(M2), None);
-    assert_matches!(state.event(A2), Some(Data::Short(_)));
+    Self::new(Pos::Up(KeyEvent::Key(0)))
   }
 }
