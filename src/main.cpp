@@ -231,9 +231,5 @@ void setup() {
 }
 
 void loop() {
-  if (is_ota_enabled()) {
-    ArduinoOTA.handle();
-  } else {
-    process_ble_events();
-  }
+  process_ble_events();
 }
