@@ -236,7 +236,7 @@ extern "C" void configure_ota() {
 }
 
 extern "C" void init_arduino() {
-  // initializeSerialCommunication();
+  initializeSerialCommunication();
   initializeKeyboard();
   startBLEScanForDevice();
   connectToClientDevice();
