@@ -14,6 +14,11 @@ use log::{info, warn, error};
 use machine::{Data, State};
 use std::sync::Mutex;
 
+lazy_static! {
+  static ref STATE: Mutex<State> = Mutex::new(State::default());
+  static ref CHANNEL: (Sender<u8>, Receiver<u8>) = unbounded();
+}
+
 extern "C" {
   fn restart(reason: *const libc::wchar_t);
   fn ble_keyboard_is_connected() -> bool;
@@ -29,19 +34,13 @@ pub extern "C" fn setup_rust() {
   info!("Setup rust");
 }
 
-lazy_static! {
-  static ref STATE: Mutex<State> = Mutex::new(State::default());
-  static ref CHANNEL: (Sender<u8>, Receiver<u8>) = unbounded();
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn handle_external_click_event(event: *const u8, len: usize) {
-  let Some([0, 0, event_id, _]) = std::slice::from_raw_parts(event, len).get(..4) else {
-    return error!("[BUG] Unexpected event size, got {} (expected {})", len, 4);
-  };
-
-  info!("Sending event: {:?}", event_id);
-  CHANNEL.0.send(*event_id).unwrap();
+  match std::slice::from_raw_parts(event, len).get(..4) {
+    Some(&[_,_, 0, _]) => info!("Button released"),
+    Some(&[_,_, n, _]) => CHANNEL.0.send(n).unwrap(),
+    _ => error!("[BUG] Unexpected event size, got {} (expected {})", len, 4),
+  }
 }
 
 #[no_mangle]
@@ -51,8 +50,8 @@ pub extern "C" fn process_ble_events() {
   };
 
   info!("Received event id {}", data);
-
-  match STATE.lock().unwrap().event(data) {
+  let mut state = STATE.lock().unwrap();
+  match state.event(data) {
     Some(Data::Media(keys)) => send_media_key(keys),
     Some(Data::Short(index)) => send_shortcut(index),
     None => warn!("No event to send event id {:?}", data),
