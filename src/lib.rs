@@ -8,26 +8,38 @@ extern crate anyhow;
 extern crate libc;
 extern crate log;
 
-use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
 use machine::{Data, State};
+use tokio::sync::{mpsc::{UnboundedSender, UnboundedReceiver}};
+use std::sync::RwLock;
 use std::sync::Mutex;
 
 lazy_static! {
   static ref STATE: Mutex<State> = Mutex::new(State::default());
-  static ref CHANNEL: (Sender<u8>, Receiver<u8>) = unbounded();
+}
+
+lazy_static! {
+  static ref CHANNEL: (UnboundedSender<u8>, Mutex<UnboundedReceiver<u8>>) = {
+      let (send, mut rev) = tokio::sync::mpsc::unbounded_channel();
+      let mut rev = Mutex::new(rev);
+      (send, rev)
+  };
 }
 
 use anyhow::{Result, Context};
 
 async fn main() -> Result<()> {
-  env_logger::init();
-  info!("[main] Starting main");
+  let mut state = machine::State::default();
+  while let Some(event_id) = CHANNEL.1.lock().unwrap().recv().await {
+    match state.event(event_id) {
+      Some(Data::Media(keys)) => send_media_key(keys),
+      Some(Data::Short(index)) => send_shortcut(index),
+      None => warn!("No event to send event id {:?}", event_id)
+    };
+  };
 
-  loop {
-    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-  }
+  Ok(())
 }
 
 extern "C" {
@@ -45,28 +57,11 @@ pub extern "C" fn setup_rust() {
   info!("Setup rust");
 }
 
-pub fn on_event(event_id: u8) {
+#[no_mangle]
+unsafe extern "C" fn on_event(event_id: u8) {
   match event_id {
     0 => info!("Button {} released", event_id),
     n => CHANNEL.0.send(n).unwrap()
-  };
-}
-
-fn tick() {
-  let event_id = match CHANNEL.1.try_recv() {
-    Err(TryRecvError::Disconnected) => unwind("Channel disconnected"),
-    Err(TryRecvError::Empty) => return debug!("No event"),
-    Ok(0) => return debug!("A button was released"),
-    Ok(n) => n
-  };
-
-  info!("Received event id {}", event_id);
-
-  let mut state = STATE.lock().unwrap();
-  match state.event(event_id) {
-    Some(Data::Media(keys)) => send_media_key(keys),
-    Some(Data::Short(index)) => send_shortcut(index),
-    None => warn!("No event to send event id {:?}", event_id)
   };
 }
 
@@ -91,7 +86,6 @@ pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
 
 #[no_mangle]
 pub unsafe extern "C" fn c_tick() {
-  tick();
 }
 
 fn unwind(reason: &str) -> ! {
@@ -103,7 +97,8 @@ fn unwind(reason: &str) -> ! {
 #[no_mangle]
 #[tokio::main]
 async extern "C" fn app_main() -> usize {
-  info!("[app_main] Starting app");
+  env_logger::init();
+  info!("[main] Starting main");
   if let Err(e) = main().await {
     error!("[app_main] Error: {:?}", e);
     return 1;
