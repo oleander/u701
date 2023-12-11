@@ -11,8 +11,7 @@ use constants::{EVENT, META};
 pub enum State {
   Combo(u8, u8),
   Key(u8),
-  Meta(u8),
-  Float
+  Meta(u8)
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -22,7 +21,6 @@ pub enum Data {
 }
 
 impl State {
-
   // Converts key presses into payloads
   #[rustfmt::skip]
   pub fn transition(&mut self, next: u8) -> Option<Data> {
@@ -63,17 +61,13 @@ impl State {
       State::Meta(_) => {
         None
       }
-
-      State::Float => {
-        None
-      }
     }
   }
 }
 
 impl Default for State {
   fn default() -> Self {
-    State::Float
+    State::Key(0)
   }
 }
 
@@ -86,13 +80,7 @@ mod tests {
   #[test]
   fn test_new() {
     let state = State::default();
-    assert_eq!(state, State::Float);
-  }
-
-  #[test]
-  fn test_default() {
-    let state = State::default();
-    assert_eq!(state, State::Float);
+    assert_eq!(state, State::Key(0));
   }
 
   #[test]
