@@ -81,18 +81,18 @@ mod tests {
   use super::*;
 
   macro_rules! test_transitions {
-    // Variant for just transitions with no setup or cleanup
     ($state:expr; $($input:expr => $expected:expr),+) => {
-        {
-            let mut state = $state;
-            $(
-                assert_eq!(state.transition($input), $expected,
-                    "Failed on input {:?}: expected {:?}, got {:?}", $input, $expected, state.transition($input));
-            )*
-        }
+      {
+        let mut state = $state;
+        $(
+          assert_eq!(
+            state.transition($input),
+            $expected,
+            "Failed on input {:?}: expected {:?}, got {:?}", $input, $expected, state.transition($input)
+          );
+        )*
+    }
     };
-
-    // Variant with setup and/or cleanup code
     ($setup:expr; $state:expr; $($input:expr => $expected:expr),+; $cleanup:expr) => {
         {
             $setup;
@@ -106,7 +106,6 @@ mod tests {
     };
 }
 
-
   #[test]
   fn test_new() {
     let state = State::default();
@@ -115,14 +114,6 @@ mod tests {
 
   #[test]
   fn test_regular() {
-
-    // assert_eq!(state.transition(A2), Some(Action::Media(VOLUME_DOWN)));
-    // assert_eq!(state.transition(A3), Some(Action::Media(PREV_TRACK)));
-    // assert_eq!(state.transition(A4), Some(Action::Media(PLAY_PAUSE)));
-
-    // assert_eq!(state.transition(B2), Some(Action::Media(VOLUME_UP)));
-    // assert_eq!(state.transition(B3), Some(Action::Media(NEXT_TRACK)));
-    // assert_eq!(state.transition(B4), Some(Action::Media(EJECT)));
     test_transitions!(State::default();
       A2 => Some(Action::Media(VOLUME_DOWN)),
       A3 => Some(Action::Media(PREV_TRACK)),
@@ -135,26 +126,22 @@ mod tests {
 
   #[test]
   fn meta_1_with_regular() {
-    let mut state = State::default();
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(48)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A3), Some(Action::Short(49)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A4), Some(Action::Short(50)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B2), Some(Action::Short(51)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B3), Some(Action::Short(52)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B4), Some(Action::Short(53)));
+    test_transitions!(State::default();
+      M1 => None::<Action>,
+      A2 => Some(Action::Short(48)),
+      M1 => None::<Action>,
+      A3 => Some(Action::Short(49)),
+      M1 => None::<Action>,
+      A4 => Some(Action::Short(50)),
+      M1 => None::<Action>,
+      B2 => Some(Action::Short(51)),
+      M1 => None::<Action>,
+      B3 => Some(Action::Short(52)),
+      M1 => None::<Action>,
+      B4 => Some(Action::Short(53))
+    );
   }
+
 
   #[test]
   fn meta_2_with_regular() {
