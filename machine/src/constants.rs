@@ -58,3 +58,18 @@ lazy_static! {
     table
   };
 }
+
+meta 2
+a, d
+b, e
+c, f
+
+meta 1
+f, i
+g, e
+h, k
+
+kjfedfedfjikjkfedkiii
+
+2: defabc
+1: ijkfgh
