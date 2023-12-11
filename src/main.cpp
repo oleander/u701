@@ -236,14 +236,16 @@ extern "C" void configure_ota() {
 }
 
 extern "C" void init_arduino() {
-  initializeSerialCommunication();
+  // initializeSerialCommunication();
   initializeKeyboard();
   startBLEScanForDevice();
   connectToClientDevice();
 }
 
 void loop() {
+  Log.noticeln("Starting ESP32 ...");
 }
 
 void setup() {
+  Log.noticeln("Starting ESP32 ...");
 }

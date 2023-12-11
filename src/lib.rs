@@ -3,7 +3,7 @@ mod ffi;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use lazy_static::lazy_static;
 use log::{error, info, warn};
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use anyhow::{bail, Result};
 use machine::Action;
 use ffi::*;
@@ -20,7 +20,7 @@ lazy_static! {
 async fn main() -> Result<()> {
   info!("[main] Starting main loop");
 
-  let mut receiver = CHANNEL.1.lock().unwrap();
+  let mut receiver = CHANNEL.1.lock().await;
   let mut state = machine::State::default();
 
   info!("[main] Enterting loop, waiting for events");
