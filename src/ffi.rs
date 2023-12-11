@@ -1,4 +1,5 @@
 use log::{error, info};
+use tokio::time::Duration;
 
 #[no_mangle]
 pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
@@ -30,9 +31,10 @@ pub async extern "C" fn app_main() -> i32 {
   return 0;
 }
 
-pub fn send_media_key(keys: [u8; 2]) {
+pub async fn send_media_key(keys: [u8; 2]) {
   info!("[media] Sending media key {:?}", keys);
   unsafe { ble_keyboard_write(keys.as_ptr()) };
+  tokio::time::sleep(Duration::from_millis(12)).await;
 }
 
 pub fn send_shortcut(index: u8) {

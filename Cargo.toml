@@ -17,8 +17,7 @@ lazy_static = { version = "1.4.0", default-features = false }
 env_logger = { version = "0.10.1", default-features = false }
 anyhow = { version = "1.0.75", default-features = false }
 log = { version = "0.4.20", default-features = false }
-crossbeam-channel = "0.5.8"
-libc = "0.2.150"
+libc = { version = "0.2.150", default-features = false }
 
 machine = { path = "machine" }
 
@@ -27,20 +26,13 @@ features = ["rt-multi-thread", "macros", "time", "sync"]
 default-features = false
 version = "1.35.0"
 
-[dependencies.thingbuf]
-default-features = false
-features = ["static"]
-version = "0.1.4"
-
 [profile.dev]
-codegen-units = 1
-opt-level = "z"
 
 [profile.release]
 codegen-units = 1
 opt-level = 3
 lto = "fat"
 
-[profile.dev.package."*"]
+[profile.release.package."*"]
 codegen-units = 1
 opt-level = 3

@@ -174,10 +174,10 @@ void connectToClientDevice() {
         Log.warningln("[Click] Unknown report characteristic: %s", currentCharUUID);
       } else if (!characteristic->canNotify()) {
         Log.warningln("[Click] Cannot subscribe to notifications: %s", currentCharUUID);
-      } else if (!characteristic->subscribe(true, handleButtonClick, true)) {
+      } else if (!characteristic->subscribe(true, handleButtonClick, false)) {
         Log.errorln("[Click] [Bug] Failed to subscribe to notifications: %s", currentCharUUID);
       } else {
-        Log.noticeln("[Click] Subscribed to notifications: %s", currentCharUUID);
+        return Log.noticeln("[Click] Subscribed to notifications: %s", currentCharUUID);
       }
     }
   }
