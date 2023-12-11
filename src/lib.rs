@@ -1,25 +1,25 @@
-#![allow(dead_code)]
 #![allow(clippy::missing_safety_doc)]
 #![feature(assert_matches)]
+#![allow(dead_code)]
 
 extern crate lazy_static;
 extern crate env_logger;
 extern crate anyhow;
-extern crate log;
 extern crate libc;
+extern crate log;
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use log::{debug, error, info, warn};
 use lazy_static::lazy_static;
+use log::{info, warn, error};
 use machine::{Data, State};
 use std::sync::Mutex;
 
 extern "C" {
+  fn restart(reason: *const libc::wchar_t);
+  fn ble_keyboard_is_connected() -> bool;
   fn ble_keyboard_print(xs: *const u8);
   fn ble_keyboard_write(xs: *const u8);
-  fn ble_keyboard_is_connected() -> bool;
   fn configure_ota();
-  fn restart(reason: *const libc::wchar_t);
   fn sleep(ms: u32);
 }
 
@@ -36,8 +36,6 @@ lazy_static! {
 
 #[no_mangle]
 pub unsafe extern "C" fn handle_external_click_event(event: *const u8, len: usize) {
-  info!("Received BLE click event");
-
   let Some([0, 0, event_id, _]) = std::slice::from_raw_parts(event, len).get(..4) else {
     return error!("[BUG] Unexpected event size, got {} (expected {})", len, 4);
   };
@@ -57,7 +55,7 @@ pub extern "C" fn process_ble_events() {
   match STATE.lock().unwrap().event(data) {
     Some(Data::Media(keys)) => send_media_key(keys),
     Some(Data::Short(index)) => send_shortcut(index),
-    None => warn!("No event to send event id {:?}", data)
+    None => warn!("No event to send event id {:?}", data),
   };
 }
 
