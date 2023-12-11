@@ -173,16 +173,16 @@ mod tests {
         assert_matches!(result, Some(Data::Print(_)));
     }
 
-    // #[test]
-    // fn test_key_release() {
-    //     let mut state = State::default();
-    //     // Simulate a key press
-    //     state.event(KEY_ID_REGULAR);
-    //     // Simulate a key release
-    //     let result = state.event(0);
-    //     // Expected to reset after release
-    //     assert_eq!(result, Some(Data::Reset));
-    // }
+    #[test]
+    fn test_key_release() {
+        let mut state = State::default();
+        // Simulate a key press
+        state.event(A2);
+        // Simulate a key release
+        let result = state.event(0);
+        // Expected to reset after release
+        assert_eq!(result, Some(Data::Reset));
+    }
 
     // ... more tests for other scenarios ...
 }
