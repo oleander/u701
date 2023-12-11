@@ -32,7 +32,7 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
-extern "C" void process_ble_events();
+extern "C" void c_tick();
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   if (keyboard.isConnected()) {
@@ -64,7 +64,7 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
   Log.traceln("[Click] Received length: %d", length);
   Log.traceln("[Click] Received isNotify: %d", isNotify);
 
-  on_event(data, length);
+  c_on_event(data, length);
 }
 
 static void handleBatteryUpdate(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
@@ -230,11 +230,10 @@ void setup() {
   initializeSerialCommunication();
   initializeKeyboard();
   setup_rust();
-  process_ble_events();
   startBLEScanForDevice();
   connectToClientDevice();
 }
 
 void loop() {
-  process_ble_events();
+  c_tick();
 }

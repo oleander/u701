@@ -8,10 +8,12 @@ extern crate anyhow;
 extern crate libc;
 extern crate log;
 
+use crossbeam_channel::TryRecvError;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use lazy_static::lazy_static;
 use log::{error, info, warn};
 use machine::{Data, State};
+use log::debug;
 use std::sync::Mutex;
 
 lazy_static! {
@@ -34,7 +36,6 @@ pub extern "C" fn setup_rust() {
   info!("Setup rust");
 }
 
-#[no_mangle]
 pub fn on_event(event_id: u8) {
   match event_id {
     0 => info!("Button {} released", event_id),
@@ -42,18 +43,21 @@ pub fn on_event(event_id: u8) {
   };
 }
 
-#[no_mangle]
-pub extern "C" fn process_ble_events() {
-  let Some(data) = CHANNEL.1.try_recv().ok() else {
-    return;
+fn tick() {
+  let event_id = match CHANNEL.1.try_recv() {
+    Err(TryRecvError::Disconnected) => unwind("Channel disconnected"),
+    Err(TryRecvError::Empty) => return debug!("No event"),
+    Ok(0) => return debug!("A button was released"),
+    Ok(n) => n
   };
 
-  info!("Received event id {}", data);
+  info!("Received event id {}", event_id);
+
   let mut state = STATE.lock().unwrap();
-  match state.event(data) {
+  match state.event(event_id) {
     Some(Data::Media(keys)) => send_media_key(keys),
     Some(Data::Short(index)) => send_shortcut(index),
-    None => warn!("No event to send event id {:?}", data)
+    None => warn!("No event to send event id {:?}", event_id)
   };
 }
 
@@ -74,4 +78,15 @@ pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
     Some(something) => error!("[BUG] Unexpected event {:?}", something),
     None => error!("[BUG] Unexpected event size, got {} (expected {})", len, 4)
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn c_tick() {
+  tick();
+}
+
+fn unwind(reason: &str) -> ! {
+  error!("{}", reason);
+  unsafe { restart(reason.as_ptr() as *const libc::wchar_t) };
+  unreachable!()
 }
