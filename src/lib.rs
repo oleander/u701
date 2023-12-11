@@ -48,6 +48,7 @@ pub unsafe extern "C" fn handle_external_click_event(event: *const u8, len: usiz
 
 #[no_mangle]
 pub extern "C" fn process_ble_events() {
+  info!("Processing BLE events");
   let Some(data) = CHANNEL.1.try_recv().ok() else {
     return debug!("No event to process");
   };

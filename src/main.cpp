@@ -110,6 +110,7 @@ void initializeSerialCommunication() {
   Serial.begin(SERIAL_BAUD_RATE);
   // Log.begin(LOG_LEVEL_SILENT, &Serial);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Log.setLevel(LOG_LEVEL_VERBOSE);
   Log.noticeln("Starting ESP32 ...");
 }
 

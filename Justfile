@@ -13,8 +13,7 @@ build:
     cargo pio build -r
 
 upload:
-    erase
-    cargo pio exec -- run -t upload -e {{ENVIROMENT}} --monitor-port {{PORT}}
+    cargo pio exec -- run -t upload -e release
 
 ota:
     cargo pio exec -- run -t upload -e ota
@@ -23,7 +22,9 @@ erase:
     # esptool.py erase_region 0x9000 0x5000
 
 monitor:
-    ./tools/monitor.sh -b 115200 -p {{PORT}}
+    # cargo pio exec -- run -t monitor -e release
+    # espflash monitor --port /dev/cu.usbserial-10 --baud 115200
+    tools/monitor.sh --port /dev/cu.usbserial-10 --baud 115200
 
 menuconfig:
     cargo pio espidf menuconfig -r true
