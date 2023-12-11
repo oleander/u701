@@ -24,6 +24,7 @@ pub enum Data {
 impl State {
 
   // Converts key presses into payloads
+  #[rustfmt::skip]
   pub fn transition(&mut self, next: u8) -> Option<Data> {
     *self = match (self.clone(), next) {
       // Meta -> Meta: ignore new
@@ -51,14 +52,21 @@ impl State {
       // Meta -> Regular: run shortcut
       State::Combo(meta_id, event_id) => {
         META.get(&meta_id).and_then(|m| m.get(&event_id)).map(|&a| Data::Short(a))
-      }
+      },
+
       // Regular: run key
       State::Key(event_id) => {
         EVENT.get(&event_id).map(|&a| Data::Media(a))
-      }
+      },
+
       // Meta: wait for next press
-      State::Meta(_) => None,
-      State::Float => None
+      State::Meta(_) => {
+        None
+      },
+
+      State::Float => {
+        None
+      }
     }
   }
 }
