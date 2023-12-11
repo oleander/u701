@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
 
   info!("Enterting loop, waiting for events");
   while let Some(event_id) = receiver.recv().await {
-    match state.event(event_id) {
+    match state.transition(event_id) {
       Some(Data::Media(keys)) => send_media_key(keys),
       Some(Data::Short(index)) => send_shortcut(index),
       None => warn!("No event id id for {}", event_id)
