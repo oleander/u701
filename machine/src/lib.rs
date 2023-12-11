@@ -102,5 +102,10 @@ mod tests {
 
     assert_eq!(state.transition(A2), Some(Data::Media(VOLUME_DOWN)));
     assert_eq!(state.transition(A3), Some(Data::Media(PREV_TRACK)));
+    assert_eq!(state.transition(A4), Some(Data::Media(PLAY_PAUSE)));
+
+    assert_eq!(state.transition(B2), Some(Data::Media(VOLUME_UP)));
+    assert_eq!(state.transition(B3), Some(Data::Media(NEXT_TRACK)));
+    assert_eq!(state.transition(B4), Some(Data::Media(EJECT)));
   }
 }
