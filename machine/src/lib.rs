@@ -145,54 +145,44 @@ mod tests {
 
   #[test]
   fn meta_2_with_regular() {
-    let mut state = State::default();
-
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(0)));
-
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A3), Some(Action::Short(1)));
-
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A4), Some(Action::Short(2)));
-
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B2), Some(Action::Short(3)));
-
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B3), Some(Action::Short(4)));
-
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B4), Some(Action::Short(5)));
+    test_transitions!(State::default();
+      M2 => None::<Action>,
+      A2 => Some(Action::Short(0)),
+      M2 => None::<Action>,
+      A3 => Some(Action::Short(1)),
+      M2 => None::<Action>,
+      A4 => Some(Action::Short(2)),
+      M2 => None::<Action>,
+      B2 => Some(Action::Short(3)),
+      M2 => None::<Action>,
+      B3 => Some(Action::Short(4)),
+      M2 => None::<Action>,
+      B4 => Some(Action::Short(5))
+    );
   }
 
   #[test]
   fn meta_1_with_meta_2() {
-    let mut state = State::default();
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(48)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A3), Some(Action::Short(49)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A4), Some(Action::Short(50)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B2), Some(Action::Short(51)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B3), Some(Action::Short(52)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B4), Some(Action::Short(53)));
+    test_transitions!(State::default();
+      M1 => None::<Action>,
+      M2 => None::<Action>,
+      A2 => Some(Action::Short(48)),
+      M1 => None::<Action>,
+      M2 => None::<Action>,
+      A3 => Some(Action::Short(49)),
+      M1 => None::<Action>,
+      M2 => None::<Action>,
+      A4 => Some(Action::Short(50)),
+      M1 => None::<Action>,
+      M2 => None::<Action>,
+      B2 => Some(Action::Short(51)),
+      M1 => None::<Action>,
+      M2 => None::<Action>,
+      B3 => Some(Action::Short(52)),
+      M1 => None::<Action>,
+      M2 => None::<Action>,
+      B4 => Some(Action::Short(53))
+    );
   }
 
   #[test]
