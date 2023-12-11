@@ -8,12 +8,11 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Recommended for avoiding API rate limits
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Cache Cargo dependencies
@@ -24,13 +23,22 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install Rust for Xtensa
-        uses: esp-rs/xtensa-toolchain@v1.5
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          buildtargets: riscv32imc-esp-espidf
-          version: 1.76.0
+          toolchain: nightly
+          override: true
           default: true
-          ldproxy: true
+          components: rust-src
+
+      # - name: Install Rust for Xtensa
+      #   uses: esp-rs/xtensa-toolchain@v1.5
+      #   with:
+      #     buildtargets: riscv32imc-esp-esp
+      #     version: 1.76.0
+      #     default: true
+      #     ldproxy: true
       - name: Build
         run: cargo build --verbose
       - name: Run tests
