@@ -21,44 +21,48 @@ pub enum Action {
 }
 
 impl State {
+
   // Converts key presses into payloads
   #[rustfmt::skip]
   pub fn transition(&mut self, next: u8) -> Option<Action> {
+    use State::*;
+    use Action::*;
+
     *self = match (self.clone(), next) {
       // Meta -> Meta: ignore new
-      (state @ State::Meta(_), M1 | M2) => {
+      (state @ Meta(_), M1 | M2) => {
         state
       }
 
       // Any -> Meta: ignore previous
       (_, meta_id @ (M1 | M2)) => {
-        State::Meta(meta_id)
+        Meta(meta_id)
       }
 
       // Meta -> Regular: run shortcut
-      (State::Meta(meta_id), event_id) => {
-        State::Combo(meta_id, event_id)
+      (Meta(meta_id), event_id) => {
+        Combo(meta_id, event_id)
       }
 
       // Regular -> Regular: run key
       (_, media_id) => {
-        State::Key(media_id)
+        Key(media_id)
       }
     };
 
     match self {
       // Meta -> Regular: run shortcut
-      State::Combo(meta_id, event_id) => {
-        META.get(&meta_id).and_then(|m| m.get(&event_id)).map(|&a| Action::Short(a))
+      Combo(meta_id, event_id) => {
+        META.get(&meta_id).and_then(|m| m.get(&event_id)).map(|&a| Short(a))
       }
 
       // Regular: run key
-      State::Key(event_id) => {
-        EVENT.get(&event_id).map(|&a| Action::Media(a))
+      Key(event_id) => {
+        EVENT.get(&event_id).map(|&a| Media(a))
       }
 
       // Meta: wait for next press
-      State::Meta(_) => {
+      Meta(_) => {
         None
       }
     }
