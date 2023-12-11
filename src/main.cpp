@@ -1,7 +1,6 @@
 
 #include "ffi.h"
 #include "settings.h"
-#include "utility.h"
 
 #include <ArduinoLog.h>
 #include <ArduinoOTA.h>
@@ -40,6 +39,16 @@ class ClientCallback : public NimBLEClientCallbacks {
     restart("Disconnected from device");
   }
 };
+
+void restart(const char *reason) {
+  Log.noticeln(reason);
+  Log.noticeln("Restarting ESP32 ...");
+  ESP.restart();
+}
+
+extern "C" void c_unwind(const char *message) {
+  restart(message);
+}
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   if (keyboard.isConnected()) {
