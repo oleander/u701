@@ -15,16 +15,17 @@ pub enum State {
   Float
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Data {
   Media([u8; 2]),
   Short(u8)
 }
 
 impl State {
-  // Translates key idn into key press states
-  fn calculate_next_state(self, next: u8) -> State {
-    match (self, next) {
+
+  // Converts key presses into payloads
+  pub fn transition(&mut self, next: u8) -> Option<Data> {
+    *self = match (self.clone(), next) {
       // Any -> Meta: ignore previous
       (_, meta_id @ (M1 | M2)) => State::Meta(meta_id),
 
@@ -33,13 +34,8 @@ impl State {
 
       // Regular -> Regular: run key
       (_, media_id) => State::Key(media_id)
-    }
-  }
+    };
 
-  // Converts key presses into payloads
-  pub fn transition(&mut self, next: u8) -> Option<Data> {
-    let new_state = self.calculate_next_state(next);
-    *self = new_state;
     match self {
       // Meta -> Regular: run shortcut
       State::Combo(meta_id, event_id) => {
