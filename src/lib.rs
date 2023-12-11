@@ -10,7 +10,7 @@ extern crate log;
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use lazy_static::lazy_static;
-use log::{info, warn, error};
+use log::{error, info, warn};
 use machine::{Data, State};
 use std::sync::Mutex;
 
@@ -35,12 +35,11 @@ pub extern "C" fn setup_rust() {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn handle_external_click_event(event: *const u8, len: usize) {
-  match std::slice::from_raw_parts(event, len).get(..4) {
-    Some(&[_,_, 0, _]) => info!("Button released"),
-    Some(&[_,_, n, _]) => CHANNEL.0.send(n).unwrap(),
-    _ => error!("[BUG] Unexpected event size, got {} (expected {})", len, 4),
-  }
+pub fn on_event(event_id: u8) {
+  match event_id {
+    0 => info!("Button {} released", event_id),
+    n => CHANNEL.0.send(n).unwrap()
+  };
 }
 
 #[no_mangle]
@@ -54,7 +53,7 @@ pub extern "C" fn process_ble_events() {
   match state.event(data) {
     Some(Data::Media(keys)) => send_media_key(keys),
     Some(Data::Short(index)) => send_shortcut(index),
-    None => warn!("No event to send event id {:?}", data),
+    None => warn!("No event to send event id {:?}", data)
   };
 }
 
@@ -66,4 +65,13 @@ fn send_media_key(keys: [u8; 2]) {
 fn send_shortcut(index: u8) {
   info!("[shortcut] Sending shortcut at index {}", index);
   unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
+  match std::slice::from_raw_parts(event, len).get(..len) {
+    Some(&[_, _, n, _]) => on_event(n),
+    Some(something) => error!("[BUG] Unexpected event {:?}", something),
+    None => error!("[BUG] Unexpected event size, got {} (expected {})", len, 4)
+  }
 }

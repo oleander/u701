@@ -64,7 +64,7 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
   Log.traceln("[Click] Received length: %d", length);
   Log.traceln("[Click] Received isNotify: %d", isNotify);
 
-  handle_external_click_event(data, length);
+  on_event(data, length);
 }
 
 static void handleBatteryUpdate(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
