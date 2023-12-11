@@ -14,7 +14,7 @@ clean:
 build:
     . ./.espup.sh && cargo pio exec -- run -e {{ENVIRONMENT}}
 
-upload: build erase
+upload: build
     . ./.espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 ota:

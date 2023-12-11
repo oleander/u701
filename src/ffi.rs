@@ -12,7 +12,7 @@ extern "C" {
 }
 
 #[no_mangle]
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread", worker_threads = 2)]
 pub async extern "C" fn app_main() -> i32 {
   env_logger::builder().filter(None, log::LevelFilter::Debug).init();
 
@@ -37,5 +37,5 @@ pub fn send_media_key(keys: [u8; 2]) {
 
 pub fn send_shortcut(index: u8) {
   info!("[shortcut] Sending shortcut at index {}", index);
-  unsafe { ble_keyboard_print([b'a' + index].as_ptr()) };
+  unsafe { ble_keyboard_print([b'a' + index, 0].as_ptr()) };
 }
