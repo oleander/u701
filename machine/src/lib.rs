@@ -86,6 +86,11 @@ impl State {
       // 1. Key released
       // 2. Key pressed
       // Res: Keep (2) pressed
+      (Up(_), mod_id @ (M1 | M2)) => Down(Modifier(mod_id)),
+
+      // 1. Key released
+      // 2. Key pressed
+      // Res: Keep (2) pressed
       (Up(_), id) => Down(Key(id)),
 
       // 1. Regular key pressed
@@ -130,9 +135,11 @@ impl Default for State {
 #[cfg(test)]
 mod tests {
     use std::assert_matches;
+    use std::assert_matches::assert_matches;
 
     use super::*;
     use constants::buttons::{M1, M2, A2};
+    use constants::media::{VOLUME_DOWN};
 
     #[test]
     fn test_regular_key_press() {
@@ -140,28 +147,31 @@ mod tests {
         // Simulate a regular key press
         let result = state.event(A2);
         // Replace with expected result
-        assert_matches!(result, Some(Data::Print(_)));
+        assert_matches!(result, Some(Data::Write(VOLUME_DOWN)));
     }
 
-    // #[test]
-    // fn test_modifier_key_press() {
-    //     let mut state = State::default();
-    //     // Simulate a modifier key press
-    //     let result = state.event(KEY_ID_MODIFIER);
-    //     // Usually, a modifier key press alone doesn't produce Data
-    //     assert_eq!(result, None);
-    // }
+    #[test]
+    fn test_modifier_key_press() {
+        let mut state = State::default();
+        // Simulate a modifier key press
+        let result = state.event(M1);
+        // Usually, a modifier key press alone doesn't produce Data
+        assert_eq!(result, None);
+    }
 
-    // #[test]
-    // fn test_combo_key_press() {
-    //     let mut state = State::default();
-    //     // Press modifier key
-    //     state.event(KEY_ID_MODIFIER);
-    //     // Press regular key
-    //     let result = state.event(KEY_ID_REGULAR);
-    //     // Replace with expected result for combo key press
-    //     assert_eq!(result, Some(Data::Print(/* Expected value */)));
-    // }
+    #[test]
+    fn test_combo_key_press() {
+        let mut state = State::default();
+        // Press modifier key
+        state.event(M1);
+
+        println!("{:?}", state.curr);
+        // Press regular key
+        let result = state.event(A2);
+        println!("{:?}", state.curr);
+        // Replace with expected result for combo key press
+        assert_matches!(result, Some(Data::Print(_)));
+    }
 
     // #[test]
     // fn test_key_release() {
