@@ -43,7 +43,6 @@ async fn main() -> Result<()> {
   bail!("Event loop ended");
 }
 
-
 fn send_media_key(keys: [u8; 2]) {
   info!("[media] Sending media key {:?}", keys);
   unsafe { ble_keyboard_write(keys.as_ptr()) };
@@ -57,8 +56,9 @@ fn send_shortcut(index: u8) {
 #[no_mangle]
 pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
   match std::slice::from_raw_parts(event, len).get(..len) {
+    Some(&[_, _, 0, _]) => warn!("Button was released, ignoring"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    Some(something) => error!("[BUG] Unexpected event {:?}", something),
+    Some(xs) => error!("[BUG] Unexpected event {:?}", xs),
     None => error!("[BUG] Unexpected event size, got {} (expected {})", len, 4)
   }
 }

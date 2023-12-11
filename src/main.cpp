@@ -233,12 +233,8 @@ extern "C" void init_arduino() {
   connectToClientDevice();
 }
 
-void setup() {
+void loop() {
 }
 
 void setup() {
 }
-
-// void loop() {
-//   // c_tick();
-// }

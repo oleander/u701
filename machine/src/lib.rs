@@ -35,7 +35,6 @@ impl State {
   // Translates key idn into key press states
   fn transition(&mut self, next: u8) -> Event {
     self.curr = match (self.curr, next) {
-      (_, 0) => Event::Float,
       // Any -> Meta: ignore previous
       (_, meta_id @ (M1 | M2)) => Event::Meta(meta_id),
 
