@@ -48,23 +48,21 @@ pub unsafe extern "C" fn handle_external_click_event(event: *const u8, len: usiz
 
 #[no_mangle]
 pub extern "C" fn process_ble_events() {
-  info!("Processing BLE events");
   let Some(data) = CHANNEL.1.try_recv().ok() else {
-    return debug!("No event to process");
+    return;
   };
 
   info!("Received event: {:?}", data);
   let mut state = STATE.lock().unwrap();
 
   match state.event(data) {
-    Some(Data::Media([key1, key2])) => {
-      info!("Sending media key report: {:?}, {:?}", key1, key2);
-      unsafe { ble_keyboard_write(&[key1, key2] as *const _ as *const u8) };
+    Some(Data::Media(keys)) => {
+      info!("Sending media key report: {:?}", keys);
+      unsafe { ble_keyboard_write(keys.as_ptr()) };
     },
     Some(Data::Short(index)) => {
-      info!("Sending letter: {:?}", index);
-      let letter = (b'a' + index - 1) as char;
-      unsafe { ble_keyboard_print(&letter as *const _ as *const u8) };
+      info!("Sending letter at index {}", index);
+      unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
     },
     None => warn!("No event to send")
   };

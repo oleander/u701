@@ -230,6 +230,7 @@ void setup() {
   initializeSerialCommunication();
   initializeKeyboard();
   setup_rust();
+  process_ble_events();
   startBLEScanForDevice();
   connectToClientDevice();
 }
