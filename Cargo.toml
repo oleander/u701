@@ -37,11 +37,11 @@ codegen-units = 1
 opt-level = "z"
 
 [profile.release]
-codegen-units = 1
-opt-level = 3
+# codegen-units = 1
+# opt-level = 3
 debug = false
 lto = true
 
-[profile.dev.package."*"]
-codegen-units = 1
-opt-level = 3
+# [profile.dev.package."*"]
+# codegen-units = 1
+# opt-level = 3
