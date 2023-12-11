@@ -50,7 +50,7 @@ impl State {
     match self {
       // Meta -> Regular: run shortcut
       State::Combo(meta_id, event_id) => {
-        META.get(&meta_id).and_then(|m| m.get(&event_id).map(|&a| Data::Short(a)))
+        META.get(&meta_id).and_then(|m| m.get(&event_id)).map(|&a| Data::Short(a))
       }
       // Regular: run key
       State::Key(event_id) => {
