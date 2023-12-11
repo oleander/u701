@@ -16,17 +16,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
-      # Install Rust for Xtensa
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Rust for Xtensa
         uses: esp-rs/xtensa-toolchain@v1.5
         with:
-          default: true
-          version: 1.76.0
-          ldproxy: true
           buildtargets: riscv32imc-esp-espidf
-
-      # Build with cargo
+          version: 1.76.0
+          default: true
+          ldproxy: true
       - name: Build
         run: cargo build --verbose
       - name: Run tests
