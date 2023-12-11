@@ -1,6 +1,7 @@
 UPLOAD_PORT := `ls /dev/* | grep "tty.usbserial" | head -n 1`
 ENVIRONMENT := "release"
 PARALLEL := "4"
+MONITOR_SPEED := "115200"
 
 set shell := ["zsh", "-cu"]
 set dotenv-load := true
@@ -11,19 +12,19 @@ clean:
     cargo pio exec -- run --target clean
 
 build:
-    cargo pio exec -- run -j {{PARALLEL}} -e {{ENVIRONMENT}}
+    cargo pio exec -- run -e {{ENVIRONMENT}}
 
-upload:
-    cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}}
+upload: build erase
+    cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 ota:
     cargo pio exec -- run -t upload -e ota -j {{PARALLEL}}
 
 erase:
-    # esptool.py erase_region 0x9000 0x5000
+    esptool.py erase_region 0x9000 0x5000 # nvs
 
 monitor:
-    tools/monitor.sh --port {{UPLOAD_PORT}} --baud 115200
+    tools/monitor.sh --port {{UPLOAD_PORT}} --baud {{MONITOR_SPEED}}
 
 menuconfig:
     cargo pio espidf menuconfig -r true
