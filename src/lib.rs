@@ -6,7 +6,7 @@ use lazy_static::lazy_static;
 use log::{error, info, warn};
 use std::sync::Mutex;
 use anyhow::Result;
-use machine::Data;
+use machine::Action;
 use anyhow::bail;
 use ffi::*;
 
@@ -28,8 +28,8 @@ async fn main() -> Result<()> {
   info!("[main] Enterting loop, waiting for events");
   while let Some(event_id) = receiver.recv().await {
     match state.transition(event_id) {
-      Some(Data::Media(keys)) => send_media_key(keys),
-      Some(Data::Short(index)) => send_shortcut(index),
+      Some(Action::Media(keys)) => send_media_key(keys),
+      Some(Action::Short(index)) => send_shortcut(index),
       None => warn!("[main] No event id {}", event_id)
     };
   }
