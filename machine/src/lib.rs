@@ -21,7 +21,6 @@ pub enum Action {
 }
 
 impl State {
-
   // Converts key presses into payloads
   #[rustfmt::skip]
   pub fn transition(&mut self, next: u8) -> Option<Action> {
@@ -81,6 +80,33 @@ mod tests {
   use super::constants::media::*;
   use super::*;
 
+  macro_rules! test_transitions {
+    // Variant for just transitions with no setup or cleanup
+    ($state:expr; $($input:expr => $expected:expr),+) => {
+        {
+            let mut state = $state;
+            $(
+                assert_eq!(state.transition($input), $expected,
+                    "Failed on input {:?}: expected {:?}, got {:?}", $input, $expected, state.transition($input));
+            )*
+        }
+    };
+
+    // Variant with setup and/or cleanup code
+    ($setup:expr; $state:expr; $($input:expr => $expected:expr),+; $cleanup:expr) => {
+        {
+            $setup;
+            let mut state = $state;
+            $(
+                assert_eq!(state.transition($input), $expected,
+                    "Failed on input {:?}: expected {:?}, got {:?}", $input, $expected, state.transition($input));
+            )*
+            $cleanup;
+        }
+    };
+}
+
+
   #[test]
   fn test_new() {
     let state = State::default();
@@ -89,15 +115,22 @@ mod tests {
 
   #[test]
   fn test_regular() {
-    let mut state = State::default();
 
-    assert_eq!(state.transition(A2), Some(Action::Media(VOLUME_DOWN)));
-    assert_eq!(state.transition(A3), Some(Action::Media(PREV_TRACK)));
-    assert_eq!(state.transition(A4), Some(Action::Media(PLAY_PAUSE)));
+    // assert_eq!(state.transition(A2), Some(Action::Media(VOLUME_DOWN)));
+    // assert_eq!(state.transition(A3), Some(Action::Media(PREV_TRACK)));
+    // assert_eq!(state.transition(A4), Some(Action::Media(PLAY_PAUSE)));
 
-    assert_eq!(state.transition(B2), Some(Action::Media(VOLUME_UP)));
-    assert_eq!(state.transition(B3), Some(Action::Media(NEXT_TRACK)));
-    assert_eq!(state.transition(B4), Some(Action::Media(EJECT)));
+    // assert_eq!(state.transition(B2), Some(Action::Media(VOLUME_UP)));
+    // assert_eq!(state.transition(B3), Some(Action::Media(NEXT_TRACK)));
+    // assert_eq!(state.transition(B4), Some(Action::Media(EJECT)));
+    test_transitions!(State::default();
+      A2 => Some(Action::Media(VOLUME_DOWN)),
+      A3 => Some(Action::Media(PREV_TRACK)),
+      A4 => Some(Action::Media(PLAY_PAUSE)),
+      B2 => Some(Action::Media(VOLUME_UP)),
+      B3 => Some(Action::Media(NEXT_TRACK)),
+      B4 => Some(Action::Media(EJECT))
+    );
   }
 
   #[test]
