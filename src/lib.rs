@@ -1,13 +1,11 @@
 mod ffi;
 
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use lazy_static::lazy_static;
 use log::{error, info, warn};
 use std::sync::Mutex;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use machine::Action;
-use anyhow::bail;
 use ffi::*;
 
 lazy_static! {
@@ -44,7 +42,6 @@ pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => warn!("Button was released"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    None => error!("Nothing was received"),
+    None => error!("Nothing was received")
   }
 }
-
