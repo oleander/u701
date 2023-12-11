@@ -1,11 +1,5 @@
 mod ffi;
 
-extern crate lazy_static;
-extern crate env_logger;
-extern crate anyhow;
-extern crate libc;
-extern crate log;
-
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use lazy_static::lazy_static;
 use log::{error, info, warn};
