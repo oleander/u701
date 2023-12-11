@@ -191,9 +191,6 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
 
     if (macAddr != buttonMacAddress) {
       Serial.print(".");
-      Serial.print("Found device: ");
-      Serial.print(advertised->getName().c_str());
-      Serial.print("\n");
       return;
     }
 
