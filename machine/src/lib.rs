@@ -21,7 +21,7 @@ pub struct State {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-enum KeyEvent {
+pub enum KeyEvent {
   Key(u8),       // For regular keys like "C"
   Modifier(u8),  // For keys like "Ctrl"
   Combo(u8, u8)  // For keys like "Ctrl + C"
@@ -134,11 +134,10 @@ impl Default for State {
 
 #[cfg(test)]
 mod tests {
-  use std::assert_matches;
+  use constants::media::{VOLUME_DOWN, VOLUME_UP};
+  use constants::buttons::{A2, B2, M1};
   use std::assert_matches::assert_matches;
   use super::*;
-  use constants::buttons::{A2, M1, M2, B2};
-  use constants::media::{VOLUME_DOWN, VOLUME_UP};
 
   #[test]
   fn test_regular_key_press() {
@@ -205,6 +204,16 @@ mod tests {
     let result = state.event(0);
     // Expected to reset after release
     assert_eq!(result, Some(Data::Reset));
+  }
+
+  // Invalid key press id: 9999
+  #[test]
+  fn test_invalid_key_press() {
+    let mut state = State::default();
+    // Simulate a key press
+    let result = state.event(200);
+    // Expected to reset after release
+    assert_eq!(result, None);
   }
 
   #[test]
