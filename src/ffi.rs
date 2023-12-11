@@ -29,3 +29,13 @@ pub async extern "C" fn app_main() -> i32 {
 
   return 0;
 }
+
+pub fn send_media_key(keys: [u8; 2]) {
+  info!("[media] Sending media key {:?}", keys);
+  unsafe { ble_keyboard_write(keys.as_ptr()) };
+}
+
+pub fn send_shortcut(index: u8) {
+  info!("[shortcut] Sending shortcut at index {}", index);
+  unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
+}

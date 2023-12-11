@@ -41,16 +41,6 @@ async fn main() -> Result<()> {
   bail!("Event loop ended");
 }
 
-fn send_media_key(keys: [u8; 2]) {
-  info!("[media] Sending media key {:?}", keys);
-  unsafe { ble_keyboard_write(keys.as_ptr()) };
-}
-
-fn send_shortcut(index: u8) {
-  info!("[shortcut] Sending shortcut at index {}", index);
-  unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
-}
-
 pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => warn!("Button was released, ignoring"),
