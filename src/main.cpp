@@ -3,12 +3,12 @@
 #include "settings.h"
 
 #include <ArduinoLog.h>
-#include <ArduinoOTA.h>
+// #include <ArduinoOTA.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
-#include <WiFi.h>
+// #include <WiFi.h>
 
 IPAddress ip(192, 168, 4, 1);
 IPAddress gateway(192, 168, 4, 1);
@@ -218,22 +218,22 @@ void startBLEScanForDevice() {
   scan->start(0, false);
 }
 
-extern "C" void configure_ota() {
-  Log.noticeln("Configuring WiFi ...");
+// extern "C" void configure_ota() {
+//   Log.noticeln("Configuring WiFi ...");
 
-  WiFi.config(ip, gateway, subnet);
-  WiFi.setTxPower(WIFI_POWER_11dBm);
-  WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
+//   WiFi.config(ip, gateway, subnet);
+//   WiFi.setTxPower(WIFI_POWER_11dBm);
+//   WiFi.softAP(ESP_WIFI_SSID, ESP_WIFI_PASSWORD, 1, true);
 
-  ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
+//   ArduinoOTA.setPassword(ESP_OTA_PASSWORD);
 
-  ArduinoOTA.onEnd([]() {
-    Log.noticeln("OTA update finished, will reboot");
-    restart("OTA update finished, will reboot");
-  });
+//   ArduinoOTA.onEnd([]() {
+//     Log.noticeln("OTA update finished, will reboot");
+//     restart("OTA update finished, will reboot");
+//   });
 
-  ArduinoOTA.begin();
-}
+//   ArduinoOTA.begin();
+// }
 
 extern "C" void init_arduino() {
   initializeSerialCommunication();
