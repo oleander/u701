@@ -8,15 +8,22 @@ edition = "2021"
 name = "u701"
 
 [dependencies]
-machine = { path = "machine" }
-thingbuf = { version = "0.1.4", default-features = false, features = ["static"] }
+tokio = { version = "1.35.0", default-features = true, features = [
+  "rt-multi-thread",
+  "macros",
+  "time",
+  "sync",
+] }
+thingbuf = { version = "0.1.4", default-features = false, features = [
+  "static",
+] }
 lazy_static = { version = "1.4.0", default-features = false }
 env_logger = { version = "0.10.0", default-features = false }
 anyhow = { version = "1.0.75", default-features = false }
 log = { version = "0.4.20", default-features = false }
-libc = "0.2.150"
+machine = { path = "machine" }
 crossbeam-channel = "0.5.8"
-tokio = { version = "1.35.0", default-features = true, features = ["rt-multi-thread", "macros", "time", "sync"] }
+libc = "0.2.150"
 
 [lib]
 crate-type = ["staticlib", "lib"]
@@ -25,6 +32,6 @@ name = "u701"
 
 [profile.release]
 codegen-units = 1
-opt-level = 3
+opt-level = "s"
 debug = false
 lto = true
