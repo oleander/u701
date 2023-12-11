@@ -56,14 +56,18 @@ pub extern "C" fn process_ble_events() {
   let mut state = STATE.lock().unwrap();
 
   match state.event(data) {
-    Some(Data::Media(keys)) => {
-      info!("Sending media key report: {:?}", keys);
-      unsafe { ble_keyboard_write(keys.as_ptr()) };
-    },
-    Some(Data::Short(index)) => {
-      info!("Sending letter at index {}", index);
-      unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
-    },
-    None => warn!("No event to send")
+    Some(Data::Media(keys)) => send_media_key(keys),
+    Some(Data::Short(index)) => send_shortcut(index),
+    None => warn!("No event to send event id {:?}", data)
   };
+}
+
+fn send_media_key(keys: [u8; 2]) {
+  info!("[media] Sending media key {:?}", keys);
+  unsafe { ble_keyboard_write(keys.as_ptr()) };
+}
+
+fn send_shortcut(index: u8) {
+  info!("[shortcut] Sending shortcut at index {}", index);
+  unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
 }
