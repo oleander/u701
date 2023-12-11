@@ -46,10 +46,6 @@ class ClientCallback : public NimBLEClientCallbacks {
   }
 };
 
-extern "C" void c_unwind(const char *message) {
-  restart(message);
-}
-
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   if (keyboard.isConnected()) {
     keyboard.write(c);
