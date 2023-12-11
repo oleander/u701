@@ -23,8 +23,8 @@ erase:
 
 monitor:
     # cargo pio exec -- run -t monitor -e release
-    # espflash monitor --port /dev/cu.usbserial-10 --baud 115200
-    tools/monitor.sh --port /dev/cu.usbserial-10 --baud 115200
+    # espflash monitor --port /dev/cu.usbserial-110 --baud 115200
+    tools/monitor.sh --port /dev/cu.usbserial-110 --baud 115200
 
 menuconfig:
     cargo pio espidf menuconfig -r true

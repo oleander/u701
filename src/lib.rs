@@ -35,6 +35,7 @@ async fn main() -> Result<()> {
   bail!("Event loop ended");
 }
 
+// BLE button callback given the button id being pressed or 0 if released
 pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => warn!("Button was released, ignoring"),
