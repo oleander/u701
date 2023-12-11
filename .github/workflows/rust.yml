@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Recommended for avoiding API rate limits
 
 jobs:
   build:
@@ -15,6 +16,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      # Install Rust for Xtensa
+      - name: Install Rust for Xtensa
+        uses: esp-rs/xtensa-toolchain@v1.5
+        with:
+          default: true
+          version: 1.76.0
+          ldproxy: true
+          buildtargets: riscv32imc-esp-espidf
+
+      # Build with cargo
       - name: Build
         run: cargo build --verbose
       - name: Run tests
