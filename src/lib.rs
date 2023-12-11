@@ -5,8 +5,7 @@ use lazy_static::lazy_static;
 use log::{error, info, warn};
 use machine::Data;
 use std::sync::Mutex;
-use anyhow::Result;
-use anyhow::bail;
+use anyhow::{bail, Result};
 use ffi::*;
 
 lazy_static! {
@@ -38,7 +37,9 @@ async fn main() -> Result<()> {
 
 fn ble_write(xs: [u8; 2]) {
   info!("Writing {:?}", xs);
-  unsafe { ble_keyboard_write(xs.as_ptr()); }
+  unsafe {
+    ble_keyboard_write(xs.as_ptr());
+  }
 }
 
 fn ble_print(index: u8) {
@@ -48,14 +49,15 @@ fn ble_print(index: u8) {
 
 fn ble_reset() {
   info!("Resetting");
-  unsafe { ble_keyboard_reset(); }
+  unsafe {
+    ble_keyboard_reset();
+  }
 }
 
 pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => warn!("Button was released, ignoring"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    None => error!("Nothing was received"),
+    None => error!("Nothing was received")
   }
 }
-
