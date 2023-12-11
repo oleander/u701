@@ -154,18 +154,18 @@ void connectToClientDevice() {
       auto currentServiceUUID = service->getUUID().toString().c_str();
       auto currentCharUUID    = characteristic->getUUID().toString().c_str();
 
-      // Register for battery level updates
-      if (!service->getUUID().equals(batteryServiceUUID)) {
-        Log.warningln("[Battery] Unknown battery service: %s", currentServiceUUID);
-      } else if (!characteristic->getUUID().equals(batteryLevelCharUUID)) {
-        Log.warningln("[Battery] Unknown battery characteristic: %s", currentCharUUID);
-      } else if (!characteristic->canNotify()) {
-        Log.warningln("[Battery] Cannot subscribe to notifications: %s", currentCharUUID);
-      } else if (!characteristic->subscribe(true, handleBatteryUpdate, true)) {
-        Log.errorln("[BUG] [Battery] Failed to subscribe to notifications: %s", currentCharUUID);
-      } else {
-        Log.noticeln("[Battery] Subscribed to notifications: %s", currentCharUUID);
-      }
+      // // Register for battery level updates
+      // if (!service->getUUID().equals(batteryServiceUUID)) {
+      //   Log.warningln("[Battery] Unknown battery service: %s", currentServiceUUID);
+      // } else if (!characteristic->getUUID().equals(batteryLevelCharUUID)) {
+      //   Log.warningln("[Battery] Unknown battery characteristic: %s", currentCharUUID);
+      // } else if (!characteristic->canNotify()) {
+      //   Log.warningln("[Battery] Cannot subscribe to notifications: %s", currentCharUUID);
+      // } else if (!characteristic->subscribe(true, handleBatteryUpdate, true)) {
+      //   Log.errorln("[BUG] [Battery] Failed to subscribe to notifications: %s", currentCharUUID);
+      // } else {
+      //   Log.noticeln("[Battery] Subscribed to notifications: %s", currentCharUUID);
+      // }
 
       // Register for click events
       if (!service->getUUID().equals(hidService)) {
