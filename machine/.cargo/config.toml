@@ -1,0 +1,11 @@
+[build]
+target = "aarch64-apple-darwin"
+
+[target.aarch64-apple-darwin]
+rustflags = ["-Z", "macro-backtrace"]
+
+[unstable]
+build-std = ["std", "panic_unwind", "panic_abort"]
+
+[alias]
+upload = "pio exec -- run -t upload"

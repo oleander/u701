@@ -1,0 +1,15 @@
+[package]
+name = "machine"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[lib]
+name = "machine"
+path = "src/lib.rs"
+# crate-type = ["staticlib"]
+
+[dependencies.lazy_static]
+features = ["spin_no_std"]
+default-features = false
+version = "1.4.0"
