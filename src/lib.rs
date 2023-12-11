@@ -52,10 +52,9 @@ pub extern "C" fn process_ble_events() {
     return;
   };
 
-  info!("Received event: {:?}", data);
-  let mut state = STATE.lock().unwrap();
+  info!("Received event id {}", data);
 
-  match state.event(data) {
+  match STATE.lock().unwrap().event(data) {
     Some(Data::Media(keys)) => send_media_key(keys),
     Some(Data::Short(index)) => send_shortcut(index),
     None => warn!("No event to send event id {:?}", data)
