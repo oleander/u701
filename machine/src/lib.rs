@@ -217,6 +217,29 @@ mod tests {
   }
 
   #[test]
+  fn test_combo_plus_regular_key_press() {
+    let mut state = State::default();
+    state.event(M1); // Simulate pressing a modifier key (e.g., Ctrl)
+    let result = state.event(A2); // Simulate pressing another key while the modifier is pressed
+    assert_matches!(result, Some(Data::Print(1))); // Expected: Some action is triggered by the combo
+  }
+
+  #[test]
+  fn test_regular() {
+    let mut state = State::default();
+    let result = state.event(A2); // Simulate pressing a key represented by A2
+    assert_matches!(result, Some(Data::Write(VOLUME_DOWN))); // Expected: A2 corresponds to VOLUME_DOWN
+  }
+
+  #[test]
+  fn test_key_press_and_release() {
+    let mut state = State::default();
+    state.event(A2); // Simulate pressing a key
+    let result = state.event(0); // Simulate releasing the key
+    assert_eq!(result, Some(Data::Reset)); // Expected: Reset after key release
+  }
+
+  #[test]
   fn test_modifier_key_release() {
     let mut state = State::default();
     // Simulate a modifier key press
