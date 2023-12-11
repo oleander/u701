@@ -37,5 +37,5 @@ pub fn send_media_key(keys: [u8; 2]) {
 
 pub fn send_shortcut(index: u8) {
   info!("[shortcut] Sending shortcut at index {}", index);
-  unsafe { ble_keyboard_print([b'a' + index - 1].as_ptr()) };
+  unsafe { ble_keyboard_print([b'1' + index].as_ptr()) };
 }
