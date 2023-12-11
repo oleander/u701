@@ -30,6 +30,12 @@ const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
+void restart(const char *reason) {
+  Log.noticeln(reason);
+  Log.noticeln("Restarting ESP32 ...");
+  ESP.restart();
+}
+
 class ClientCallback : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *client) override {
     Log.noticeln("Connected to device!");
@@ -39,12 +45,6 @@ class ClientCallback : public NimBLEClientCallbacks {
     restart("Disconnected from device");
   }
 };
-
-void restart(const char *reason) {
-  Log.noticeln(reason);
-  Log.noticeln("Restarting ESP32 ...");
-  ESP.restart();
-}
 
 extern "C" void c_unwind(const char *message) {
   restart(message);
