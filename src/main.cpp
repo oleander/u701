@@ -3,11 +3,11 @@
 #include "settings.h"
 
 #include <ArduinoLog.h>
-// #include <ArduinoOTA.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
+// #include <ArduinoOTA.h>
 // #include <WiFi.h>
 
 IPAddress ip(192, 168, 4, 1);
