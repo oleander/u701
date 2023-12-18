@@ -1,10 +1,10 @@
 mod ffi;
 
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+use log::{error, info, warn, debug};
 use lazy_static::lazy_static;
-use log::{error, info, warn};
-use tokio::sync::Mutex;
 use anyhow::{bail, Result};
+use tokio::sync::Mutex;
 use machine::Action;
 use ffi::*;
 
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
 // Example: [0, 0, 0, 0] -> A button was released
 pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
-    Some(&[_, _, 0, _]) => warn!("Button was released"),
+    Some(&[_, _, 0, _]) => debug!("Button was released"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
     None => error!("[BUG] Nothing was received")
   }
