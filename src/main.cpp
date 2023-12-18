@@ -241,11 +241,3 @@ extern "C" void init_arduino() {
   startBLEScanForDevice();
   connectToClientDevice();
 }
-
-void loop() {
-  vTaskDelete(NULL);
-}
-
-void setup() {
-  vTaskDelete(NULL);
-}
