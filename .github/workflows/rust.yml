@@ -40,7 +40,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target riscv32imc-esp-espidf
+          args: --target riscv32imc-esp-espid
       - name: Run tests (machine)
         uses: actions-rs/cargo@v1
         with:
