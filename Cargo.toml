@@ -22,7 +22,7 @@ libc = { version = "0.2.150", default-features = false }
 machine = { path = "machine" }
 
 [dependencies.tokio]
-features = ["rt-multi-thread", "macros", "time", "sync"]
+features = ["rt", "macros", "time", "sync"]
 default-features = false
 version = "1.35.0"
 
