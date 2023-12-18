@@ -1,7 +1,7 @@
 mod ffi;
 
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
-use log::{error, info, warn, debug};
+use log::{error, info, debug};
 use lazy_static::lazy_static;
 use anyhow::{bail, Result};
 use tokio::sync::Mutex;
@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     match state.transition(event_id) {
       Some(Action::Media(keys)) => send_media_key(keys),
       Some(Action::Short(index)) => send_shortcut(index),
-      None => warn!("[main] No event id {}", event_id)
+      None => debug!("[main] No action {}", event_id)
     };
   }
 
@@ -42,6 +42,6 @@ pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => debug!("Button was released"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    None => error!("[BUG] Nothing was received")
+    None => error!("[on_event] [BUG] Nothing received")
   }
 }
