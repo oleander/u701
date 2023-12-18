@@ -12,7 +12,7 @@ clean:
     cargo pio exec -- run --target clean
 
 build:
-    . ./.espup.sh && cargo pio build -r
+    cargo pio build -r
 
 upload: build
     . ./.espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}

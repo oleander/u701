@@ -26,8 +26,6 @@ features = ["rt-multi-thread", "macros", "time", "sync"]
 default-features = false
 version = "1.35.0"
 
-[profile.dev]
-
 [profile.release]
 codegen-units = 1
 opt-level = 3
@@ -36,3 +34,7 @@ lto = "fat"
 [profile.release.package."*"]
 codegen-units = 1
 opt-level = 3
+
+[profile.dev]
+debug = true
+opt-level = "z"
