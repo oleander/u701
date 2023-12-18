@@ -42,6 +42,6 @@ pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => warn!("Button was released"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    None => error!("Nothing was received")
+    None => error!("[BUG] Nothing was received")
   }
 }
