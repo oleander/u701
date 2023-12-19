@@ -24,11 +24,14 @@ jobs:
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install Rust for Xtensa
-        uses: esp-rs/xtensa-toolchain@v1.5
+      - run: rm rust-toolchain.toml
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly
+          override: true
           default: true
-          ldproxy: true
+          components: rust-src
       - name: Run tests (main)
         uses: actions-rs/cargo@v1
         with:
