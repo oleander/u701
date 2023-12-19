@@ -1,10 +1,31 @@
-# u701 Project Documentation
-
-[![Rust Build Status](https://github.com/oleander/u701/actions/workflows/rust.yml/badge.svg)](https://github.com/oleander/u701/actions/workflows/rust.yml)
-
-## Introduction
+# u701 [![Rust Build Status](https://github.com/oleander/u701/actions/workflows/rust.yml/badge.svg)](https://github.com/oleander/u701/actions/workflows/rust.yml)
 
 **u701** is a BLE proxy developed in Rust and C++ for the [Terrain Command](https://carpe-iter.com/support/rally-command-getting-started/) controller by [Carpe Iter](https://carpe-iter.com). This software enables BLE event remapping for iOS device compatibility, expanding upon the original Android-only support. It operates on an ESP32C3 microcontroller but is designed to be portable to other platforms.
+
+## Setup
+
+* `rustup target add riscv32imc-esp-espidf`
+* `cargo install cargo-pio`
+* `cargo install just`
+
+## Hardware Support
+
+- Terrain Command v2
+- ESP32C3
+
+> For Terrain Command V3, update event IDs in `machine/src/constants.rs`.
+
+## Flashing the ESP32
+
+1. Connect the ESP32 to your computer.
+2. Run `just upload` to flash the ESP32.
+3. Run `just monitor` to view the serial output.
+
+## Features
+
+- **Direct Button Mapping**: Facilitates direct mapping of buttons to HID events, such as Play/Pause.
+- **Meta Key Combinations**: Utilizes red buttons on the Terrain Command as meta keys for triggering complex events.
+- **iOS Shortcuts Integration**: Enables triggering of iOS shortcuts through BLE events for advanced functionality.
 
 ## Event Mapping Flow
 
@@ -16,12 +37,6 @@ Event processing in the Terrain Command follows this sequence:
 4. The iPhone receives the remapped BLE event.
 
 The ESP32 functions both as a BLE host and server.
-
-## Features
-
-- **Direct Button Mapping**: Facilitates direct mapping of buttons to HID events, such as Play/Pause.
-- **Meta Key Combinations**: Utilizes red buttons on the Terrain Command as meta keys for triggering complex events.
-- **iOS Shortcuts Integration**: Enables triggering of iOS shortcuts through BLE events for advanced functionality.
 
 ## Terrain Command Button Layout
 
@@ -78,33 +93,3 @@ HID events are pre-mapped to the following keys:
 ## Custom Events
 
 For custom events, modify mappings in `machine/src/constants.rs`.
-
-## Hardware Support
-
-- Terrain Command v2
-- ESP32C3
-
-> For Terrain Command V3, update event IDs in `machine/src/constants.rs`.
-
-## Flashing the ESP32
-
-Execute `just upload monitor` to flash the ESP32.
-
-## About the Project
-
-This project leverages the ESP32C3, PlatformIO, Rust, and various Arduino libraries to implement a BLE proxy. (Further details on libraries are to be provided.)
-
-## Setup
-
-* `rustup target add riscv32imc-esp-espidf`
-* `cargo install cargo-pio`
-* `cargo install just`
-
-## Development Tools
-
-The project utilizes `just` as the build system. The `Justfile` includes various commands for managing the ESP32, with detailed explanations.
-
-## Project Goal
-
-- Transition fully to Rust, eliminating the need for PlatformIO and C++.
-- Resolve issues related to reconnecting when using Rust exclusively.
