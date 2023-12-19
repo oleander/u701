@@ -169,15 +169,15 @@ void connectToClientDevice() {
 
       // Register for click events
       if (!service->getUUID().equals(hidService)) {
-        Log.warningln("[Click] Unknown report service: %s", currentServiceUUID);
+        Log.warningln("[Click] Unknown report service: %X", currentServiceUUID);
       } else if (!characteristic->getUUID().equals(reportUUID)) {
-        Log.warningln("[Click] Unknown report characteristic: %s", currentCharUUID);
+        Log.warningln("[Click] Unknown report characteristic: %X", currentCharUUID);
       } else if (!characteristic->canNotify()) {
-        Log.warningln("[Click] Cannot subscribe to notifications: %s", currentCharUUID);
+        Log.warningln("[Click] Cannot subscribe to notifications: %X", currentCharUUID);
       } else if (!characteristic->subscribe(true, handleButtonClick, false)) {
-        Log.errorln("[Click] [Bug] Failed to subscribe to notifications: %s", currentCharUUID);
+        Log.errorln("[Click] [Bug] Failed to subscribe to notifications: %X", currentCharUUID);
       } else {
-        return Log.noticeln("[Click] Subscribed to notifications: %s", currentCharUUID);
+        return Log.noticeln("[Click] Subscribed to notifications: %X", currentCharUUID);
       }
     }
   }
