@@ -7,6 +7,9 @@
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
+#include <esp_task_wdt.h>
+
+#define WDT_TIMEOUT 30
 // #include <ArduinoOTA.h>
 // #include <WiFi.h>
 
@@ -38,6 +41,7 @@ void restart(const char *reason) {
 
 class ClientCallback : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *client) override {
+    esp_task_wdt_reset();
     Log.noticeln("Connected to device!");
   }
 
@@ -80,6 +84,7 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
 }
 
 void initializeKeyboard() {
+  esp_task_wdt_reset();
   Log.noticeln("Enable Keyboard");
 
   keyboard.setBatteryLevel(100);
@@ -96,13 +101,16 @@ void initializeKeyboard() {
   auto waitingTimeinSeconds = 2;
   Log.noticeln("iPhone connected, but will wait %d seconds to be sure", waitingTimeinSeconds);
   delay(waitingTimeinSeconds * 1000);
+  esp_task_wdt_reset();
 }
 
 void initializeSerialCommunication() {
+  esp_task_wdt_reset();
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   Log.setLevel(LOG_LEVEL_VERBOSE);
   Log.noticeln("Starting ESP32 ...");
+  esp_task_wdt_reset();
 }
 
 /**
@@ -110,6 +118,7 @@ void initializeSerialCommunication() {
  * If the connection fails or no services/characteristics are found, the device will restart.
  */
 void connectToClientDevice() {
+  esp_task_wdt_reset();
   Log.noticeln("[Connecting] to Terrain Command ...");
 
   if (client == nullptr) {
@@ -133,6 +142,8 @@ void connectToClientDevice() {
       auto currentServiceUUID = service->getUUID().toString().c_str();
       auto currentCharUUID    = characteristic->getUUID().toString().c_str();
 
+      esp_task_wdt_reset();
+
       // Register for click events
       if (!service->getUUID().equals(hidService)) {
         Log.warningln("[Click] Unknown report service: %X", currentServiceUUID);
@@ -149,11 +160,14 @@ void connectToClientDevice() {
   }
 
   Log.noticeln("Subcribed to all characteristics");
+  esp_task_wdt_reset();
 }
 
 class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto macAddr = advertised->getAddress();
+
+    esp_task_wdt_reset();
 
     if (macAddr != buttonMacAddress) {
       Serial.print(".");
@@ -184,9 +198,22 @@ void startBLEScanForDevice() {
   scan->start(0, false);
 }
 
+void setupWatchdog() {
+  Log.noticeln("Setting up watchdog ...");
+  esp_task_wdt_init(WDT_TIMEOUT, true);
+  esp_task_wdt_add(nullptr);
+}
+
+void disableWatchdog() {
+  Log.noticeln("Disabling watchdog ...");
+  esp_task_wdt_delete(nullptr);
+}
+
 extern "C" void init_arduino() {
+  setupWatchdog();
   initializeSerialCommunication();
   initializeKeyboard();
   startBLEScanForDevice();
   connectToClientDevice();
+  disableWatchdog();
 }
