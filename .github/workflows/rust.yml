@@ -28,7 +28,6 @@ jobs:
         uses: esp-rs/xtensa-toolchain@v1.5
         with:
           default: true
-          version: "1.66.0"
           ldproxy: true
       - name: Run tests (main)
         uses: actions-rs/cargo@v1
