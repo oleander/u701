@@ -23,16 +23,11 @@ fn main() -> Result<()> {
   let mut state = machine::State::default();
 
   info!("[main] Entering loop, waiting for events");
-  loop {
-    match receiver.recv() {
-      Ok(event_id) => {
-        match state.transition(event_id) {
-          Some(Action::Media(keys)) => send_media_key(keys),
-          Some(Action::Short(index)) => send_shortcut(index),
-          None => debug!("[main] No action {}", event_id)
-        }
-      },
-      Err(_) => break
+  while let Ok(event_id) = receiver.recv() {
+    match state.transition(event_id) {
+      Some(Action::Media(keys)) => send_media_key(keys),
+      Some(Action::Short(index)) => send_shortcut(index),
+      None => debug!("[main] No action {}", event_id)
     }
   }
 
