@@ -92,11 +92,13 @@ Execute `just upload monitor` to flash the ESP32.
 
 ## About the Project
 
-This project leverages the ESP32C3, Platformio, Rust, and various Arduino libraries to implement a BLE proxy. (Further details on libraries are to be provided.)
+This project leverages the ESP32C3, PlatformIO, Rust, and various Arduino libraries to implement a BLE proxy. (Further details on libraries are to be provided.)
 
 ## Setup
 
-Configure the build target for the ESP32 with `rustup target add riscv32imc-esp-espidf`.
+* `rustup target add riscv32imc-esp-espidf`
+* `cargo install cargo-pio`
+* `cargo install just`
 
 ## Development Tools
 
@@ -104,5 +106,5 @@ The project utilizes `just` as the build system. The `Justfile` includes various
 
 ## Project Goal
 
-- Transition fully to Rust, eliminating the need for Platformio and C++.
+- Transition fully to Rust, eliminating the need for PlatformIO and C++.
 - Resolve issues related to reconnecting when using Rust exclusively.
