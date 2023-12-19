@@ -9,7 +9,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  RUST_TOOLCHAIN: nightly
 
 jobs:
   build:
@@ -25,13 +24,12 @@ jobs:
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust for Xtensa
+        uses: esp-rs/xtensa-toolchain@v1.5
         with:
-          toolchain: nightly
-          override: true
           default: true
-          components: rust-src
+          version: "1.66.0"
+          ldproxy: true
       - name: Run tests (main)
         uses: actions-rs/cargo@v1
         with:
