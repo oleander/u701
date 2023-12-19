@@ -12,8 +12,7 @@ extern "C" {
 }
 
 #[no_mangle]
-#[tokio::main(flavor = "current_thread")]
-pub async extern "C" fn app_main() -> i32 {
+pub extern "C" fn app_main() -> i32 {
   env_logger::builder().filter(None, log::LevelFilter::Info).init();
 
   info!("[app_main] Calling setup");
@@ -22,7 +21,7 @@ pub async extern "C" fn app_main() -> i32 {
   }
 
   info!("[app_main] Entering main loop");
-  if let Err(e) = crate::main().await {
+  if let Err(e) = crate::main() {
     error!("[error] Error: {:?}", e);
     return 1;
   }
