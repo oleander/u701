@@ -9,10 +9,5 @@ linker = "ldproxy"
 [unstable]
 build-std = ["std", "panic_abort"]
 
-# [profile.release]
-# opt-level = "z"
-# lto = true
-
 [env]
-RUST_LOG = "debug"
-ESP_IDF_VERSION = "v4.6.6"
+ESP_IDF_VERSION = "release/v5.0"
