@@ -7,7 +7,7 @@ target = "riscv32imc-esp-espidf"
 linker = "ldproxy"
 
 [unstable]
-build-std = ["std", "panic_abort"]
+build-std = ["std", "panic_abort", "alloc"]
 
 [profile.release]
 opt-level = "z"
