@@ -167,8 +167,6 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto macAddr = advertised->getAddress();
 
-    esp_task_wdt_reset();
-
     if (macAddr != buttonMacAddress) {
       Serial.print(".");
       return;
@@ -213,7 +211,9 @@ extern "C" void init_arduino() {
   setupWatchdog();
   initializeSerialCommunication();
   initializeKeyboard();
+  disableWatchdog();
   startBLEScanForDevice();
+  setupWatchdog();
   connectToClientDevice();
   disableWatchdog();
 }
