@@ -198,8 +198,13 @@ void disableWatchdog() {
   esp_task_wdt_delete(nullptr);
 }
 
+void setupBle() {
+  NimBLEDevice::init(DEVICE_NAME);
+}
+
 extern "C" void init_arduino() {
   setupWatchdog();
+  setupBle();
   initializeSerialCommunication();
   initializeKeyboard();
   disableWatchdog();

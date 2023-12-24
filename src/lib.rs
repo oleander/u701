@@ -1,7 +1,7 @@
 mod ffi;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
-use log::{debug, error, info};
+use log::{debug, info};
 use lazy_static::lazy_static;
 use anyhow::{bail, Result};
 use std::sync::Mutex;
