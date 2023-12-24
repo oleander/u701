@@ -1,4 +1,5 @@
 mod ffi;
+mode keyboard;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
 use log::{debug, info};
@@ -7,6 +8,7 @@ use anyhow::{bail, Result};
 use std::sync::Mutex;
 use machine::Action;
 use ffi::*;
+use keyboard::*;
 
 lazy_static! {
   static ref CHANNEL: (Sender<u8>, Mutex<Receiver<u8>>) = {
@@ -21,12 +23,13 @@ fn main() -> Result<()> {
 
   let receiver = CHANNEL.1.lock().unwrap();
   let mut state = machine::State::default();
+  let mut keyboard = Keyboard::new();
 
   info!("[main] Entering loop, waiting for events");
   while let Ok(event_id) = receiver.recv() {
     match state.transition(event_id) {
-      Some(Action::Media(keys)) => send_media_key(keys),
-      Some(Action::Short(index)) => send_shortcut(index),
+      Some(Action::Media(keys)) => keyboard.write("media");
+      Some(Action::Short(index)) => keyboard.write("short");
       None => debug!("[main] No action {}", event_id)
     }
   }

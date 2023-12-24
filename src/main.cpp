@@ -3,7 +3,7 @@
 #include "settings.h"
 
 // #include <ArduinoLog.h>
-#include <BleKeyboard.h>
+// #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
@@ -31,7 +31,7 @@ static NimBLEClient *client;
 
 const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
-BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
+// BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
 void restart(const char *reason) {
   // Log.noticeln(reason);
@@ -51,19 +51,19 @@ class ClientCallback : public NimBLEClientCallbacks {
 };
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
-  if (keyboard.isConnected()) {
-    keyboard.write(c);
-  }
+  // if (keyboard.isConnected()) {
+  // keyboard.write(c);
+  // }
 }
 
 extern "C" void ble_keyboard_print(const uint8_t *format) {
-  if (keyboard.isConnected()) {
-    keyboard.print(reinterpret_cast<const char *>(format));
-  }
+  // if (keyboard.isConnected()) {
+  //   keyboard.print(reinterpret_cast<const char *>(format));
+  // }
 }
 
 extern "C" bool ble_keyboard_is_connected() {
-  return keyboard.isConnected();
+  // return keyboard.isConnected();
 }
 
 /* Add function isActive to the State struct */
@@ -83,19 +83,19 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
   c_on_event(data, length);
 }
 
-void initializeKeyboard() {
-  esp_task_wdt_reset();
-  // Log.noticeln("Enable Keyboard");
+// void initializeKeyboard() {
+//   esp_task_wdt_reset();
+//   // Log.noticeln("Enable Keyboard");
 
-  keyboard.setBatteryLevel(100);
-  keyboard.setDelay(12);
-  keyboard.begin();
+//   keyboard.setBatteryLevel(100);
+//   keyboard.setDelay(12);
+//   keyboard.begin();
 
-  while (!keyboard.isConnected()) {
-    esp_task_wdt_reset();
-    delay(10);
-  }
-}
+//   while (!keyboard.isConnected()) {
+//     esp_task_wdt_reset();
+//     delay(10);
+//   }
+// }
 
 void initializeSerialCommunication() {
   esp_task_wdt_reset();
@@ -204,13 +204,13 @@ void disableWatchdog() {
 
 void setupBle() {
   esp_task_wdt_reset();
-  NimBLEDevice::init(DEVICE_NAME);
+  // NimBLEDevice::init(DEVICE_NAME);
 }
 
 extern "C" void init_arduino() {
   setupWatchdog();
   setupBle();
-  initializeKeyboard();
+  // initializeKeyboard();
   initializeSerialCommunication();
   disableWatchdog();
   startBLEScanForDevice();
