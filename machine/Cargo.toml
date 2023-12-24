@@ -13,3 +13,16 @@ path = "src/lib.rs"
 features = ["spin_no_std"]
 default-features = false
 version = "1.4.0"
+
+[profile.release]
+codegen-units = 1
+opt-level = 3
+lto = true
+
+[profile.release.package."*"]
+codegen-units = 1
+opt-level = 3
+
+[profile.dev]
+debug = true
+opt-level = "z"
