@@ -5,14 +5,14 @@ target = "xtensa-esp32-espidf"
 
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
-# rustflags = ["--cfg", "espidf_time64","-C", "default-linker-libraries"]
+rustflags = ["--cfg", "espidf_time64","-C", "default-linker-libraries"]
 
 [target.xtensa-esp32-espidf]
 linker = "ldproxy"
-# rustflags = ["--cfg", "espidf_time64","-C", "default-linker-libraries"]
+rustflags = ["--cfg", "espidf_time64","-C", "default-linker-libraries"]
 
 [unstable]
 build-std = ["std", "panic_abort"]
 
 [env]
-ESP_IDF_VERSION = "4.4.6"
+ESP_IDF_VERSION = "release/v5.0"
