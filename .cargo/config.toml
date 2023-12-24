@@ -9,7 +9,7 @@ rustflags = ["--cfg", "espidf_time64","-C", "default-linker-libraries"]
 
 [target.xtensa-esp32-espidf]
 linker = "ldproxy"
-rustflags = ["--cfg", "espidf_time64","-C", "default-linker-libraries"]
+rustflags = ["--cfg", "espidf_time64"]
 
 [unstable]
 build-std = ["std", "panic_abort"]
