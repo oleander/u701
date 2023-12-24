@@ -13,27 +13,20 @@ clean:
 
 build:
     cargo pio build -r
-
-upload:
+upload: setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
-
 ota:
     cargo pio exec -- run -t upload -e ota -j {{PARALLEL}}
-
 erase:
     esptool.py erase_region 0x9000 0x5000 # nvs
-
 monitor:
     tools/monitor.sh --port {{UPLOAD_PORT}} --baud {{MONITOR_SPEED}}
-
 menuconfig:
     cargo pio espidf menuconfig -r true
-
 update:
     cargo pio exec -- pkg update
 setup:
     espup install -t esp32c3 -f .espup.sh
-
 test:
     source ./.espup.sh && cargo test
 install: upload monitor

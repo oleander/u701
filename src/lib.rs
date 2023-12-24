@@ -34,26 +34,11 @@ fn app_main() {
     let device = BLEDevice::take();
     let scan = device.get_scan();
 
-    let connect_device = Arc::new(Mutex::new(None));
-    let connect_device_clone = Arc::clone(&connect_device);
-
-    scan.active_scan(true).interval(490).window(450).on_result(move |found_device| {
-      if !found_device.is_advertising_service(&SERVICE_UUID) {
-        return;
-      }
-
-      if !found_device.name().starts_with(BLE_BUTTONS_NAME) {
-        return;
-      }
-
-      info!("Found device: {:?}", found_device.name());
-      *connect_device_clone.lock() = Some(found_device.clone());
-      BLEDevice::take().get_scan().stop().expect("Failed to stop scan");
+    let device = scan.active_scan(true).interval(490).window(450).find_device(u32::MAX.try_into().unwrap(), |found_device| {
+      found_device.name().starts_with(b"key")
     });
 
-    scan.start(i32::MAX).await.expect("Failed to start scan");
-
-    let Some(device) = &*connect_device.lock() else {
+    let Ok(Some(device)) = device.await else {
       return warn!("No device found");
     };
 
