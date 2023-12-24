@@ -97,7 +97,7 @@ void initializeKeyboard() {
 
 void initializeSerialCommunication() {
   esp_task_wdt_reset();
-  Serial.begin(SERIAL_BAUD_RATE);
+  // Serial.begin(SERIAL_BAUD_RATE);
   // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   // Log.setLevel(LOG_LEVEL_VERBOSE);
   // Log.noticeln("Starting ESP32 ...");
@@ -161,7 +161,7 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
     auto macAddr = advertised->getAddress();
 
     if (macAddr != buttonMacAddress) {
-      Serial.print(".");
+      // Serial.print(".");
       return;
     }
 
@@ -202,17 +202,17 @@ void disableWatchdog() {
 
 void setupBle() {
   esp_task_wdt_reset();
-  NimBLEDevice::init(DEVICE_NAME);
+  // NimBLEDevice::init(DEVICE_NAME);
 }
 
 extern "C" void init_arduino() {
-  setupWatchdog();
+  // setupWatchdog();
   setupBle();
   initializeKeyboard();
   initializeSerialCommunication();
-  disableWatchdog();
+  // disableWatchdog();
   startBLEScanForDevice();
-  setupWatchdog();
+  // setupWatchdog();
   connectToClientDevice();
-  disableWatchdog();
+  // disableWatchdog();
 }
