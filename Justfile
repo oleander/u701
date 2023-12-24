@@ -36,4 +36,4 @@ setup:
 
 test:
     source ./.espup.sh && cargo test
-install: upload
+install: upload monitor
