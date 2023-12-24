@@ -206,9 +206,9 @@ extern "C" void init_arduino() {
   setupWatchdog();
   setupBle();
   initializeSerialCommunication();
-  initializeKeyboard();
   disableWatchdog();
   startBLEScanForDevice();
+  initializeKeyboard();
   setupWatchdog();
   connectToClientDevice();
   disableWatchdog();
