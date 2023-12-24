@@ -19,6 +19,8 @@ anyhow = { version = "1.0.75", default-features = false }
 log = { version = "0.4.20", default-features = false }
 esp32-nimble = { path = "../esp32-nimble" }
 machine = { path = "machine" }
+esp-idf-sys = "0.33.7"
+esp-idf-hal = "0.42.5"
 
 # [profile.release]
 # codegen-units = 1

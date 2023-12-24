@@ -1,5 +1,5 @@
 mod ffi;
-mode keyboard;
+mod keyboard;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
 use log::{debug, info};
@@ -28,8 +28,8 @@ fn main() -> Result<()> {
   info!("[main] Entering loop, waiting for events");
   while let Ok(event_id) = receiver.recv() {
     match state.transition(event_id) {
-      Some(Action::Media(keys)) => keyboard.write("media");
-      Some(Action::Short(index)) => keyboard.write("short");
+      Some(Action::Media(keys)) => keyboard.write("media"),
+      Some(Action::Short(index)) => keyboard.write("short"),
       None => debug!("[main] No action {}", event_id)
     }
   }
