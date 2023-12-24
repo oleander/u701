@@ -88,19 +88,10 @@ void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
 
   keyboard.setBatteryLevel(100);
-  // keyboard.setDelay(12);
+  keyboard.setDelay(12);
   keyboard.begin();
 
   Log.noticeln("Waiting for keyboard to connect ...");
-
-  while (!keyboard.isConnected()) {
-    Serial.print(".");
-    delay(100);
-  }
-
-  auto waitingTimeinSeconds = 2;
-  Log.noticeln("iPhone connected, but will wait %d seconds to be sure", waitingTimeinSeconds);
-  delay(waitingTimeinSeconds * 1000);
   esp_task_wdt_reset();
 }
 
