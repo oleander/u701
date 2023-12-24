@@ -24,15 +24,11 @@ machine = { path = "machine" }
 esp-idf-sys = "0.33.7"
 esp-idf-hal = "0.42.5"
 
-# [profile.release]
-# codegen-units = 1
-# opt-level = 3
-# lto = "fat"
-
 # [profile.release.package."*"]
 # codegen-units = 1
 # opt-level = 3
 
-# [profile.dev]
-# debug = true
-# opt-level = "z"
+[profile.release]
+opt-level = "z"
+debug = true
+lto = false

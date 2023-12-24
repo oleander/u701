@@ -34,7 +34,7 @@ fn app_main() {
     let device = BLEDevice::take();
     let scan = device.get_scan();
 
-    let device = scan.active_scan(true).interval(490).window(450).find_device(u32::MAX.try_into().unwrap(), |found_device| {
+    let device = scan.active_scan(true).interval(100).window(99).find_device(u32::MAX.try_into().unwrap(), |found_device| {
       found_device.name().starts_with(b"key")
     });
 
