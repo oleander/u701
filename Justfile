@@ -7,6 +7,7 @@ set shell := ["zsh", "-cu"]
 set dotenv-load := true
 
 clean:
+    rm -rf .embuild .pio
     cargo clean
     cargo pio exec -- run --target clean -e {{ENVIRONMENT}}
     cargo pio exec -- run --target clean

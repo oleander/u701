@@ -15,11 +15,11 @@ name = "u701"
 [dependencies]
 esp-idf-svc = { version = "0.47.3", features = ["embassy-time-isr-queue"] }
 embassy-time = { version = "*", features = ["tick-hz-1_000_000"] }
+esp32-nimble = { path = "../esp32-nimble", features = ["std"] }
 lazy_static = { version = "1.4.0", default-features = false }
 env_logger = { version = "0.10.1", default-features = false }
 anyhow = { version = "1.0.75", default-features = false }
 log = { version = "0.4.20", default-features = false }
-esp32-nimble = { path = "../esp32-nimble" }
 machine = { path = "machine" }
 esp-idf-sys = "0.33.7"
 esp-idf-hal = "0.42.5"
