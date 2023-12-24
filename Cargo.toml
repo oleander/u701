@@ -13,6 +13,8 @@ path = "src/lib.rs"
 name = "u701"
 
 [dependencies]
+esp-idf-svc = { version = "0.47.3", features = ["embassy-time-isr-queue"] }
+embassy-time = { version = "*", features = ["tick-hz-1_000_000"] }
 lazy_static = { version = "1.4.0", default-features = false }
 env_logger = { version = "0.10.1", default-features = false }
 anyhow = { version = "1.0.75", default-features = false }
@@ -21,8 +23,6 @@ esp32-nimble = { path = "../esp32-nimble" }
 machine = { path = "machine" }
 esp-idf-sys = "0.33.7"
 esp-idf-hal = "0.42.5"
-esp-idf-svc = { version = "0.47.3", features = ["embassy-time-isr-queue"] }
-embassy-time = "*"
 
 # [profile.release]
 # codegen-units = 1
