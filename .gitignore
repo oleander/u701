@@ -7,3 +7,5 @@
 CMakeFiles/
 .env
 src/CMakeLists.txt
+sdkconfig.*.old
+sdkconfig.old
