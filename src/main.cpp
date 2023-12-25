@@ -112,12 +112,12 @@ extern "C" void init_arduino() {
   pScan->setWindow(37);
   pScan->start(std::numeric_limits<uint32_t>::max());
 
-  printf("Starting keyboard\n");
+  Serial.println("Starting keyboard\n");
   keyboard.begin();
 
   if (!advDevice) {
-    printf("No advertised device to connect to\n");
-    printf("Will restart the ESP\n");
+    Serial.println("No advertised device to connect to");
+    Serial.println("Will restart the ESP");
     ESP.restart();
   }
 
@@ -127,34 +127,34 @@ extern "C" void init_arduino() {
   pClient->setConnectTimeout(5);
 
   if (!pClient->connect(advDevice)) {
-    printf("Failed to connect, restarting ESP (1)");
-    printf("Will restart the ESP\n");
+    Serial.println("Failed to connect, restarting ESP (1)");
+    Serial.println("Will restart the ESP");
     ESP.restart();
   }
 
   if (!pClient->isConnected()) {
-    printf("Failed to connect, restarting ESP (2)");
-    printf("Will restart the ESP\n");
+    Serial.println("Failed to connect, restarting ESP (2)");
+    Serial.println("Will restart the ESP");
     ESP.restart();
   }
 
-  printf("Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
+  Serial.println("Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
 
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
-    printf("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
-    printf("Will logout the device\n");
+    Serial.println("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
+    Serial.println("Will logout the device\n");
     pClient->disconnect();
-    printf("Will restart the ESP\n");
+    Serial.println("Will restart the ESP\n");
     ESP.restart();
   }
 
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
-    printf("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
-    printf("Will logout the device\n");
+    Serial.println("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
+    Serial.println("Will logout the device\n");
     pClient->disconnect();
-    printf("Will restart the ESP\n");
+    Serial.println("Will restart the ESP\n");
     ESP.restart();
   }
 
