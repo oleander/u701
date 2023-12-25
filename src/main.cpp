@@ -15,8 +15,8 @@
 #define ServerName          "u701"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
-NimBLEAddress ServerAddress = 0xA842E3CD0C6;  // TEST
-NimBLEAddress ClientAddress = 0xF797AC1FF8C0; // REAL
+NimBLEAddress ServerAddress = 0xA842E3CD0C6; // TEST
+// NimBLEAddress ServerAddress = 0xF797AC1FF8C0; // REAL
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 void scanEndedCB(NimBLEScanResults results);
@@ -106,7 +106,7 @@ extern "C" void init_arduino() {
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-  pScan->setActiveScan(true);
+  pScan->setActiveScan(false);
   pScan->setInterval(97);
   pScan->setWindow(37);
   pScan->start(std::numeric_limits<uint32_t>::max());
