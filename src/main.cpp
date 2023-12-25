@@ -181,7 +181,7 @@ extern "C" void init_arduino() {
   NimBLEDevice::setPower(ESP_PWR_LVL_P3);
   NimBLEDevice::init(DEVICE_NAME);
 
-  keyboard.whenClientConnects([](NimBLEClient *_client) {
+  keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
     Serial.println("Client connected to keyboard");
     Serial.println("Release keyboard semaphore");
     xSemaphoreGive(outgoingClientSemaphore);
