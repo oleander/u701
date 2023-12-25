@@ -1,7 +1,7 @@
 mod ffi;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
-use log::{debug, info};
+use log::{debug, info, error};
 use lazy_static::lazy_static;
 use anyhow::{bail, Result};
 use std::sync::Mutex;
@@ -38,7 +38,6 @@ pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => debug!("Button was released"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    // None => error!("[on_event] [BUG] Received {:?} event", event)
-    None => CHANNEL.0.send(0x50).unwrap()
+    None => error!("[on_event] [BUG] Received {:?} event", event)
   }
 }
