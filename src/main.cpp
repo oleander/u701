@@ -4,6 +4,7 @@
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
+#include <stdarg.h>
 #include <vector>
 
 #define SCAN_DURATION 5 * 60 // in seconds
@@ -14,16 +15,13 @@
 #define DEVICE_BATTERY   100
 
 #define DEVICE_MANUFACTURER "HVA"
-// #define DEVICE_NAME         "u701"
-// #define DEVICE_NAME "key"
-#define DEVICE_NAME "Terrain Comman"
+#define DEVICE_NAME         "Terrain Comman"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
-// a8:42:e3:cd:fb:c6,
-NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM);
-// NimBLEAddress ServerAddress = 0xF797AC1FF8C0; // REAL
-
-#include <stdarg.h>
+// NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM); // TEST
+NimBLEAddress ServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
+static NimBLEUUID serviceUUID("1812");
+static NimBLEUUID charUUID("2a4d");
 
 void restart(const char *format, ...) {
   char buffer[256];
@@ -40,12 +38,10 @@ void restart(const char *format, ...) {
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 void scanEndedCB(NimBLEScanResults results);
-static NimBLEUUID serviceUUID("1812");
-static NimBLEUUID charUUID("2a4d");
 
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    Serial.println("Connected, will update conn params");
+    Serial.println("Connected, will optimize conn params");
     pClient->updateConnParams(120, 120, 0, 1);
   };
 
@@ -58,7 +54,11 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         the currently used parameters. Default will return true.
   */
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-    Serial.println("Connection parameter update request: ");
+    printf("Connection parameter update request: %d, %d, %d, %d\n",
+           params->itvl_min,
+           params->itvl_max,
+           params->latency,
+           params->supervision_timeout);
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
@@ -75,9 +75,9 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
-    if (desc->sec_state.encrypted) return;
-    Serial.println("Encrypt connection failed - disconnecting");
-    NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
+    if (!desc->sec_state.encrypted) {
+      restart("Encrypt connection failed: %s", desc);
+    }
   };
 };
 
