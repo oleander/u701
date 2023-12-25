@@ -1,5 +1,5 @@
 UPLOAD_PORT := `ls /dev/* | grep "tty.usb" | head -n 1`
-ENVIRONMENT := "debug"
+ENVIRONMENT := "release"
 PARALLEL := "4"
 MONITOR_SPEED := "115200"
 
@@ -27,7 +27,7 @@ monitor:
     tools/monitor.sh --port {{UPLOAD_PORT}} --baud {{MONITOR_SPEED}}
 
 menuconfig:
-    cargo pio espidf menuconfig -r false
+    cargo pio espidf menuconfig -r true
 
 update:
     cargo pio exec -- pkg update
