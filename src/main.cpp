@@ -89,6 +89,7 @@ void restart(const char *format, ...) {
   ESP.restart();
 }
 
+SemaphoreHandle_t semaphore = xSemaphoreCreateBinary();
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 static NimBLEClient *pClient;
 
@@ -115,10 +116,6 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     restart("Terrain Command disconnected");
   };
 
-  /** Called when the peripheral requests a change to the connection parameters.
-        Return true to accept and apply them or false to reject and keep
-        the currently used parameters. Default will return true.
-  */
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
     Serial.println("Connection parameters update request received");
     printf("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
@@ -147,47 +144,8 @@ class ClientCallbacks : public NimBLEClientCallbacks {
       restart("Encrypt connection failed: %s", desc);
     }
 
-    Serial.println("Fetching service ...");
-    auto pSvc = pClient->getService(serviceUUID);
-    if (!pSvc) {
-      Serial.println("Failed to find our service UUID");
-      Serial.println("Will disconnect the device");
-      pClient->disconnect();
-      restart("Device has been manually disconnected");
-    }
-
-    Serial.println("Fetching all characteristics ...");
-    auto pChrs = pSvc->getCharacteristics(true);
-    if (!pChrs) {
-      Serial.println("Failed to find our characteristic UUID");
-      Serial.println("Will disconnect the device");
-      pClient->disconnect();
-      restart("Device has been manually disconnected");
-    }
-
-    for (int i = 0; i < pChrs->size(); i++) {
-      if (!pChrs->at(i)->canNotify()) {
-        Serial.println("Characteristic cannot notify");
-        continue;
-      }
-
-      if (!pChrs->at(i)->getUUID().equals(charUUID)) {
-        Serial.println("Characteristic UUID does not match");
-        continue;
-      }
-
-      if (!pChrs->at(i)->subscribe(true, onEvent, true)) {
-        Serial.println("Failed to subscribe to characteristic");
-        Serial.println("Will disconnect the device");
-        pClient->disconnect();
-        restart("Device has been manually disconnected");
-      }
-
-      Serial.println("Successfully subscribed to characteristic");
-      return;
-    }
-
-    restart("[BUG] Didn't find any matching characteristics");
+    Serial.println("Release semaphore");
+    xSemaphoreGive(semaphore);
   };
 };
 
@@ -227,12 +185,6 @@ extern "C" void init_arduino() {
   Serial.println("Starting keyboard");
   keyboard.begin();
 
-  // Serial.println("Starting keyboard");
-  // while (!keyboard.isConnected()) {
-  //   Serial.print(".");
-  //   delay(100);
-  // }
-
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   pScan->setInterval(SCAN_INTERVAL);
@@ -256,6 +208,51 @@ extern "C" void init_arduino() {
   } else {
     Serial.println("Successfully connected to the Terrain Command");
   }
+
+  Serial.println("Waiting for semaphore to be released");
+  xSemaphoreTake(semaphore, portMAX_DELAY);
+
+  Serial.println("Fetching service ...");
+  auto pSvc = pClient->getService(serviceUUID);
+  if (!pSvc) {
+    Serial.println("Failed to find our service UUID");
+    Serial.println("Will disconnect the device");
+    pClient->disconnect();
+    restart("Device has been manually disconnected");
+  }
+
+  Serial.println("Fetching all characteristics ...");
+  auto pChrs = pSvc->getCharacteristics(true);
+  if (!pChrs) {
+    Serial.println("Failed to find our characteristic UUID");
+    Serial.println("Will disconnect the device");
+    pClient->disconnect();
+    restart("Device has been manually disconnected");
+  }
+
+  for (int i = 0; i < pChrs->size(); i++) {
+    if (!pChrs->at(i)->canNotify()) {
+      Serial.println("Characteristic cannot notify");
+      continue;
+    }
+
+    if (!pChrs->at(i)->getUUID().equals(charUUID)) {
+      Serial.println("Characteristic UUID does not match");
+      continue;
+    }
+
+    if (!pChrs->at(i)->subscribe(true, onEvent, true)) {
+      Serial.println("Failed to subscribe to characteristic");
+      Serial.println("Will disconnect the device");
+      pClient->disconnect();
+      restart("Device has been manually disconnected");
+    }
+
+    Serial.println("Successfully subscribed to characteristic");
+    return;
+  }
+
+  restart("[BUG] Didn't find any matching characteristics");
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
@@ -273,34 +270,3 @@ extern "C" void ble_keyboard_print(const uint8_t *format) {
 extern "C" bool ble_keyboard_is_connected() {
   return keyboard.isConnected();
 }
-
-// static int ble_client_gap_event(struct ble_gap_event *event, void *arg) {
-//   ble_client *client = (ble_client *) arg;
-//   ESP_LOGD(TAG, "gap event: %d", event->type);
-//   switch (event->type) {
-//   case BLE_GAP_EVENT_CONNECT: {
-//     int status = event->connect.status;
-//     if (status == 0) {
-//       ESP_LOGI(TAG, "connection established");
-//       client->conn_handle = event->connect.conn_handle;
-//     } else {
-//       ESP_LOGE(TAG, "connection failed. ble code: %d", status);
-//       client->semaphore_result = ble_client_convert_ble_code(status);
-//       client->connected        = false;
-//       xSemaphoreGive(client->semaphore);
-//     }
-//     break;
-//   }
-//     // notify connected only after MTU negotiation completes
-//   case BLE_GAP_EVENT_MTU: {
-//     ESP_LOGI(TAG, "MTU negotiated");
-//     client->semaphore_result = ESP_OK;
-//     client->connected        = true;
-//     xSemaphoreGive(client->semaphore);
-//     break;
-//   }
-//   default:
-//     break;
-//   }
-//   return 0;
-// }
