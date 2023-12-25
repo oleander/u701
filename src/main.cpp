@@ -180,7 +180,7 @@ extern "C" void init_arduino() {
     }
 
     if (!pChrs->at(i)->getUUID().equals(charUUID)) {
-      Serial.warnln("Characteristic UUID does not match");
+      Serial.println("Characteristic UUID does not match");
       continue;
     }
 
