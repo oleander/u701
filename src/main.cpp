@@ -29,6 +29,7 @@ static NimBLEUUID hidService("1812");
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 static auto scan             = NimBLEDevice::getScan();
 static auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
+static NimBLEClient *client  = nullptr;
 
 /* Event received from the Terrain Command */
 static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
@@ -81,7 +82,7 @@ class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
     }
 
     printf("Will try to connect to %s\n", macAddr.toString().c_str());
-    auto client = NimBLEDevice::createClient(macAddr);
+    client = NimBLEDevice::createClient(macAddr);
     client->setClientCallbacks(&clientCallback);
     client->connect();
   }
