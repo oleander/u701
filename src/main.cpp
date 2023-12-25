@@ -135,14 +135,16 @@ extern "C" void init_arduino() {
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
+  pScan->setMaxResults(0);
+
   pScan->start(50200, false);
+
+  if (!advDevice) {
+    restart("The Terrain Command was not found");
+  }
 
   Serial.println("Starting keyboard");
   keyboard.begin();
-
-  if (!advDevice) {
-    restart("No advertised device found while scanning");
-  }
 
   auto pClient = NimBLEDevice::createClient();
   pClient->setClientCallbacks(&clientCB, false);
