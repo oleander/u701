@@ -69,7 +69,6 @@ static NimBLEAdvertisedDevice *advDevice;
 
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
-
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
     printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
 
@@ -82,9 +81,7 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     }
 
     printf("Found Our Service!");
-    /** stop scan before connecting */
     advDevice->getScan()->stop();
-    /** Save the device reference in a global for the client to use*/
     advDevice = advertisedDevice;
   };
 };
@@ -100,56 +97,6 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 
 /** Handles the provisioning of clients and connects / interfaces with the server */
 bool connectToServer() {
-  if (!advDevice) {
-    printf("No advertised device to connect to\n");
-    return false;
-  }
-
-  auto pClient = NimBLEDevice::createClient();
-  pClient->setClientCallbacks(&clientCB, false);
-  pClient->setConnectionParams(12, 12, 0, 51);
-  pClient->setConnectTimeout(5);
-
-  if (!pClient->connect(advDevice)) {
-    printf("Failed to connect, restarting ESP (1)");
-    ESP.restart();
-    return false;
-  }
-
-  if (!pClient->isConnected()) {
-    printf("Failed to connect, restarting ESP (2)");
-    ESP.restart();
-    return false;
-  }
-
-  printf("Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
-
-  auto pSvc = pClient->getService(serviceUUID);
-  if (!pSvc) {
-    return printf("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
-  }
-
-  auto pChrs = pSvc->getCharacteristics(true);
-  if (!pChrs) {
-    return printf("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
-  }
-
-  for (int i = 0; i < pChrs->size(); i++) {
-    if (pChrs->at(i)->canNotify()) {
-      if (!pChrs->at(i)->registerForNotify(onEvent)) {
-        printf("Failed to register for notify\n");
-        printf("Will disconnect\n");
-        pClient->disconnect();
-        return false;
-      } else {
-        printf("Registered for notify\n");
-      }
-    } else {
-      printf("Characteristic cannot notify\n");
-    }
-  }
-
-  return true;
 }
 
 extern "C" void init_arduino() {
@@ -171,11 +118,72 @@ extern "C" void init_arduino() {
   printf("Starting keyboard\n");
   keyboard.begin();
 
-  printf("Starting BLE work!\n");
-  if (connectToServer()) {
-    printf("We are now connected to the BLE Server.\n");
-  } else {
-    printf("We have failed to connect to the server; there is nothin more we will do.\n");
+  if (!advDevice) {
+    printf("No advertised device to connect to\n");
+    printf("Will restart the ESP\n");
+    ESP.restart();
+  }
+
+  auto pClient = NimBLEDevice::createClient();
+  pClient->setClientCallbacks(&clientCB, false);
+  pClient->setConnectionParams(12, 12, 0, 51);
+  pClient->setConnectTimeout(5);
+
+  if (!pClient->connect(advDevice)) {
+    printf("Failed to connect, restarting ESP (1)");
+    printf("Will restart the ESP\n");
+    ESP.restart();
+  }
+
+  if (!pClient->isConnected()) {
+    printf("Failed to connect, restarting ESP (2)");
+    printf("Will restart the ESP\n");
+    ESP.restart();
+  }
+
+  printf("Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
+
+  auto pSvc = pClient->getService(serviceUUID);
+  if (!pSvc) {
+    printf("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
+    printf("Will logout the device\n");
+    pClient->disconnect();
+    printf("Will restart the ESP\n");
+    ESP.restart();
+  }
+
+  auto pChrs = pSvc->getCharacteristics(true);
+  if (!pChrs) {
+    printf("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
+    printf("Will logout the device\n");
+    pClient->disconnect();
+    printf("Will restart the ESP\n");
+    ESP.restart();
+  }
+
+  for (int i = 0; i < pChrs->size(); i++) {
+    if (!pChrs->at(i)->canNotify()) {
+      printf("Characteristic cannot notify\n");
+      continue;
+    }
+
+    if (!pChrs->at(i)->getUUID().equals(charUUID)) {
+      printf("Found characteristic UUID: %s\n", pChrs->at(i)->getUUID().toString().c_str());
+      continue;
+    }
+
+    if (!pChrs->at(i)->registerForNotify(onEvent)) {
+      printf("Failed to register for notify\n");
+      continue;
+    }
+
+    if (!pChrs->at(i)->subscribe(true, onEvent, false)) {
+      printf("Failed to subscribe for notify\n");
+      printf("Will logout the device\n");
+      pClient->disconnect();
+      printf("Will restart the ESP\n");
+      ESP.restart();
+    }
   }
 }
 
