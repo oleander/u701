@@ -81,8 +81,23 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
   c_on_event(data, length);
 }
 
+TaskHandle_t Task1;
+
+void checkIfIphoneIsConnected(void *pvParameters) {
+  while (true) {
+    if (!keyboard.isConnected()) {
+      restart("Keyboard is no longer connected, restarting ...");
+    }
+
+    // Wait for 10 seconds
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
+  }
+}
+
 void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
+  BLEDevice::init("u701");
+  BLEDevice::setMTU(23); //<<<< MTU SIZE
 
   keyboard.setBatteryLevel(100);
   keyboard.setDelay(12);
@@ -90,19 +105,24 @@ void initializeKeyboard() {
 
   Log.noticeln("Waiting for iPhone to connect to virtual keyboard ...");
   Log.noticeln("Entering wait loop ...");
+
   while (!keyboard.isConnected()) {
     esp_task_wdt_reset();
     delay(10);
   }
 
   Log.noticeln("iPhone connected to virtual keyboard");
+
+  xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 10000, NULL, 1, &Task1, 1);
 }
 
 void initializeSerialCommunication() {
+  printf("Starting ESP32 ...\n");
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   Log.setLevel(LOG_LEVEL_VERBOSE);
   Log.noticeln("Starting ESP32 ...");
+  printf("Starting ESP322 22 ...\n");
   esp_task_wdt_reset();
 }
 
