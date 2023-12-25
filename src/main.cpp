@@ -87,15 +87,11 @@ TaskHandle_t Task1;
 void checkIfIphoneIsConnected(void *pvParameters) {
   auto waitTime = 10000;
 
-  // Log.noticeln("Waiting for iPhone to connect to virtual keyboard ...");
-  while (!keyboard.isConnected()) {
-    esp_task_wdt_reset();
-    vTaskDelay(waitTime / portTICK_PERIOD_MS);
-  }
+  // while (!keyboard.isConnected()) {
+  //   esp_task_wdt_reset();
+  //   vTaskDelay(waitTime / portTICK_PERIOD_MS);
+  // }
 
-  // Log.noticeln("iPhone connected to virtual keyboard");
-
-  // Log.noticeln("Waiting for iPhone to disconnect from virtual keyboard ...");
   while (keyboard.isConnected()) {
     esp_task_wdt_reset();
     vTaskDelay(waitTime / portTICK_PERIOD_MS);
@@ -107,8 +103,8 @@ void checkIfIphoneIsConnected(void *pvParameters) {
 void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
 
-  // BLEDevice::init("u701");
-  // BLEDevice::setMTU(23);
+  BLEDevice::init("u701");
+  BLEDevice::setMTU(23);
 
   keyboard.setBatteryLevel(100);
   keyboard.setDelay(12);
@@ -124,7 +120,7 @@ void initializeKeyboard() {
 
   Log.noticeln("iPhone connected to virtual keyboard");
 
-  xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 2000, NULL, 1, &Task1, 1);
+  xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 5000, NULL, 0, NULL, 1);
 }
 
 void initializeSerialCommunication() {
@@ -189,16 +185,15 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto macAddr = advertised->getAddress();
 
-    esp_task_wdt_reset();
+    // esp_task_wdt_reset();
 
     if (macAddr != buttonMacAddress) {
       return;
     }
 
+    Log.noticeln("[SCAN] Terrain Command found");
     client = NimBLEDevice::createClient(macAddr);
     advertised->getScan()->stop();
-
-    Log.noticeln("[SCAN] Terrain Command found");
   }
 };
 
@@ -216,26 +211,28 @@ void startBLEScanForDevice() {
   Log.noticeln("Starting BLE scan ...");
 
   // If frozen, the scan will not start
-  setupWatchdog(5 * 60);
+  // setupWatchdog(5 * 60);
+
+  BLEDevice::init("u701");
 
   auto scan = NimBLEDevice::getScan();
-  static Callbacks scanCallbackInstance;
-  scan->setAdvertisedDeviceCallbacks(&scanCallbackInstance);
+  scan->setAdvertisedDeviceCallbacks(new Callbacks());
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
+  // scan->setMaxResults(0); // do not store the scan results, use callback only.
   scan->start(0, false);
 
   Log.noticeln("BLE scan finished");
-  disableWatchdog();
+  // disableWatchdog();
 }
 
 extern "C" void init_arduino() {
   setupWatchdog(WDT_TIMEOUT);
-  initializeKeyboard();
   initializeSerialCommunication();
   disableWatchdog();
   startBLEScanForDevice();
+  initializeKeyboard();
   setupWatchdog(WDT_TIMEOUT);
   connectToClientDevice();
   disableWatchdog();
