@@ -172,6 +172,15 @@ extern "C" void init_arduino() {
 
   Serial.println("Starting BLE scan");
 
+  Serial.println("Starting keyboard");
+  keyboard.begin();
+
+  Serial.println("Starting keyboard");
+  while (!keyboard.isConnected()) {
+    Serial.print(".");
+    delay(100);
+  }
+
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   pScan->setInterval(SCAN_INTERVAL);
@@ -183,9 +192,6 @@ extern "C" void init_arduino() {
   if (!pClient) {
     restart("The Terrain Command was not found");
   }
-
-  Serial.println("Starting keyboard");
-  keyboard.begin();
 
   pClient->setClientCallbacks(&clientCallbacks, false);
   pClient->setConnectionParams(12, 12, 0, 51);
