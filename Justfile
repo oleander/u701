@@ -1,5 +1,5 @@
 UPLOAD_PORT := `ls /dev/* | grep "tty.usb" | head -n 1`
-ENVIRONMENT := "release"
+ENVIRONMENT := "debug"
 PARALLEL := "4"
 MONITOR_SPEED := "115200"
 
