@@ -16,7 +16,7 @@
 #define DEVICE_NAME         "u701"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
-NimBLEAddress ServerAddress = 0xA842E3CD0C6; // TEST
+NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM);
 // NimBLEAddress ServerAddress = 0xF797AC1FF8C0; // REAL
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
@@ -72,10 +72,12 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     Serial.print(".");
 
     if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
+      printf("Found device: %s\n", advertisedDevice->toString().c_str());
       return;
     }
 
     if (!advertisedDevice->getAddress().equals(ServerAddress)) {
+      printf("Found device: %s\n", advertisedDevice->getAddress());
       return;
     }
 
@@ -107,7 +109,7 @@ extern "C" void init_arduino() {
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-  pScan->start(50200, false);
+  pScan->start(50200);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
