@@ -35,7 +35,7 @@ static NimBLEAdvertisedDevice *advDevice;
 
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    Serial.println("Connected");
+    printf("Connected\n");
     /** After connection we should change the parameters if we don't need fast response times.
           These settings are 150ms interval, 0 latency, 450ms timout.
           Timeout should be a multiple of the interval, minimum is 100ms.
@@ -46,7 +46,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 
   void onDisconnect(NimBLEClient *pClient) {
-    Serial.println("Disconnected - Restarting ESP");
+    printf("Disconnected\n");
     ESP.restart();
   };
 
@@ -71,7 +71,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
     if (!desc->sec_state.encrypted) {
-      // Serial.println("Encrypt connection failed - disconnecting");
+      printf("Encrypt connection failed - disconnecting");
       /** Find the client with the connection handle provided in desc */
       NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
       return;
@@ -83,10 +83,10 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
 
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    Serial.print("Advertised Device found: ");
+    printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
 
     if (advertisedDevice->isAdvertisingService(serviceUUID) && advertisedDevice->getAddress().equals(ServerAddress)) {
-      Serial.println("Found Our Service");
+      printf("Found Our Service: %s \n", advertisedDevice->toString().c_str());
       /** stop scan before connecting */
       advDevice->getScan()->stop();
       /** Save the device reference in a global for the client to use*/
@@ -108,7 +108,7 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 
 /** Callback to process the results of the last scan or restart it */
 void scanEndedCB(NimBLEScanResults results) {
-  Serial.println("Scan Ended (start keyboard)");
+  printf("Scan Ended\n");
 }
 
 /** Create a single global instance of the callback class to be used by all clients */
@@ -127,10 +127,10 @@ bool connectToServer() {
     pClient = NimBLEDevice::getClientByPeerAddress(advDevice->getAddress());
     if (pClient) {
       if (!pClient->connect(advDevice, false)) {
-        // Serial.println("Reconnect failed");
+        printf("Reconnect failed\n");
         return false;
       }
-      // Serial.println("Reconnected client");
+      printf("Reconnected client\n");
     }
     /** We don't already have a client that knows this device,
         we will check for a client that is disconnected that we can use.
@@ -143,14 +143,13 @@ bool connectToServer() {
   /** No client to reuse? Create a new one. */
   if (!pClient) {
     if (NimBLEDevice::getClientListSize() >= NIMBLE_MAX_CONNECTIONS) {
-      // Serial.println("Max clients reached - no more connections available");
+      printf("Failed to connect, restarting ESP (0)");
       return false;
     }
 
     pClient = NimBLEDevice::createClient();
 
-    // Serial.println("New client created");
-
+    printf("New client created\n");
     pClient->setClientCallbacks(&clientCB, false);
     /** Set initial connection parameters: These settings are 15ms interval, 0 latency, 120ms timout.
         These settings are safe for 3 clients to connect reliably, can go faster if you have less
@@ -162,7 +161,7 @@ bool connectToServer() {
     pClient->setConnectTimeout(5);
 
     if (!pClient->connect(advDevice)) {
-      Serial.println("Failed to connect, restarting ESP (1)");
+      printf("Failed to connect, restarting ESP (1)");
       ESP.restart();
       return false;
     }
@@ -170,16 +169,13 @@ bool connectToServer() {
 
   if (!pClient->isConnected()) {
     if (!pClient->connect(advDevice)) {
-      Serial.println("Failed to connect, restarting ESP (2)");
+      printf("Failed to connect, restarting ESP (2)");
       ESP.restart();
       return false;
     }
   }
 
-  Serial.print("Connected to: ");
-  Serial.println(pClient->getPeerAddress().toString().c_str());
-  Serial.print("RSSI: ");
-  Serial.println(pClient->getRssi());
+  printf("Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
 
   /** Now we can read/write/subscribe the charateristics of the services we are interested in */
   NimBLERemoteService *pSvc = nullptr;
@@ -209,16 +205,15 @@ bool connectToServer() {
   }
 
   else {
-    Serial.println("DEAD service not found.");
+    printf("ERROR: Failed to find our characteristic UUID\n");
   }
 
-  Serial.println("Done with this device!");
+  printf("Done with this device!\n\n");
   return true;
 }
 
 extern "C" void init_arduino() {
-  // Serial.begin(115200);
-  Serial.println("Starting NimBLE Client");
+  printf("Starting NimBLE Client\n");
 
   NimBLEDevice::init("");
 
@@ -260,15 +255,15 @@ extern "C" void init_arduino() {
       Optional callback for when scanning stops.
   */
 
-  Serial.println("Starting scan");
+  printf("Starting scan\n");
   pScan->start(0);
-  Serial.println("Scan finished");
+  printf("Scan started\n");
 
-  Serial.println("Connecting to buttons");
+  printf("Starting BLE work!\n");
   if (connectToServer()) {
-    Serial.println("Success! we should now be getting notifications, scanning for more!");
+    printf("We are now connected to the BLE Server.\n");
   } else {
-    Serial.println("Failed to connect, starting scan");
+    printf("We have failed to connect to the server; there is nothin more we will do.\n");
   }
 }
 
