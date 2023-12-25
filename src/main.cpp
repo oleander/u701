@@ -179,30 +179,30 @@ bool connectToServer() {
   NimBLERemoteDescriptor *pDsc = nullptr;
 
   pSvc = pClient->getService(serviceUUID);
-  if (pSvc) { /** make sure it's not null */
-    pChrs = pSvc->getCharacteristics(true);
+  if (!pSvc) {
+    return printf("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
   }
 
-  if (pChrs) { /** make sure it's not null */
+  pChrs = pSvc->getCharacteristics(true);
+  if (!pChrs) {
+    return printf("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
+  }
 
-    for (int i = 0; i < pChrs->size(); i++) {
-
-      if (pChrs->at(i)->canNotify()) {
-        /** Must send a callback to subscribe, if nullptr it will unsubscribe */
-        if (!pChrs->at(i)->registerForNotify(onEvent)) {
-          /** Disconnect if subscribe failed */
-          pClient->disconnect();
-          return false;
-        }
+  for (int i = 0; i < pChrs->size(); i++) {
+    if (pChrs->at(i)->canNotify()) {
+      if (!pChrs->at(i)->registerForNotify(onEvent)) {
+        printf("Failed to register for notify\n");
+        printf("Will disconnect\n");
+        pClient->disconnect();
+        return false;
+      } else {
+        printf("Registered for notify\n");
       }
+    } else {
+      printf("Characteristic cannot notify\n");
     }
   }
 
-  else {
-    printf("ERROR: Failed to find our characteristic UUID\n");
-  }
-
-  printf("Done with this device!\n\n");
   return true;
 }
 
