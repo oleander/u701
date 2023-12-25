@@ -141,7 +141,7 @@ extern "C" void init_arduino() {
   // pClient->setConnectionParams(12, 12, 0, 51);
   // pClient->setConnectTimeout(10);
 
-  printf("Connecting to %s\n", advDevice->getAddress().toString().c_str());
+  printf("Connecting to %s\n", advDevice->toString().c_str());
 
   if (!pClient->connect(advDevice)) {
     restart("Could not connect to the Terrain Command");
