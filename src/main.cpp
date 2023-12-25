@@ -184,8 +184,8 @@ extern "C" void init_arduino() {
     restart("The Terrain Command was not found");
   }
 
-  // Serial.println("Starting keyboard");
-  // keyboard.begin();
+  Serial.println("Starting keyboard");
+  keyboard.begin();
 
   pClient->setClientCallbacks(&clientCallbacks, false);
   pClient->setConnectionParams(12, 12, 0, 51);
