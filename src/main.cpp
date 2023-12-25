@@ -6,8 +6,9 @@
 #include <NimBLEUtils.h>
 #include <vector>
 
-#define SCAN_INTERVAL 500 // in ms
-#define SCAN_WINDOW   450 // in ms
+#define SCAN_DURATION 5 * 60 // in seconds
+#define SCAN_INTERVAL 500    // in ms
+#define SCAN_WINDOW   450    // in ms
 
 #define SERIAL_BAUD_RATE 115200
 #define DEVICE_BATTERY   100
@@ -122,11 +123,11 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 
 extern "C" void init_arduino() {
   Serial.begin(SERIAL_BAUD_RATE);
-  Serial.println("Starting NimBLE Client");
+  Serial.println("Starting ESP32 BLE Proxy");
 
-  NimBLEDevice::init("");
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+  NimBLEDevice::setPower(ESP_PWR_LVL_P3);
+  NimBLEDevice::init(DEVICE_NAME);
 
   Serial.println("Starting BLE scan");
 
@@ -137,7 +138,7 @@ extern "C" void init_arduino() {
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
 
-  pScan->start(50200, false);
+  pScan->start(SCAN_DURATION, false);
 
   if (!advDevice) {
     restart("The Terrain Command was not found");
