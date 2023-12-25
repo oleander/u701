@@ -130,7 +130,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 };
 
 static NimBLEClient *pClient;
-static ClientCallbacks clientCallback();
+ClientCallbacks clientCallbacks;
 
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
@@ -187,7 +187,7 @@ extern "C" void init_arduino() {
   // Serial.println("Starting keyboard");
   // keyboard.begin();
 
-  pClient->setClientCallbacks(&clientCallback, false);
+  pClient->setClientCallbacks(&clientCallbacks, false);
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
 
