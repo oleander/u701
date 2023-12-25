@@ -8,6 +8,3 @@ linker = "ldproxy"
 
 [unstable]
 build-std = ["std", "panic_abort"]
-
-[env]
-ESP_IDF_VERSION = "release/v5.0"
