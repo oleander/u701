@@ -87,15 +87,15 @@ TaskHandle_t Task1;
 void checkIfIphoneIsConnected(void *pvParameters) {
   auto waitTime = 10000;
 
-  Log.noticeln("Waiting for iPhone to connect to virtual keyboard ...");
+  // Log.noticeln("Waiting for iPhone to connect to virtual keyboard ...");
   while (!keyboard.isConnected()) {
     esp_task_wdt_reset();
     vTaskDelay(waitTime / portTICK_PERIOD_MS);
   }
 
-  Log.noticeln("iPhone connected to virtual keyboard");
+  // Log.noticeln("iPhone connected to virtual keyboard");
 
-  Log.noticeln("Waiting for iPhone to disconnect from virtual keyboard ...");
+  // Log.noticeln("Waiting for iPhone to disconnect from virtual keyboard ...");
   while (keyboard.isConnected()) {
     esp_task_wdt_reset();
     vTaskDelay(waitTime / portTICK_PERIOD_MS);
@@ -107,8 +107,8 @@ void checkIfIphoneIsConnected(void *pvParameters) {
 void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
 
-  BLEDevice::init("u701");
-  BLEDevice::setMTU(23);
+  // BLEDevice::init("u701");
+  // BLEDevice::setMTU(23);
 
   keyboard.setBatteryLevel(100);
   keyboard.setDelay(12);
@@ -124,15 +124,15 @@ void initializeKeyboard() {
 
   Log.noticeln("iPhone connected to virtual keyboard");
 
-  xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 10000, NULL, 1, &Task1, 1);
+  xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 2000, NULL, 1, &Task1, 1);
 }
 
 void initializeSerialCommunication() {
   printf("Starting ESP32 ...\n");
-  // Serial.begin(SERIAL_BAUD_RATE);
-  // Log.begin(LOG_LEVEL_MAX, &Serial);
-  // Log.setLevel(LOG_LEVEL_MAX);
-  // Log.noticeln("Starting ESP32 ...");
+  Serial.begin(SERIAL_BAUD_RATE);
+  Log.begin(LOG_LEVEL_MAX, &Serial);
+  Log.setLevel(LOG_LEVEL_MAX);
+  Log.noticeln("Starting ESP32 ...");
   esp_task_wdt_reset();
 }
 
