@@ -28,6 +28,7 @@ static NimBLEUUID cccdUUID("2902");
 #define DEVICE_MANUFACTURER "u701"
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
+static auto scan = NimBLEDevice::getScan();
 
 /* Removes warnings */
 #undef LOG_LEVEL_INFO
@@ -49,8 +50,9 @@ class ClientCallback : public NimBLEClientCallbacks {
   // 2. Find the report characteristic
   // 3. Subscribe to the report characteristic
   void onConnect(NimBLEClient *client) override {
-    // TODO: Stop the scanner here?
-    for (auto &service: *client->getServices(false)) { // Do we need to reload these values or does the cache work?
+    scan->stop();
+
+    for (auto &service: *client->getServices(false)) {
       for (auto &characteristic: *service->getCharacteristics(false)) {
         if (!service->getUUID().equals(hidService)) {
           continue;
@@ -58,7 +60,6 @@ class ClientCallback : public NimBLEClientCallbacks {
           continue;
         } else if (!characteristic->canNotify()) {
           continue;
-          // What does {true} do?
         } else if (!characteristic->subscribe(true, handleButtonClick, false)) {
           continue;
         } else {
@@ -70,13 +71,12 @@ class ClientCallback : public NimBLEClientCallbacks {
 
   // When client is disconnected, restart the ESP32
   void onDisconnect(NimBLEClient *client) override {
-    // Question: Is there a way to tell the system why we restart?
+    Serial.println("Disconnected from BLE device, restarting");
     ESP.restart();
   }
 };
 
 static auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
-static auto scan             = NimBLEDevice::getScan();
 static auto clientCallback   = ClientCallback();
 
 // Search for client
@@ -91,12 +91,7 @@ class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
     // Is it a problem that {client} is not freed?
     auto client = NimBLEDevice::createClient(macAddr);
     client->setClientCallbacks(&clientCallback);
-
-    // Connect to the client
-    // Should we stop before this?
-    if (!client->connect()) {
-      advertised->getScan()->stop();
-    }
+    client->connect();
   }
 };
 
