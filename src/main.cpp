@@ -69,18 +69,19 @@ static NimBLEAdvertisedDevice *advDevice;
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
+    Serial.printf("Advertised Device: %s\n", advertisedDevice->getName());
 
     if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-      printf("Not Our Service: %s\n", advertisedDevice->toString().c_str());
+      Serial.println("Not Our Service: %s\n", advertisedDevice->getName());
       return;
     }
 
     if (!advertisedDevice->getAddress().equals(ServerAddress)) {
-      printf("Not Our Server: %s\n", advertisedDevice->toString().c_str());
+      Serial.println("Not Our Server: %s\n", advertisedDevice->getName());
       return;
     }
 
-    printf("Found Our Service: %s\n", advertisedDevice->toString().c_str());
+    Serial.println("Found Our Service, stopping scan\n");
 
     advDevice->getScan()->stop();
     advDevice = advertisedDevice;
@@ -97,7 +98,8 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 }
 
 extern "C" void init_arduino() {
-  printf("Starting NimBLE Client\n");
+  Serial.begin(SERIAL_BAUD_RATE);
+  Serial.println("Starting NimBLE Client\n");
 
   NimBLEDevice::init("");
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
