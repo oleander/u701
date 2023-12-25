@@ -129,7 +129,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 };
 
-static ClientCallbacks clientCB;
+static clientCallback = ClientCallbacks();
 static NimBLEClient *pClient;
 
 /** Define a class to handle the callbacks when advertisments are received */
@@ -147,7 +147,6 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
       Serial.println("Found the Terrain Command");
     }
 
-    // pClient->setClientCallbacks(&clientCB, false);
     auto addr = advertisedDevice->getAddress();
     pClient   = NimBLEDevice::createClient(addr);
     advertisedDevice->getScan()->stop();
@@ -188,6 +187,7 @@ extern "C" void init_arduino() {
   // Serial.println("Starting keyboard");
   // keyboard.begin();
 
+  pClient->setClientCallbacks(&clientCallback, false);
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
 
