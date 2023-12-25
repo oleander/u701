@@ -26,66 +26,27 @@ NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
-/**
- * Restarts the ESP device with a formatted message. Uses dynamic memory allocation
- * to handle potentially large messages.
- *
- * @param format A format string for the message.
- * @param ... Variable arguments for the format string.
- */
 void restart(const char *format, ...) {
-  // Start with a reasonable buffer size
-  size_t bufferSize = 256;
-  char *buffer      = (char *) malloc(bufferSize);
+  // Simplify memory management with std::vector
+  std::vector<char> buffer(256);
 
-  if (buffer == NULL) {
-    Serial.println("Memory allocation failed. Restarting...");
-    ESP.restart();
-  }
-
-  // Initialize the variable argument list
   va_list args;
   va_start(args, format);
-
-  // Try to format the message into the buffer
-  int needed = vsnprintf(buffer, bufferSize, format, args);
-
-  // Check if the buffer was large enough
-  if (needed >= bufferSize) {
-    // Reallocate with the correct size
-    bufferSize      = needed + 1; // +1 for null terminator
-    char *newBuffer = (char *) realloc(buffer, bufferSize);
-
-    if (newBuffer == NULL) {
-      free(buffer);
-      Serial.println("Memory reallocation failed. Restarting...");
-      ESP.restart();
-    }
-
-    buffer = newBuffer;
-
-    // Format the message again
-    va_end(args);
-    va_start(args, format);
-    vsnprintf(buffer, bufferSize, format, args);
-  }
-
-  // Clean up the variable argument list
+  int needed = vsnprintf(buffer.data(), buffer.size(), format, args);
   va_end(args);
 
-  // Print the formatted message to the Serial interface
-  Serial.println(buffer);
+  // Resize buffer if needed and reformat message
+  if (needed >= buffer.size()) {
+    buffer.resize(needed + 1);
+    va_start(args, format);
+    vsnprintf(buffer.data(), buffer.size(), format, args);
+    va_end(args);
+  }
 
-  // Notify about the impending restart
+  // Print message and restart
+  Serial.println(buffer.data());
   Serial.println("Will restart the ESP in 2 seconds");
-
-  // Wait for 2 seconds
   delay(2000);
-
-  // Free the allocated memory
-  free(buffer);
-
-  // Restart the ESP device
   ESP.restart();
 }
 
@@ -240,20 +201,19 @@ extern "C" void init_arduino() {
     restart("Device has been manually disconnected");
   }
 
-  for (int i = 0; i < pChrs->size(); i++) {
-    if (!pChrs->at(i)->canNotify()) {
+  for (auto &chr: *pChrs) {
+    if (!chr->canNotify()) {
       Serial.println("Characteristic cannot notify, skipping");
       continue;
     }
 
-    if (!pChrs->at(i)->getUUID().equals(charUUID)) {
+    if (!chr->getUUID().equals(charUUID)) {
       Serial.println("Characteristic UUID does not match, skipping");
       continue;
     }
 
-    if (!pChrs->at(i)->subscribe(true, onEvent, true)) {
+    if (!chr->subscribe(true, onEvent, false)) {
       Serial.println("Failed to subscribe to characteristic");
-      Serial.println("Will disconnect the device");
       pClient->disconnect();
       restart("Device has been manually disconnected");
     }
