@@ -84,14 +84,23 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
 TaskHandle_t Task1;
 
 void checkIfIphoneIsConnected(void *pvParameters) {
-  while (true) {
-    if (!keyboard.isConnected()) {
-      restart("Keyboard is no longer connected, restarting ...");
-    }
+  auto waitTime = 10000;
 
-    // Wait for 10 seconds
-    vTaskDelay(10000 / portTICK_PERIOD_MS);
+  Log.noticeln("Waiting for iPhone to connect to virtual keyboard ...");
+  while (!keyboard.isConnected()) {
+    esp_task_wdt_reset();
+    vTaskDelay(waitTime / portTICK_PERIOD_MS);
   }
+
+  Log.noticeln("iPhone connected to virtual keyboard");
+
+  Log.noticeln("Waiting for iPhone to disconnect from virtual keyboard ...");
+  while (keyboard.isConnected()) {
+    esp_task_wdt_reset();
+    vTaskDelay(waitTime / portTICK_PERIOD_MS);
+  }
+
+  restart("Keyboard is no longer connected, restarting ...");
 }
 
 void initializeKeyboard() {
