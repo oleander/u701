@@ -6,13 +6,14 @@
 #include <NimBLEUtils.h>
 #include <vector>
 
-#define SCAN_INTERVAL       500 // in ms
-#define SCAN_WINDOW         450 // in ms
+#define SCAN_INTERVAL 500 // in ms
+#define SCAN_WINDOW   450 // in ms
+
+#define SERIAL_BAUD_RATE 115200
+#define DEVICE_BATTERY   100
+
+#define DEVICE_MANUFACTURER "HVA"
 #define DEVICE_NAME         "u701"
-#define SERIAL_BAUD_RATE    115200
-#define DEVICE_MANUFACTURER "u701"
-#define DEVICE_BATTERY      100
-#define ServerName          "u701"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 NimBLEAddress ServerAddress = 0xA842E3CD0C6; // TEST
