@@ -28,7 +28,11 @@ esp-idf-hal = "0.42.5"
 # codegen-units = 1
 # opt-level = 3
 
-[profile.release]
-opt-level = "z"
-debug = true
-lto = false
+[build-dependencies]
+embuild = "*"
+anyhow = { version = "1.0.75", default-features = false }
+
+# [profile.release]
+# opt-level = "z"
+# debug = true
+# lto = false

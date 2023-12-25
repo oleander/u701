@@ -2,6 +2,7 @@ UPLOAD_PORT := `ls /dev/* | grep "tty.usb" | head -n 1`
 ENVIRONMENT := "release"
 PARALLEL := "4"
 MONITOR_SPEED := "115200"
+TARGET := "esp32"
 
 set shell := ["zsh", "-cu"]
 set dotenv-load := true
@@ -23,7 +24,7 @@ erase:
 monitor:
     tools/monitor.sh --port {{UPLOAD_PORT}} --baud {{MONITOR_SPEED}}
 menuconfig:
-    cargo pio espidf menuconfig -r true
+    cargo pio espidf menuconfig -r true -e {{ENVIRONMENT}} --target {{TARGET}}
 update:
     cargo pio exec -- pkg update
 setup:
