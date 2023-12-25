@@ -85,12 +85,11 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     // }
 
     if (!advertisedDevice->getName().equals("key")) {
-      printf("Found device: %s\n", advertisedDevice->getName().c_str());
+      // printf("Found device: %s\n", advertisedDevice->getName().c_str());
       return;
     }
 
-    Serial.println("\nFound Our Service, stopping scan");
-
+    Serial.println("Found Our Service, stopping scan");
     advDevice->getScan()->stop();
     advDevice = advertisedDevice;
   };
