@@ -103,7 +103,7 @@ extern "C" void init_arduino() {
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
-  printf("Starting BLE scan\n");
+  Serial.println("Starting BLE scan\n");
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
