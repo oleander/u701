@@ -89,7 +89,8 @@ void restart(const char *format, ...) {
   ESP.restart();
 }
 
-SemaphoreHandle_t semaphore = xSemaphoreCreateBinary();
+SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
+SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 static NimBLEClient *pClient;
 
@@ -145,7 +146,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     }
 
     Serial.println("Release semaphore");
-    xSemaphoreGive(semaphore);
+    xSemaphoreGive(incommingClientSemaphore);
   };
 };
 
@@ -180,7 +181,11 @@ extern "C" void init_arduino() {
   NimBLEDevice::setPower(ESP_PWR_LVL_P3);
   NimBLEDevice::init(DEVICE_NAME);
 
-  Serial.println("Starting BLE scan");
+  keyboard.whenClientConnects([](NimBLEClient *_client) {
+    Serial.println("Client connected to keyboard");
+    Serial.println("Release keyboard semaphore");
+    xSemaphoreGive(outgoingClientSemaphore);
+  });
 
   Serial.println("Starting keyboard");
   keyboard.begin();
@@ -191,6 +196,12 @@ extern "C" void init_arduino() {
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
+
+  // Wait for the semaphore to be released
+  Serial.println("Waiting for out semaphore to be released");
+  xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
+
+  Serial.println("Starting BLE scan");
   pScan->start(SCAN_DURATION, false);
 
   if (!pClient) {
@@ -209,8 +220,8 @@ extern "C" void init_arduino() {
     Serial.println("Successfully connected to the Terrain Command");
   }
 
-  Serial.println("Waiting for semaphore to be released");
-  xSemaphoreTake(semaphore, portMAX_DELAY);
+  Serial.println("Waiting for input semaphore to be released");
+  xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
 
   Serial.println("Fetching service ...");
   auto pSvc = pClient->getService(serviceUUID);
