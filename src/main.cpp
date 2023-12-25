@@ -116,10 +116,10 @@ extern "C" void init_arduino() {
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-  pScan->start(50200);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
+  pScan->start(50200, false);
 
   Serial.println("Starting keyboard");
   keyboard.begin();
