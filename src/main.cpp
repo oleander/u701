@@ -94,19 +94,15 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     } else if (advertisedDevice->getName() != DEVICE_NAME) {
       return;
     } else if (advertisedDevice->getAddress() != serverAddress) {
-      printf("\nMismatched address: %s vs %s\n",
-             advertisedDevice->toString().c_str(),
-             serverAddress.toString().c_str());
       return;
     } else {
-      printf("\nFound Terrain Command: %s\n", advertisedDevice->toString().c_str());
+      printf("Found Terrain Command\n");
     }
 
-    advertisedDevice->getScan()->stop();
-
-    auto macAddr = advertisedDevice->getAddress();
     pClient->setClientCallbacks(&clientCB, false);
-    pClient = NimBLEDevice::createClient(macAddr);
+    auto addr = advertisedDevice->getAddress();
+    pClient   = NimBLEDevice::createClient(addr);
+    advertisedDevice->getScan()->stop();
   };
 };
 
