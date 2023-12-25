@@ -195,7 +195,7 @@ extern "C" void init_arduino() {
 
   Serial.println("Starting BLE scan for the Terrain Command");
   auto pScan = NimBLEDevice::getScan();
-  pScan->setAdvertisedDeviceCallbacks(advertisedDeviceCallbacks);
+  pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
