@@ -11,10 +11,10 @@ clean:
     cargo pio exec -- run --target clean -e {{ENVIRONMENT}}
     cargo pio exec -- run --target clean
 
-build:
+build: setup
     cargo pio build -r
 
-upload:
+upload: setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 ota:
