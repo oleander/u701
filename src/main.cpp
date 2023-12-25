@@ -216,8 +216,8 @@ bool connectToServer() {
   return true;
 }
 
-void init_arduino() {
-  Serial.begin(115200);
+extern "C" void init_arduino() {
+  // Serial.begin(115200);
   Serial.println("Starting NimBLE Client");
 
   NimBLEDevice::init("");
