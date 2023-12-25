@@ -95,6 +95,9 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     Serial.println("Connected, will optimize conn params");
     pClient->updateConnParams(120, 120, 0, 1);
+
+    Serial.println("Re-broadcasting keyboard");
+    keyboard.broadcast();
   };
 
   void onDisconnect(NimBLEClient *pClient) {
