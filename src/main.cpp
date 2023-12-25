@@ -147,7 +147,7 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
       Serial.println("Found the Terrain Command");
     }
 
-    pClient->setClientCallbacks(&clientCB, false);
+    // pClient->setClientCallbacks(&clientCB, false);
     auto addr = advertisedDevice->getAddress();
     pClient   = NimBLEDevice::createClient(addr);
     advertisedDevice->getScan()->stop();
