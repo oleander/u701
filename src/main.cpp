@@ -1,10 +1,12 @@
 // #include <BleKeyboard.h>
 #include "ffi.h"
+#include <Arduino.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <vector>
 
 #define SCAN_DURATION 5 * 60 // in seconds
@@ -23,16 +25,66 @@ NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
+/**
+ * Restarts the ESP device with a formatted message. Uses dynamic memory allocation
+ * to handle potentially large messages.
+ *
+ * @param format A format string for the message.
+ * @param ... Variable arguments for the format string.
+ */
 void restart(const char *format, ...) {
-  char buffer[256];
+  // Start with a reasonable buffer size
+  size_t bufferSize = 256;
+  char *buffer      = (char *) malloc(bufferSize);
+
+  if (buffer == NULL) {
+    Serial.println("Memory allocation failed. Restarting...");
+    ESP.restart();
+  }
+
+  // Initialize the variable argument list
   va_list args;
   va_start(args, format);
-  vsnprintf(buffer, sizeof(buffer), format, args);
+
+  // Try to format the message into the buffer
+  int needed = vsnprintf(buffer, bufferSize, format, args);
+
+  // Check if the buffer was large enough
+  if (needed >= bufferSize) {
+    // Reallocate with the correct size
+    bufferSize      = needed + 1; // +1 for null terminator
+    char *newBuffer = (char *) realloc(buffer, bufferSize);
+
+    if (newBuffer == NULL) {
+      free(buffer);
+      Serial.println("Memory reallocation failed. Restarting...");
+      ESP.restart();
+    }
+
+    buffer = newBuffer;
+
+    // Format the message again
+    va_end(args);
+    va_start(args, format);
+    vsnprintf(buffer, bufferSize, format, args);
+  }
+
+  // Clean up the variable argument list
   va_end(args);
 
+  // Print the formatted message to the Serial interface
   Serial.println(buffer);
+
+  // Notify about the impending restart
   Serial.println("Will restart the ESP in 2 seconds");
+
+  // Wait for 2 seconds
   delay(2000);
+
+  // Free the allocated memory
+  free(buffer);
+
+  // Restart the ESP device
   ESP.restart();
 }
 
@@ -54,11 +106,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         the currently used parameters. Default will return true.
   */
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-    printf("Connection parameter update request: %d, %d, %d, %d\n",
-           params->itvl_min,
-           params->itvl_max,
-           params->latency,
-           params->supervision_timeout);
+    Serial.println("Connection parameters update request received");
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
