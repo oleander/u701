@@ -16,7 +16,6 @@
 
 static NimBLEUUID reportUUID("2A4D");
 static NimBLEUUID hidService("1812");
-static NimBLEUUID cccdUUID("2902");
 
 // #define DEVICE_MAC          "A8:42:E3:CD:FB:C6"
 #define DEVICE_MAC          "f7:97:ac:1f:f8:c0"
@@ -24,15 +23,12 @@ static NimBLEUUID cccdUUID("2902");
 #define SCAN_WINDOW         450 // in ms
 #define DEVICE_NAME         "u701"
 #define SERIAL_BAUD_RATE    115200
-#define DEVICE_BATTERY      100
 #define DEVICE_MANUFACTURER "u701"
+#define DEVICE_BATTERY      100
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-static auto scan = NimBLEDevice::getScan();
-
-/* Removes warnings */
-#undef LOG_LEVEL_INFO
-#undef LOG_LEVEL_ERROR
+static auto scan             = NimBLEDevice::getScan();
+static auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
 
 /* Event received from the Terrain Command */
 static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
@@ -43,13 +39,10 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
   c_on_event(data, length);
 }
 
-// Terrain Command callbacks
+/* Terrain Command callbacks */
 class ClientCallback : public NimBLEClientCallbacks {
-  // When client is connected:
-  // 1. Find the HID service
-  // 2. Find the report characteristic
-  // 3. Subscribe to the report characteristic
   void onConnect(NimBLEClient *client) override {
+    printf("Connected to BLE device\n");
     scan->stop();
 
     for (auto &service: *client->getServices(false)) {
@@ -69,15 +62,14 @@ class ClientCallback : public NimBLEClientCallbacks {
     }
   }
 
-  // When client is disconnected, restart the ESP32
+  /* When client is disconnected, restart the ESP32 */
   void onDisconnect(NimBLEClient *client) override {
     Serial.println("Disconnected from BLE device, restarting");
     ESP.restart();
   }
 };
 
-static auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
-static auto clientCallback   = ClientCallback();
+static auto clientCallback = ClientCallback();
 
 // Search for client
 class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
@@ -88,30 +80,29 @@ class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
       return;
     }
 
-    // Is it a problem that {client} is not freed?
+    printf("Will try to connect to %s\n", macAddr.toString().c_str());
     auto client = NimBLEDevice::createClient(macAddr);
     client->setClientCallbacks(&clientCallback);
     client->connect();
   }
 };
 
+static void onScanComplete(NimBLEScanResults results) {
+  printf("Scan complete\n");
+  keyboard.begin();
+}
+
 static auto scanCallback = ScanCallback();
 
 extern "C" void init_arduino() {
-  Serial.begin(SERIAL_BAUD_RATE);
+  printf("Starting BLE scan\n");
 
-  Serial.println("Starting BLE scan");
-  // Question: Does scan have to be global?
   scan->setAdvertisedDeviceCallbacks(&scanCallback);
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
   scan->setMaxResults(0);
-  scan->start(0, false);
-
-  Serial.println("Starting BLE keyboard");
-  NimBLEDevice::init(DEVICE_NAME);
-  keyboard.begin();
+  scan->start(0, onScanComplete, false);
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
