@@ -110,6 +110,10 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   */
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
     Serial.println("Connection parameters update request received");
+    printf("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
+           params->itvl_min,
+           params->latency,
+           params->supervision_timeout);
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
