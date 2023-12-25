@@ -133,13 +133,15 @@ extern "C" void init_arduino() {
     restart("The Terrain Command was not found");
   }
 
-  Serial.println("Starting keyboard");
-  keyboard.begin();
+  // Serial.println("Starting keyboard");
+  // keyboard.begin();
 
   auto pClient = NimBLEDevice::createClient();
   pClient->setClientCallbacks(&clientCB, false);
-  pClient->setConnectionParams(12, 12, 0, 51);
-  pClient->setConnectTimeout(10);
+  // pClient->setConnectionParams(12, 12, 0, 51);
+  // pClient->setConnectTimeout(10);
+
+  printf("Connecting to %s\n", advDevice->getAddress().toString().c_str());
 
   if (!pClient->connect(advDevice)) {
     restart("Could not connect to the Terrain Command");
