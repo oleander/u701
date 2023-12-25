@@ -8,12 +8,11 @@ edition = "2021"
 name = "u701"
 
 [lib]
-# crate-type = ["staticlib", "cdylib", "lib"]
 path = "src/lib.rs"
 name = "u701"
 
 [dependencies]
-esp-idf-svc = { version = "0.47.3", features = ["embassy-time-isr-queue"] }
+esp-idf-svc = { version = "0.47.3", features = ["embassy-time-isr-queue", "libstart"], default-features = false }
 embassy-time = { version = "*", features = ["tick-hz-1_000_000"] }
 esp32-nimble = { path = "../esp32-nimble", features = ["std"] }
 lazy_static = { version = "1.4.0", default-features = false }
@@ -21,8 +20,8 @@ env_logger = { version = "0.10.1", default-features = false }
 anyhow = { version = "1.0.75", default-features = false }
 log = { version = "0.4.20", default-features = false }
 machine = { path = "machine" }
-esp-idf-sys = "0.33.7"
-esp-idf-hal = "0.42.5"
+esp-idf-sys = { version = "0.33.7", default-features = false }
+esp-idf-hal = { version = "0.42.5", default-features = false }
 
 # [profile.release.package."*"]
 # codegen-units = 1

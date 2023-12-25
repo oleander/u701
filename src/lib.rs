@@ -22,7 +22,7 @@ const CHAR_UUID: BleUuid = Uuid16(0x2A4D);
 const BLE_BUTTONS_NAME: &str = "key";
 
 #[no_mangle]
-fn app_main() {
+fn main() {
   esp_idf_sys::link_patches();
   esp_idf_svc::log::EspLogger::initialize_default();
   esp_idf_svc::timer::embassy_time::driver::link();

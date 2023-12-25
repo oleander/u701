@@ -1,7 +1,7 @@
 [build]
 # target = "riscv32imc-esp-espidf"
 # target = "xtensa-esp32-espidf"
-target =  "xtensa-esp32-elf"
+target =  "xtensa-esp32-espidf"
 # target = "aarch64-apple-darwin"
 
 [target.riscv32imc-esp-espidf]
@@ -13,12 +13,11 @@ linker = "ldproxy"
 
 # rustflags = ["--cfg", "espidf_time64", "-C", "default-linker-libraries"]
 
-[target.xtensa-esp32-elf]
-linker = "ldproxy"
-# rustflags = ["-C", "default-linker-libraries"]
 
 [unstable]
 build-std = ["std", "panic_abort"]
 
 # [env]
 # ESP_IDF_VERSION = "v.4.4.4"
+[env]
+MCU = "esp32"
