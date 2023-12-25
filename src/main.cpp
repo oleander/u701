@@ -40,7 +40,8 @@ void setupWatchdog(int timeout) {
 
 void restart(const char *reason) {
   Log.noticeln(reason);
-  Log.noticeln("Restarting ESP32 ...");
+  Log.noticeln("Restarting ESP32 in 5 seconds ...");
+  delay(5000);
   ESP.restart();
 }
 
