@@ -70,17 +70,19 @@ static NimBLEAdvertisedDevice *advDevice;
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
 
     if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
+      printf("Not Our Service: %s\n", advertisedDevice->toString().c_str());
       return;
     }
 
     if (!advertisedDevice->getAddress().equals(ServerAddress)) {
+      printf("Not Our Server: %s\n", advertisedDevice->toString().c_str());
       return;
     }
 
-    printf("Found Our Service!");
+    printf("Found Our Service: %s\n", advertisedDevice->toString().c_str());
+
     advDevice->getScan()->stop();
     advDevice = advertisedDevice;
   };
@@ -95,16 +97,12 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
-/** Handles the provisioning of clients and connects / interfaces with the server */
-bool connectToServer() {
-}
-
 extern "C" void init_arduino() {
   printf("Starting NimBLE Client\n");
 
-  NimBLEDevice::init("");
-  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+  // NimBLEDevice::init("");
+  // NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+  // NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
   printf("Starting BLE scan\n");
 
@@ -115,8 +113,8 @@ extern "C" void init_arduino() {
   pScan->setWindow(37);
   pScan->start(0);
 
-  printf("Starting keyboard\n");
-  keyboard.begin();
+  // printf("Starting keyboard\n");
+  // keyboard.begin();
 
   if (!advDevice) {
     printf("No advertised device to connect to\n");
