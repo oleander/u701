@@ -129,8 +129,8 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 };
 
-static clientCallback = ClientCallbacks();
 static NimBLEClient *pClient;
+static clientCallback = ClientCallbacks();
 
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
