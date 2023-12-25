@@ -1,5 +1,6 @@
 // #include <BleKeyboard.h>
 #include "ffi.h"
+#include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
@@ -9,9 +10,18 @@ using namespace std;
 
 TaskHandle_t scanTask;
 
+#define SCAN_INTERVAL       500 // in ms
+#define SCAN_WINDOW         450 // in ms
+#define DEVICE_NAME         "u701"
+#define SERIAL_BAUD_RATE    115200
+#define DEVICE_MANUFACTURER "u701"
+#define DEVICE_BATTERY      100
+
+BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
+
 #define ServerName "u701"
 
-// A8:42:E3:CD:FB:C6
+// A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 NimBLEAddress ServerAddress = 0xA842E3CD0C6;
 
 void scanEndedCB(NimBLEScanResults results);
@@ -23,14 +33,9 @@ static NimBLEUUID charUUID("2a4d");
 
 static NimBLEAdvertisedDevice *advDevice;
 
-static bool doConnect       = false;
-static bool clientConnected = false;
-static uint32_t scanTime    = 0; /** 0 = scan forever */
-
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     Serial.println("Connected");
-    clientConnected = true;
     /** After connection we should change the parameters if we don't need fast response times.
           These settings are 150ms interval, 0 latency, 450ms timout.
           Timeout should be a multiple of the interval, minimum is 100ms.
@@ -86,8 +91,6 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
       advDevice->getScan()->stop();
       /** Save the device reference in a global for the client to use*/
       advDevice = advertisedDevice;
-      /** Ready to connect now */
-      doConnect = true;
     }
   };
 };
@@ -267,4 +270,20 @@ void init_arduino() {
   } else {
     Serial.println("Failed to connect, starting scan");
   }
+}
+
+extern "C" void ble_keyboard_write(uint8_t c[2]) {
+  if (keyboard.isConnected()) {
+    keyboard.write(c);
+  }
+}
+
+extern "C" void ble_keyboard_print(const uint8_t *format) {
+  if (keyboard.isConnected()) {
+    keyboard.print(reinterpret_cast<const char *>(format));
+  }
+}
+
+extern "C" bool ble_keyboard_is_connected() {
+  return keyboard.isConnected();
 }
