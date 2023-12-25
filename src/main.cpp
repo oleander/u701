@@ -152,8 +152,10 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto macAddr = advertised->getAddress();
 
+    Serial.print(".");
+
     if (macAddr != buttonMacAddress) {
-      return Serial.print(".");
+      return;
     }
 
     client = NimBLEDevice::createClient(macAddr);
