@@ -39,6 +39,6 @@ pub fn on_event(event: Option<&[u8; 4]>) {
     Some(&[_, _, 0, _]) => debug!("Button was released"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
     // None => error!("[on_event] [BUG] Received {:?} event", event)
-    None => CHANNEL.0.send(0x51).unwrap()
+    None => CHANNEL.0.send(0x50).unwrap()
   }
 }
