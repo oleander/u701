@@ -27,7 +27,7 @@ menuconfig:
 update:
     cargo pio exec -- pkg update
 setup:
-    espup install -t esp32c3 -f .espup.sh
+    espup install -t esp32 -f .espup.sh
 test:
     source ./.espup.sh && cargo test
 install: upload monitor
