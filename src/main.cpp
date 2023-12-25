@@ -16,8 +16,9 @@
 #define SERIAL_BAUD_RATE 115200
 #define DEVICE_BATTERY   100
 
+#define CLIENT_NAME         "Terrain Comman"
+#define DEVICE_NAME         "u701"
 #define DEVICE_MANUFACTURER "HVA"
-#define DEVICE_NAME         "Terrain Comman"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 // NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM); // TEST
@@ -90,6 +91,7 @@ void restart(const char *format, ...) {
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
+// Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     Serial.println("Connected, will optimize conn params");
@@ -132,6 +134,9 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     if (!desc->sec_state.encrypted) {
       restart("Encrypt connection failed: %s", desc);
     }
+
+    Serial.println("Connection with Terrain Command established");
+    printf("Connection with Terrain Command established: %s\n", desc);
   };
 };
 
@@ -145,12 +150,12 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
 
     if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
       return;
-    } else if (advertisedDevice->getName() != DEVICE_NAME) {
+    } else if (advertisedDevice->getName() != CLIENT_NAME) {
       return;
     } else if (advertisedDevice->getAddress() != serverAddress) {
       return;
     } else {
-      Serial.println("Found the Terrain Command");
+      Serial.println("\nFound the Terrain Command");
     }
 
     auto addr = advertisedDevice->getAddress();
