@@ -19,7 +19,7 @@
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 // NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM); // TEST
-NimBLEAddress ServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
+NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
@@ -93,6 +93,11 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
       return;
     } else if (advertisedDevice->getName() != DEVICE_NAME) {
       return;
+    } else if (advertisedDevice->getAddress() != serverAddress) {
+      printf("\nMismatched address: %s vs %s\n",
+             advertisedDevice->toString().c_str(),
+             serverAddress.toString().c_str());
+      return;
     } else {
       printf("\nFound Terrain Command: %s\n", advertisedDevice->toString().c_str());
     }
@@ -142,8 +147,12 @@ extern "C" void init_arduino() {
   // pClient->setConnectTimeout(10);
 
   printf("Connecting to %s\n", advDevice->toString().c_str());
+  // printf("Address: %s\n", advDevice->getAddress().toString().c_str());
+  // printf("Name: %s\n", advDevice->getName().c_str());
+  // print serverAddress
+  printf("Address: %s\n", serverAddress.toString().c_str());
 
-  if (!pClient->connect(advDevice)) {
+  if (!pClient->connect(serverAddress)) {
     restart("Could not connect to the Terrain Command");
   } else if (!pClient->isConnected()) {
     restart("Could not connect to the Terrain Command");
