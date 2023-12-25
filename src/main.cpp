@@ -218,3 +218,34 @@ extern "C" void ble_keyboard_print(const uint8_t *format) {
 extern "C" bool ble_keyboard_is_connected() {
   return keyboard.isConnected();
 }
+
+static int ble_client_gap_event(struct ble_gap_event *event, void *arg) {
+  ble_client *client = (ble_client *) arg;
+  ESP_LOGD(TAG, "gap event: %d", event->type);
+  switch (event->type) {
+  case BLE_GAP_EVENT_CONNECT: {
+    int status = event->connect.status;
+    if (status == 0) {
+      ESP_LOGI(TAG, "connection established");
+      client->conn_handle = event->connect.conn_handle;
+    } else {
+      ESP_LOGE(TAG, "connection failed. ble code: %d", status);
+      client->semaphore_result = ble_client_convert_ble_code(status);
+      client->connected        = false;
+      xSemaphoreGive(client->semaphore);
+    }
+    break;
+  }
+    // notify connected only after MTU negotiation completes
+  case BLE_GAP_EVENT_MTU: {
+    ESP_LOGI(TAG, "MTU negotiated");
+    client->semaphore_result = ESP_OK;
+    client->connected        = true;
+    xSemaphoreGive(client->semaphore);
+    break;
+  }
+  default:
+    break;
+  }
+  return 0;
+}
