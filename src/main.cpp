@@ -34,10 +34,39 @@ void restart(const char *reason) {
   ESP.restart();
 }
 
+/* Add function isActive to the State struct */
+static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
+  if (!isNotify) {
+    return;
+  }
+
+  c_on_event(data, length);
+}
+
 class ClientCallback : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *client) override {
-    // esp_task_wdt_reset();
-    Log.noticeln("Connected to device!");
+    Log.noticeln("Discovering services ...");
+    for (auto &service: *client->getServices(true)) {
+      Log.noticeln("Discovering characteristics ...");
+      for (auto &characteristic: *service->getCharacteristics(true)) {
+        auto currentServiceUUID = service->getUUID().toString().c_str();
+        auto currentCharUUID    = characteristic->getUUID().toString().c_str();
+
+        if (!service->getUUID().equals(hidService)) {
+          Log.warningln("[Click] Unknown report service: %X", currentServiceUUID);
+        } else if (!characteristic->getUUID().equals(reportUUID)) {
+          Log.warningln("[Click] Unknown report characteristic: %X", currentCharUUID);
+        } else if (!characteristic->canNotify()) {
+          Log.warningln("[Click] Cannot subscribe to notifications: %X", currentCharUUID);
+        } else if (!characteristic->subscribe(true, handleButtonClick, false)) {
+          Log.errorln("[Click] [Bug] Failed to subscribe to notifications: %X", currentCharUUID);
+        } else {
+          return Log.noticeln("[Click] Subscribed to notifications: %X", currentCharUUID);
+        }
+      }
+    }
+
+    Log.noticeln("Could not subscribe to notifications");
   }
 
   void onDisconnect(NimBLEClient *client) override {
@@ -46,38 +75,37 @@ class ClientCallback : public NimBLEClientCallbacks {
 };
 
 static auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
+static auto scan             = NimBLEDevice::getScan();
+static auto clientCallback   = ClientCallback();
 
 class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto macAddr = advertised->getAddress();
 
-    Serial.printf("[SCAN] %s\n", macAddr.toString().c_str());
-    // esp_task_wdt_reset();
-
     if (macAddr != buttonMacAddress) {
       return;
     }
 
-    Log.noticeln("[SCAN] Terrain Command found");
-    Serial.printf("[SCAN] Terrain Command found\n");
-    printf("[SCAN] Terrain Command found\n");
+    Log.noticeln("Found device, will try to connect");
     client = NimBLEDevice::createClient(macAddr);
-    // advertised->getScan()->stop();
+
+    client->setClientCallbacks(&clientCallback);
+    if (client->isConnected()) {
+      return Log.noticeln("Already connected to device");
+    }
+
+    if (!client->connect()) {
+      restart("Could not connect to the Terrain Command");
+    }
+
+    Log.noticeln("Stop scan");
+    advertised->getScan()->stop();
   }
 };
 
-static auto clientCallback = ClientCallback();
-static auto scanCallback   = ScanCallback();
+static auto scanCallback = ScanCallback();
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-
-// void setupWatchdog(int timeout) {
-//   Log.noticeln("Setting up watchdog @ %d ...", timeout);
-//   esp_task_wdt_init(timeout, true);
-//   esp_task_wdt_add(nullptr);
-// }
-
-/* BleDevice: For Terrain Command buttons (client) */
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   if (keyboard.isConnected()) {
@@ -95,55 +123,12 @@ extern "C" bool ble_keyboard_is_connected() {
   return keyboard.isConnected();
 }
 
-/* Add function isActive to the State struct */
-static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
-  if (!isNotify) {
-    return;
-  }
-
-  c_on_event(data, length);
-}
-
-// TaskHandle_t Task1;
-
-// Check if the iPhone is connected to the virtual keyboard
-// void checkIfIphoneIsConnected(void *pvParameters) {
-//   auto waitTime = 10000;
-
-//   // while (!keyboard.isConnected()) {
-//   //   esp_task_wdt_reset();
-//   //   vTaskDelay(waitTime / portTICK_PERIOD_MS);
-//   // }
-
-//   while (keyboard.isConnected()) {
-//     esp_task_wdt_reset();
-//     vTaskDelay(waitTime / portTICK_PERIOD_MS);
-//   }
-
-//   restart("Keyboard is no longer connected, restarting ...");
-// }
-
 void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
-
-  // BLEDevice::init("u701");
-  // BLEDevice::setMTU(23);
 
   keyboard.setBatteryLevel(100);
   keyboard.setDelay(12);
   keyboard.begin();
-
-  Log.noticeln("Waiting for iPhone to connect to virtual keyboard ...");
-  Log.noticeln("Entering wait loop ...");
-
-  while (!keyboard.isConnected()) {
-    // esp_task_wdt_reset();
-    delay(10);
-  }
-
-  Log.noticeln("iPhone connected to virtual keyboard");
-
-  // xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 5000, NULL, 0, NULL, 1);
 }
 
 void initializeSerialCommunication() {
@@ -152,106 +137,21 @@ void initializeSerialCommunication() {
   Log.begin(LOG_LEVEL_MAX, &Serial);
   Log.setLevel(LOG_LEVEL_MAX);
   Log.noticeln("Starting ESP32 ...");
-  // esp_task_wdt_reset();
 }
 
-/**
- * Sets up the client to connect to the BLE device with the specified MAC address.
- * If the connection fails or no services/characteristics are found, the device will restart.
- */
-void connectToClientDevice() {
-  Log.noticeln("[Connecting] to Terrain Command ...");
-
-  if (client == nullptr) {
-    restart("Device not found, will reboot");
-  }
-
-  client->setClientCallbacks(&clientCallback);
-  if (client->isConnected()) {
-    return Log.noticeln("Already connected to device");
-  }
-
-  if (!client->connect()) {
-    restart("Could not connect to the Terrain Command");
-  }
-  // Ensure MTU has been defined by both parties
-  delay(5000);
-
-  Log.noticeln("Discovering services ...");
-  for (auto &service: *client->getServices(true)) {
-    Log.noticeln("Discovering characteristics ...");
-    for (auto &characteristic: *service->getCharacteristics(true)) {
-      auto currentServiceUUID = service->getUUID().toString().c_str();
-      auto currentCharUUID    = characteristic->getUUID().toString().c_str();
-
-      // esp_task_wdt_reset();
-
-      // Register for click events
-      if (!service->getUUID().equals(hidService)) {
-        Log.warningln("[Click] Unknown report service: %X", currentServiceUUID);
-      } else if (!characteristic->getUUID().equals(reportUUID)) {
-        Log.warningln("[Click] Unknown report characteristic: %X", currentCharUUID);
-      } else if (!characteristic->canNotify()) {
-        Log.warningln("[Click] Cannot subscribe to notifications: %X", currentCharUUID);
-      } else if (!characteristic->subscribe(true, handleButtonClick, false)) {
-        Log.errorln("[Click] [Bug] Failed to subscribe to notifications: %X", currentCharUUID);
-      } else {
-        return Log.noticeln("[Click] Subscribed to notifications: %X", currentCharUUID);
-      }
-    }
-  }
-
-  Log.noticeln("Could not subscribe to notifications");
-}
-
-/* For scanning */
-
-// void disableWatchdog() {
-//   Log.noticeln("Disabling watchdog ...");
-//   esp_task_wdt_delete(nullptr);
-// }
-
-void onScanComplete(NimBLEScanResults results) {
-  Serial.println("Done scanning");
-};
-
-/**
- * Sets up the BLE scan to search for the device with the specified MAC address.
- * If the device is found, the scan will stop and the client will be set up.
- * The scan interval is set high to save power
- */
 void startBLEScanForDevice() {
   Log.noticeln("Starting BLE scan ...");
 
-  // If frozen, the scan will not start
-  // setupWatchdog(5 * 60);
-
-  // BLEDevice::init("u701");
-
-  auto scan = NimBLEDevice::getScan();
   scan->setAdvertisedDeviceCallbacks(&scanCallback);
-  // scan->setInterval(SCAN_INTERVAL);
-  // scan->setWindow(SCAN_WINDOW);
-  // scan->setActiveScan(true);
-  // scan->setMaxResults(0); // do not store the scan results, use callback only.
+  scan->setInterval(SCAN_INTERVAL);
+  scan->setWindow(SCAN_WINDOW);
+  scan->setActiveScan(true);
+  scan->setMaxResults(0);
   scan->start(0, false);
-
-  Log.noticeln("BLE scan finished");
-  if (client == nullptr) {
-    Log.noticeln("Could not find device");
-  } else {
-    Log.noticeln("Found device, will connect");
-  }
 }
 
 extern "C" void init_arduino() {
-  // setupWatchdog(WDT_TIMEOUT);
   initializeSerialCommunication();
-  // disableWatchdog();
   startBLEScanForDevice();
   initializeKeyboard();
-  // setupWatchdog(WDT_TIMEOUT);
-  // delay(5000);
-  connectToClientDevice();
-  // disableWatchdog();
 }

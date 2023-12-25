@@ -27,7 +27,7 @@ monitor:
     tools/monitor.sh --port {{UPLOAD_PORT}} --baud {{MONITOR_SPEED}}
 
 menuconfig:
-    cargo pio espidf menuconfig -r true
+    cargo pio espidf menuconfig -r false
 
 update:
     cargo pio exec -- pkg update
