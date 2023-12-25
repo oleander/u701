@@ -8,7 +8,7 @@ edition = "2021"
 name = "u701"
 
 [lib]
-crate-type = ["staticlib"]
+# crate-type = ["staticlib", "cdylib", "lib"]
 path = "src/lib.rs"
 name = "u701"
 
