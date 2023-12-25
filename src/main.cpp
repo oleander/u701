@@ -106,11 +106,9 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    Serial.println("Connected, will optimize conn params");
+    Serial.println("Connected to Terrain Command");
+    Serial.println("Update connection parameters");
     pClient->updateConnParams(120, 120, 0, 1);
-
-    Serial.println("Re-broadcasting keyboard");
-    keyboard.broadcast();
   };
 
   void onDisconnect(NimBLEClient *pClient) {
@@ -145,12 +143,10 @@ class ClientCallbacks : public NimBLEClientCallbacks {
       restart("Encrypt connection failed: %s", desc);
     }
 
-    Serial.println("Release semaphore");
+    Serial.println("Release Terrain Command semaphore (input) (semaphore)");
     xSemaphoreGive(incommingClientSemaphore);
   };
 };
-
-ClientCallbacks clientCallbacks;
 
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
@@ -173,6 +169,9 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   };
 };
 
+AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
+ClientCallbacks clientCallbacks;
+
 extern "C" void init_arduino() {
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting ESP32 BLE Proxy");
@@ -181,27 +180,26 @@ extern "C" void init_arduino() {
   NimBLEDevice::setPower(ESP_PWR_LVL_N0);
   NimBLEDevice::init(DEVICE_NAME);
 
+  // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
-    Serial.println("Client connected to keyboard");
-    Serial.println("Release keyboard semaphore");
+    Serial.println("Client connected to the keyboard");
+    Serial.println("Release keyboard semaphore (output) (semaphore)");
     xSemaphoreGive(outgoingClientSemaphore);
   });
 
-  Serial.println("Starting keyboard");
+  Serial.println("Broadcasting BLE keyboard");
   keyboard.begin();
 
+  Serial.println("Wait for the keyboard to connect (output) (semaphore)");
+  xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
+
+  Serial.println("Starting BLE scan for the Terrain Command");
   auto pScan = NimBLEDevice::getScan();
-  pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
+  pScan->setAdvertisedDeviceCallbacks(advertisedDeviceCallbacks);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
-
-  // Wait for the semaphore to be released
-  Serial.println("Waiting for out semaphore to be released");
-  xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
-
-  Serial.println("Starting BLE scan");
   pScan->start(SCAN_DURATION, false);
 
   if (!pClient) {
@@ -212,6 +210,7 @@ extern "C" void init_arduino() {
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
 
+  Serial.println("Wait for the Terrain Command to establish connection (input)");
   if (!pClient->connect()) {
     restart("Could not connect to the Terrain Command");
   } else if (!pClient->isConnected()) {
@@ -220,10 +219,10 @@ extern "C" void init_arduino() {
     Serial.println("Successfully connected to the Terrain Command");
   }
 
-  Serial.println("Waiting for input semaphore to be released");
+  Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
   xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
 
-  Serial.println("Fetching service ...");
+  Serial.println("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
     Serial.println("Failed to find our service UUID");
@@ -232,7 +231,7 @@ extern "C" void init_arduino() {
     restart("Device has been manually disconnected");
   }
 
-  Serial.println("Fetching all characteristics ...");
+  Serial.println("Fetching all characteristics from the Terrain Command ...");
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
     Serial.println("Failed to find our characteristic UUID");
@@ -243,12 +242,12 @@ extern "C" void init_arduino() {
 
   for (int i = 0; i < pChrs->size(); i++) {
     if (!pChrs->at(i)->canNotify()) {
-      Serial.println("Characteristic cannot notify");
+      Serial.println("Characteristic cannot notify, skipping");
       continue;
     }
 
     if (!pChrs->at(i)->getUUID().equals(charUUID)) {
-      Serial.println("Characteristic UUID does not match");
+      Serial.println("Characteristic UUID does not match, skipping");
       continue;
     }
 
@@ -263,7 +262,7 @@ extern "C" void init_arduino() {
     return;
   }
 
-  restart("[BUG] Didn't find any matching characteristics");
+  restart("Didn't find any matching characteristics");
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
