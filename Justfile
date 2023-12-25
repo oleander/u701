@@ -7,29 +7,26 @@ set dotenv-load := true
 clean:
     rm -rf .pio .embuild target
     cargo clean
-    cargo pio exec -- run --target clean -e {{ENVIRONMENT}}
+    cargo pio exec -- run --target clean -e $ENVIRONMENT
     cargo pio exec -- run --target clean
 super_clean: clean
     rm -f sdkconfig*
 build:
     cargo pio build -r
-
 upload: setup
-    . ./.espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
-
+    . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 ota:
     cargo pio exec -- run -t upload -e ota
-
 erase:
     esptool.py erase_region 0x9000 0x5000 # nvs
 monitor:
-    tools/monitor.sh --port {{UPLOAD_PORT}} --baud {{MONITOR_SPEED}}
+    tools/monitor.sh --port {{UPLOAD_PORT}} --baud $MONITOR_SPEED
 menuconfig:
     cargo pio espidf menuconfig -r true
 update:
     cargo pio exec -- pkg update
 setup:
-    espup install -t {{MCU}} -f .espup.sh
+    espup install -t $MCU -f .espup.sh
 test:
     source ./.espup.sh && cargo test
 unset_cache:
