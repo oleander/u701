@@ -129,10 +129,10 @@ void initializeKeyboard() {
 
 void initializeSerialCommunication() {
   printf("Starting ESP32 ...\n");
-  Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_MAX, &Serial);
-  Log.setLevel(LOG_LEVEL_MAX);
-  Log.noticeln("Starting ESP32 ...");
+  // Serial.begin(SERIAL_BAUD_RATE);
+  // Log.begin(LOG_LEVEL_MAX, &Serial);
+  // Log.setLevel(LOG_LEVEL_MAX);
+  // Log.noticeln("Starting ESP32 ...");
   esp_task_wdt_reset();
 }
 
