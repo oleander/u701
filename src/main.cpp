@@ -14,7 +14,8 @@
 
 #define DEVICE_MANUFACTURER "HVA"
 // #define DEVICE_NAME         "u701"
-#define DEVICE_NAME "key"
+// #define DEVICE_NAME "key"
+#define DEVICE_NAME "Terrain Comman"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 // a8:42:e3:cd:fb:c6,
