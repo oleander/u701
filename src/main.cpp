@@ -5,6 +5,7 @@
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
+#include <esp_task_wdt.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <vector>
@@ -134,6 +135,7 @@ AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
 extern "C" void init_arduino() {
+  esp_task_wdt_init(60 * 5, true);
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting ESP32 BLE Proxy");
 
@@ -219,10 +221,11 @@ extern "C" void init_arduino() {
     }
 
     Serial.println("Successfully subscribed to characteristic");
-    return;
+    break;
   }
 
-  restart("Didn't find any matching characteristics");
+  Serial.println("Setup complete");
+  esp_task_wdt_deinit();
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
