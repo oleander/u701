@@ -44,8 +44,6 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
 class ClientCallback : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *client) override {
     printf("Connected to BLE device\n");
-    scan->stop();
-
     for (auto &service: *client->getServices(false)) {
       for (auto &characteristic: *service->getCharacteristics(false)) {
         if (!service->getUUID().equals(hidService)) {
@@ -77,6 +75,8 @@ class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto macAddr = advertised->getAddress();
 
+    printf("Found BLE device %s\n", macAddr.toString().c_str());
+
     if (macAddr != buttonMacAddress) {
       return;
     }
@@ -84,13 +84,14 @@ class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
     printf("Will try to connect to %s\n", macAddr.toString().c_str());
     client = NimBLEDevice::createClient(macAddr);
     client->setClientCallbacks(&clientCallback);
-    client->connect();
+    advertised->getScan()->stop();
   }
 };
 
 static void onScanComplete(NimBLEScanResults results) {
   printf("Scan complete\n");
-  keyboard.begin();
+  client->connect();
+  // keyboard.begin();
 }
 
 static auto scanCallback = ScanCallback();
@@ -102,8 +103,8 @@ extern "C" void init_arduino() {
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
-  scan->setMaxResults(0);
-  scan->start(0, onScanComplete, false);
+  // scan->setMaxResults(0);
+  scan->start(0, onScanComplete);
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
