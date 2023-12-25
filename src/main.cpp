@@ -96,7 +96,7 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     } else if (advertisedDevice->getAddress() != serverAddress) {
       return;
     } else {
-      printf("Found Terrain Command\n");
+      Serial.println("Found the Terrain Command");
     }
 
     pClient->setClientCallbacks(&clientCB, false);
