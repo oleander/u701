@@ -130,7 +130,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 };
 
 static NimBLEClient *pClient;
-static ClientCallbacks = clientCallback();
+static ClientCallbacks clientCallback();
 
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
