@@ -69,17 +69,17 @@ static NimBLEAdvertisedDevice *advDevice;
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    Serial.println("Advertised Device: %s", advertisedDevice->getName().c_str())
+    Serial.print(".");
 
-        if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
+    if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
       return;
     }
 
-    if (!advertisedDevice->getAddress().equals(DEVICE_NAME)) {
+    if (!advertisedDevice->getAddress().equals(ServerAddress)) {
       return;
     }
 
-    Serial.println("Found Our Service, stopping scan");
+    Serial.println("\nFound Our Service, stopping scan");
 
     advDevice->getScan()->stop();
     advDevice = advertisedDevice;
