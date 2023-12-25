@@ -190,7 +190,6 @@ class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
     auto macAddr = advertised->getAddress();
 
     esp_task_wdt_reset();
-    Serial.print(".");
 
     if (macAddr != buttonMacAddress) {
       return;
