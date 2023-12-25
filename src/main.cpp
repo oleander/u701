@@ -89,15 +89,14 @@ void restart(const char *format, ...) {
 }
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-void scanEndedCB(NimBLEScanResults results);
 
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     Serial.println("Connected, will optimize conn params");
     pClient->updateConnParams(120, 120, 0, 1);
 
-    // Serial.println("Re-broadcasting keyboard");
-    // keyboard.broadcast();
+    Serial.println("Re-broadcasting keyboard");
+    keyboard.broadcast();
   };
 
   void onDisconnect(NimBLEClient *pClient) {
@@ -182,11 +181,11 @@ extern "C" void init_arduino() {
   Serial.println("Starting keyboard");
   keyboard.begin();
 
-  Serial.println("Starting keyboard");
-  while (!keyboard.isConnected()) {
-    Serial.print(".");
-    delay(100);
-  }
+  // Serial.println("Starting keyboard");
+  // while (!keyboard.isConnected()) {
+  //   Serial.print(".");
+  //   delay(100);
+  // }
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
