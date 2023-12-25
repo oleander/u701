@@ -11,6 +11,9 @@ clean:
     cargo clean
     cargo pio exec -- run --target clean -e {{ENVIRONMENT}}
     cargo pio exec -- run --target clean
+super_clean: clean
+    rm -f sdkconfig*
+
 build:
     cargo pio build -r
 
@@ -35,6 +38,8 @@ setup:
     espup install -t esp32c3 -f .espup.sh
 test:
     source ./.espup.sh && cargo test
-redo: clean upload
+unset_cache:
+    unset RUSTC_WRAPPER
+redo: super_clean unset_cache upload
 
 install: upload monitor
