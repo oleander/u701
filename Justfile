@@ -7,14 +7,14 @@ set shell := ["zsh", "-cu"]
 set dotenv-load := true
 
 clean:
+    rm -rf .pio .embuild target
     cargo clean
     cargo pio exec -- run --target clean -e {{ENVIRONMENT}}
     cargo pio exec -- run --target clean
-
 build:
     cargo pio build -r
 
-upload:
+upload: setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e {{ENVIRONMENT}} --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 ota:
@@ -33,7 +33,8 @@ update:
     cargo pio exec -- pkg update
 setup:
     espup install -t esp32c3 -f .espup.sh
-
 test:
     source ./.espup.sh && cargo test
+redo: clean upload
+
 install: upload monitor
