@@ -7,36 +7,25 @@
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
-#include <esp_task_wdt.h>
+// #include <esp_task_wdt.h>
 
-#define WDT_TIMEOUT 30
+// #define WDT_TIMEOUT 30
 
-IPAddress ip(192, 168, 4, 1);
-IPAddress gateway(192, 168, 4, 1);
-IPAddress subnet(255, 255, 255, 0);
+// IPAddress ip(192, 168, 4, 1);
+// IPAddress gateway(192, 168, 4, 1);
+// IPAddress subnet(255, 255, 255, 0);
 
 static NimBLEUUID reportUUID("2A4D");
 static NimBLEUUID cccdUUID("2902");
 static NimBLEUUID hidService("1812");
 static NimBLEUUID batteryServiceUUID("180F");
 static NimBLEUUID batteryLevelCharUUID("2A19");
-static BLEClientCallbacks clientCallbackInstance;
 
 static NimBLEClient *client;
 
 /* Removes warnings */
 #undef LOG_LEVEL_INFO
 #undef LOG_LEVEL_ERROR
-
-const auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
-
-BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-
-void setupWatchdog(int timeout) {
-  Log.noticeln("Setting up watchdog @ %d ...", timeout);
-  esp_task_wdt_init(timeout, true);
-  esp_task_wdt_add(nullptr);
-}
 
 void restart(const char *reason) {
   Log.noticeln(reason);
@@ -47,7 +36,7 @@ void restart(const char *reason) {
 
 class ClientCallback : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *client) override {
-    esp_task_wdt_reset();
+    // esp_task_wdt_reset();
     Log.noticeln("Connected to device!");
   }
 
@@ -55,6 +44,39 @@ class ClientCallback : public NimBLEClientCallbacks {
     restart("Disconnected from device");
   }
 };
+
+static auto buttonMacAddress = NimBLEAddress(DEVICE_MAC, 1);
+
+class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
+  void onResult(NimBLEAdvertisedDevice *advertised) {
+    auto macAddr = advertised->getAddress();
+
+    // esp_task_wdt_reset();
+
+    if (macAddr != buttonMacAddress) {
+      return;
+    }
+
+    Log.noticeln("[SCAN] Terrain Command found");
+    Serial.printf("[SCAN] Terrain Command found\n");
+    printf("[SCAN] Terrain Command found\n");
+    client = NimBLEDevice::createClient(macAddr);
+    advertised->getScan()->stop();
+  }
+};
+
+static auto clientCallback = ClientCallback();
+static auto scanCallback   = ScanCallback();
+
+BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
+
+// void setupWatchdog(int timeout) {
+//   Log.noticeln("Setting up watchdog @ %d ...", timeout);
+//   esp_task_wdt_init(timeout, true);
+//   esp_task_wdt_add(nullptr);
+// }
+
+/* BleDevice: For Terrain Command buttons (client) */
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
   if (keyboard.isConnected()) {
@@ -81,30 +103,30 @@ static void handleButtonClick(BLERemoteCharacteristic *_, uint8_t *data, size_t 
   c_on_event(data, length);
 }
 
-TaskHandle_t Task1;
+// TaskHandle_t Task1;
 
 // Check if the iPhone is connected to the virtual keyboard
-void checkIfIphoneIsConnected(void *pvParameters) {
-  auto waitTime = 10000;
+// void checkIfIphoneIsConnected(void *pvParameters) {
+//   auto waitTime = 10000;
 
-  // while (!keyboard.isConnected()) {
-  //   esp_task_wdt_reset();
-  //   vTaskDelay(waitTime / portTICK_PERIOD_MS);
-  // }
+//   // while (!keyboard.isConnected()) {
+//   //   esp_task_wdt_reset();
+//   //   vTaskDelay(waitTime / portTICK_PERIOD_MS);
+//   // }
 
-  while (keyboard.isConnected()) {
-    esp_task_wdt_reset();
-    vTaskDelay(waitTime / portTICK_PERIOD_MS);
-  }
+//   while (keyboard.isConnected()) {
+//     esp_task_wdt_reset();
+//     vTaskDelay(waitTime / portTICK_PERIOD_MS);
+//   }
 
-  restart("Keyboard is no longer connected, restarting ...");
-}
+//   restart("Keyboard is no longer connected, restarting ...");
+// }
 
 void initializeKeyboard() {
   Log.noticeln("Enable Keyboard");
 
-  BLEDevice::init("u701");
-  BLEDevice::setMTU(23);
+  // BLEDevice::init("u701");
+  // BLEDevice::setMTU(23);
 
   keyboard.setBatteryLevel(100);
   keyboard.setDelay(12);
@@ -114,13 +136,13 @@ void initializeKeyboard() {
   Log.noticeln("Entering wait loop ...");
 
   while (!keyboard.isConnected()) {
-    esp_task_wdt_reset();
+    // esp_task_wdt_reset();
     delay(10);
   }
 
   Log.noticeln("iPhone connected to virtual keyboard");
 
-  xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 5000, NULL, 0, NULL, 1);
+  // xTaskCreatePinnedToCore(checkIfIphoneIsConnected, "Keyboard", 5000, NULL, 0, NULL, 1);
 }
 
 void initializeSerialCommunication() {
@@ -129,7 +151,7 @@ void initializeSerialCommunication() {
   Log.begin(LOG_LEVEL_MAX, &Serial);
   Log.setLevel(LOG_LEVEL_MAX);
   Log.noticeln("Starting ESP32 ...");
-  esp_task_wdt_reset();
+  // esp_task_wdt_reset();
 }
 
 /**
@@ -143,7 +165,7 @@ void connectToClientDevice() {
     restart("Device not found, will reboot");
   }
 
-  client->setClientCallbacks(&clientCallbackInstance);
+  client->setClientCallbacks(&clientCallback);
   if (client->isConnected()) {
     return Log.noticeln("Already connected to device");
   }
@@ -152,7 +174,7 @@ void connectToClientDevice() {
     restart("Could not connect to the Terrain Command");
   }
   // Ensure MTU has been defined by both parties
-  delay(1000);
+  delay(5000);
 
   Log.noticeln("Discovering services ...");
   for (auto &service: *client->getServices(true)) {
@@ -161,7 +183,7 @@ void connectToClientDevice() {
       auto currentServiceUUID = service->getUUID().toString().c_str();
       auto currentCharUUID    = characteristic->getUUID().toString().c_str();
 
-      esp_task_wdt_reset();
+      // esp_task_wdt_reset();
 
       // Register for click events
       if (!service->getUUID().equals(hidService)) {
@@ -181,26 +203,16 @@ void connectToClientDevice() {
   Log.noticeln("Could not subscribe to notifications");
 }
 
-class Callbacks : public NimBLEAdvertisedDeviceCallbacks {
-  void onResult(NimBLEAdvertisedDevice *advertised) {
-    auto macAddr = advertised->getAddress();
+/* For scanning */
 
-    // esp_task_wdt_reset();
+// void disableWatchdog() {
+//   Log.noticeln("Disabling watchdog ...");
+//   esp_task_wdt_delete(nullptr);
+// }
 
-    if (macAddr != buttonMacAddress) {
-      return;
-    }
-
-    Log.noticeln("[SCAN] Terrain Command found");
-    client = NimBLEDevice::createClient(macAddr);
-    advertised->getScan()->stop();
-  }
+void onScanComplete(NimBLEScanResults results) {
+  Serial.println("Done scanning");
 };
-
-void disableWatchdog() {
-  Log.noticeln("Disabling watchdog ...");
-  esp_task_wdt_delete(nullptr);
-}
 
 /**
  * Sets up the BLE scan to search for the device with the specified MAC address.
@@ -213,27 +225,32 @@ void startBLEScanForDevice() {
   // If frozen, the scan will not start
   // setupWatchdog(5 * 60);
 
-  BLEDevice::init("u701");
+  // BLEDevice::init("u701");
 
   auto scan = NimBLEDevice::getScan();
-  scan->setAdvertisedDeviceCallbacks(new Callbacks());
+  scan->setAdvertisedDeviceCallbacks(&scanCallback);
   scan->setInterval(SCAN_INTERVAL);
   scan->setWindow(SCAN_WINDOW);
   scan->setActiveScan(true);
   // scan->setMaxResults(0); // do not store the scan results, use callback only.
-  scan->start(0, false);
+  scan->start(0, *onScanComplete, false);
 
   Log.noticeln("BLE scan finished");
-  // disableWatchdog();
+  if (client == nullptr) {
+    Log.noticeln("Could not find device");
+  } else {
+    Log.noticeln("Found device, will connect");
+  }
 }
 
 extern "C" void init_arduino() {
-  setupWatchdog(WDT_TIMEOUT);
+  // setupWatchdog(WDT_TIMEOUT);
   initializeSerialCommunication();
-  disableWatchdog();
+  // disableWatchdog();
   startBLEScanForDevice();
   initializeKeyboard();
-  setupWatchdog(WDT_TIMEOUT);
+  // setupWatchdog(WDT_TIMEOUT);
+  // delay(5000);
   connectToClientDevice();
-  disableWatchdog();
+  // disableWatchdog();
 }
