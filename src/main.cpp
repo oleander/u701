@@ -13,7 +13,8 @@
 #define DEVICE_BATTERY   100
 
 #define DEVICE_MANUFACTURER "HVA"
-#define DEVICE_NAME         "u701"
+// #define DEVICE_NAME         "u701"
+#define DEVICE_NAME "key"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 // a8:42:e3:cd:fb:c6,
@@ -84,7 +85,7 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     //   return;
     // }
 
-    if (!advertisedDevice->getName().equals("key")) {
+    if (advertisedDevice->getName() != DEVICE_NAME) {
       // printf("Found device: %s\n", advertisedDevice->getName().c_str());
       return;
     }
