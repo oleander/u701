@@ -88,25 +88,15 @@ static NimBLEAdvertisedDevice *advDevice;
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
     Serial.print(".");
-    // Print the name
-    printf("Advertised Device: %s\n", advertisedDevice->toString().c_str());
 
-    // if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-    //   printf("Found device: %s\n", advertisedDevice->toString().c_str());
-    //   return;
-    // }
-
-    // if (!advertisedDevice->getAddress().equals(ServerAddress)) {
-    //   printf("Found device: %s\n", advertisedDevice->getAddress());
-    //   return;
-    // }
-
-    if (advertisedDevice->getName() != DEVICE_NAME) {
-      // printf("Found device: %s\n", advertisedDevice->getName().c_str());
+    if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
       return;
+    } else if (advertisedDevice->getName() != DEVICE_NAME) {
+      return;
+    } else {
+      printf("\nFound Terrain Command: %s\n", advertisedDevice->toString().c_str());
     }
 
-    Serial.println("Found Our Service, stopping scan");
     advDevice->getScan()->stop();
     advDevice = advertisedDevice;
   };
@@ -137,7 +127,6 @@ extern "C" void init_arduino() {
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
-
   pScan->start(SCAN_DURATION, false);
 
   if (!advDevice) {
@@ -150,7 +139,7 @@ extern "C" void init_arduino() {
   auto pClient = NimBLEDevice::createClient();
   pClient->setClientCallbacks(&clientCB, false);
   pClient->setConnectionParams(12, 12, 0, 51);
-  pClient->setConnectTimeout(5);
+  pClient->setConnectTimeout(10);
 
   if (!pClient->connect(advDevice)) {
     restart("Could not connect to the Terrain Command");
@@ -199,6 +188,8 @@ extern "C" void init_arduino() {
     Serial.println("Successfully subscribed to characteristic");
     return;
   }
+
+  restart("[BUG] Didn't find any matching characteristics");
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
