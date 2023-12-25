@@ -82,7 +82,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 };
 
 static ClientCallbacks clientCB;
-static NimBLEAdvertisedDevice *advDevice;
+static NimBLEClient *pClient;
 
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
@@ -102,8 +102,11 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
       printf("\nFound Terrain Command: %s\n", advertisedDevice->toString().c_str());
     }
 
-    advDevice->getScan()->stop();
-    advDevice = advertisedDevice;
+    advertisedDevice->getScan()->stop();
+
+    auto macAddr = advertisedDevice->getAddress();
+    pClient->setClientCallbacks(&clientCB, false);
+    pClient = NimBLEDevice::createClient(macAddr);
   };
 };
 
@@ -134,25 +137,17 @@ extern "C" void init_arduino() {
   pScan->setMaxResults(0);
   pScan->start(SCAN_DURATION, false);
 
-  if (!advDevice) {
+  if (!pClient) {
     restart("The Terrain Command was not found");
   }
 
   // Serial.println("Starting keyboard");
   // keyboard.begin();
 
-  auto pClient = NimBLEDevice::createClient();
-  pClient->setClientCallbacks(&clientCB, false);
-  // pClient->setConnectionParams(12, 12, 0, 51);
-  // pClient->setConnectTimeout(10);
+  pClient->setConnectionParams(12, 12, 0, 51);
+  pClient->setConnectTimeout(10);
 
-  printf("Connecting to %s\n", advDevice->toString().c_str());
-  // printf("Address: %s\n", advDevice->getAddress().toString().c_str());
-  // printf("Name: %s\n", advDevice->getName().c_str());
-  // print serverAddress
-  printf("Address: %s\n", serverAddress.toString().c_str());
-
-  if (!pClient->connect(serverAddress)) {
+  if (!pClient->connect()) {
     restart("Could not connect to the Terrain Command");
   } else if (!pClient->isConnected()) {
     restart("Could not connect to the Terrain Command");
@@ -219,33 +214,33 @@ extern "C" bool ble_keyboard_is_connected() {
   return keyboard.isConnected();
 }
 
-static int ble_client_gap_event(struct ble_gap_event *event, void *arg) {
-  ble_client *client = (ble_client *) arg;
-  ESP_LOGD(TAG, "gap event: %d", event->type);
-  switch (event->type) {
-  case BLE_GAP_EVENT_CONNECT: {
-    int status = event->connect.status;
-    if (status == 0) {
-      ESP_LOGI(TAG, "connection established");
-      client->conn_handle = event->connect.conn_handle;
-    } else {
-      ESP_LOGE(TAG, "connection failed. ble code: %d", status);
-      client->semaphore_result = ble_client_convert_ble_code(status);
-      client->connected        = false;
-      xSemaphoreGive(client->semaphore);
-    }
-    break;
-  }
-    // notify connected only after MTU negotiation completes
-  case BLE_GAP_EVENT_MTU: {
-    ESP_LOGI(TAG, "MTU negotiated");
-    client->semaphore_result = ESP_OK;
-    client->connected        = true;
-    xSemaphoreGive(client->semaphore);
-    break;
-  }
-  default:
-    break;
-  }
-  return 0;
-}
+// static int ble_client_gap_event(struct ble_gap_event *event, void *arg) {
+//   ble_client *client = (ble_client *) arg;
+//   ESP_LOGD(TAG, "gap event: %d", event->type);
+//   switch (event->type) {
+//   case BLE_GAP_EVENT_CONNECT: {
+//     int status = event->connect.status;
+//     if (status == 0) {
+//       ESP_LOGI(TAG, "connection established");
+//       client->conn_handle = event->connect.conn_handle;
+//     } else {
+//       ESP_LOGE(TAG, "connection failed. ble code: %d", status);
+//       client->semaphore_result = ble_client_convert_ble_code(status);
+//       client->connected        = false;
+//       xSemaphoreGive(client->semaphore);
+//     }
+//     break;
+//   }
+//     // notify connected only after MTU negotiation completes
+//   case BLE_GAP_EVENT_MTU: {
+//     ESP_LOGI(TAG, "MTU negotiated");
+//     client->semaphore_result = ESP_OK;
+//     client->connected        = true;
+//     xSemaphoreGive(client->semaphore);
+//     break;
+//   }
+//   default:
+//     break;
+//   }
+//   return 0;
+// }
