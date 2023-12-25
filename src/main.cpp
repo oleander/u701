@@ -241,7 +241,7 @@ extern "C" void init_arduino() {
       continue;
     }
 
-    if (!pChrs->at(i)->subscribe(true, onEvent, false)) {
+    if (!pChrs->at(i)->subscribe(true, onEvent, true)) {
       Serial.println("Failed to subscribe to characteristic");
       Serial.println("Will disconnect the device");
       pClient->disconnect();
