@@ -32,5 +32,7 @@ test:
 unset_cache:
     unset RUSTC_WRAPPER
 redo: super_clean unset_cache upload monitor
-
+try: upload && monitor
+    git add .
+    git commit --no-edit
 install: upload monitor

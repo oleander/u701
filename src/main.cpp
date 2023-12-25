@@ -70,6 +70,8 @@ static NimBLEAdvertisedDevice *advDevice;
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
     Serial.print(".");
+    // Print the name
+    printf("Advertised Device: %s\n", advertisedDevice->toString().c_str());
 
     if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
       printf("Found device: %s\n", advertisedDevice->toString().c_str());
