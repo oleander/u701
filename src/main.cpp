@@ -16,6 +16,7 @@
 #define DEVICE_NAME         "u701"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
+// a8:42:e3:cd:fb:c6,
 NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM);
 // NimBLEAddress ServerAddress = 0xF797AC1FF8C0; // REAL
 
@@ -73,13 +74,18 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     // Print the name
     printf("Advertised Device: %s\n", advertisedDevice->toString().c_str());
 
-    if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-      printf("Found device: %s\n", advertisedDevice->toString().c_str());
-      return;
-    }
+    // if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
+    //   printf("Found device: %s\n", advertisedDevice->toString().c_str());
+    //   return;
+    // }
 
-    if (!advertisedDevice->getAddress().equals(ServerAddress)) {
-      printf("Found device: %s\n", advertisedDevice->getAddress());
+    // if (!advertisedDevice->getAddress().equals(ServerAddress)) {
+    //   printf("Found device: %s\n", advertisedDevice->getAddress());
+    //   return;
+    // }
+
+    if (!advertisedDevice->getName().equals("key")) {
+      printf("Found device: %s\n", advertisedDevice->getName().c_str());
       return;
     }
 
