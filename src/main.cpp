@@ -6,20 +6,15 @@
 #include <NimBLEUtils.h>
 #include <vector>
 
-using namespace std;
-
-TaskHandle_t scanTask;
-
 #define SCAN_INTERVAL       500 // in ms
 #define SCAN_WINDOW         450 // in ms
 #define DEVICE_NAME         "u701"
 #define SERIAL_BAUD_RATE    115200
 #define DEVICE_MANUFACTURER "u701"
 #define DEVICE_BATTERY      100
+#define ServerName          "u701"
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-
-#define ServerName "u701"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 NimBLEAddress ServerAddress = 0xA842E3CD0C6;
@@ -28,20 +23,13 @@ void scanEndedCB(NimBLEScanResults results);
 
 // UUID HID
 static NimBLEUUID serviceUUID("1812");
-// UUID Report Charcteristic
 static NimBLEUUID charUUID("2a4d");
 
 static NimBLEAdvertisedDevice *advDevice;
 
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    printf("Connected\n");
-    /** After connection we should change the parameters if we don't need fast response times.
-          These settings are 150ms interval, 0 latency, 450ms timout.
-          Timeout should be a multiple of the interval, minimum is 100ms.
-          I find a multiple of 3-5 * the interval works best for quick response/reconnect.
-          Min interval: 120 * 1.25ms = 150, Max interval: 120 * 1.25ms = 150, 0 latency, 60 * 10ms = 600ms timeout
-    */
+    printf("Connected, will update conn params\n");
     pClient->updateConnParams(120, 120, 0, 1);
   };
 
@@ -55,6 +43,8 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         the currently used parameters. Default will return true.
   */
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
+    printf("Connection parameter update request: ");
+
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
     } else if (params->itvl_max > 40) { /** 1.25ms units */
@@ -85,17 +75,21 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
     printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
 
-    if (advertisedDevice->isAdvertisingService(serviceUUID) && advertisedDevice->getAddress().equals(ServerAddress)) {
-      printf("Found Our Service: %s \n", advertisedDevice->toString().c_str());
-      /** stop scan before connecting */
-      advDevice->getScan()->stop();
-      /** Save the device reference in a global for the client to use*/
-      advDevice = advertisedDevice;
+    if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
+      return;
     }
+
+    if (!advertisedDevice->getAddress().equals(ServerAddress)) {
+      return;
+    }
+
+    printf("Found Our Service!");
+    /** stop scan before connecting */
+    advDevice->getScan()->stop();
+    /** Save the device reference in a global for the client to use*/
+    advDevice = advertisedDevice;
   };
 };
-
-int lastJoystickData = -1;
 
 /* Event received from the Terrain Command */
 static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
@@ -215,49 +209,24 @@ bool connectToServer() {
 extern "C" void init_arduino() {
   printf("Starting NimBLE Client\n");
 
-  NimBLEDevice::init("");
+  // NimBLEDevice::init("");
 
-  /** Set the IO capabilities of the device, each option will trigger a different pairing method.
-      BLE_HS_IO_KEYBOARD_ONLY    - Passkey pairing
-      BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
-      BLE_HS_IO_NO_INPUT_OUTPUT - DEFAULT setting - just works pairing
-  */
-  // NimBLEDevice::setSecurityIOCap(BLE_HS_IO_KEYBOARD_ONLY); // use passkey
-  // NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_YESNO); //use numeric comparison
-  /** 2 different ways to set security - both calls achieve the same result.
-      no bonding, no man in the middle protection, secure connections.
-
-      These are the default values, only shown here for demonstration.
-  */
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-
   /** Optional: set the transmit power, default is 3db */
   NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** +9db */
-
-  /** Optional: set any devices you don't want to get advertisments from */
-  // NimBLEDevice::addIgnored(NimBLEAddress ("aa:bb:cc:dd:ee:ff"));
   /** create new scan */
   NimBLEScan *pScan = NimBLEDevice::getScan();
 
   /** create a callback that gets called when advertisers are found */
+  printf("Scan started\n");
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-
-  /** Set scan interval (how often) and window (how long) in milliseconds */
+  pScan->setActiveScan(true);
   pScan->setInterval(97);
   pScan->setWindow(37);
-  // pScan->setMaxResults(0); // do not store the scan results, use callback only.
-
-  /** Active scan will gather scan response data from advertisers
-      but will use more energy from both devices
-  */
-  pScan->setActiveScan(false);
-  /** Start scanning for advertisers for the scan time specified (in seconds) 0 = forever
-      Optional callback for when scanning stops.
-  */
-
-  printf("Starting scan\n");
   pScan->start(0);
-  printf("Scan started\n");
+
+  printf("Starting keyboard\n");
+  keyboard.begin();
 
   printf("Starting BLE work!\n");
   if (connectToServer()) {
