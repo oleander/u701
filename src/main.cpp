@@ -25,8 +25,6 @@ void scanEndedCB(NimBLEScanResults results);
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
-static NimBLEAdvertisedDevice *advDevice;
-
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     printf("Connected, will update conn params\n");
@@ -60,14 +58,14 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
-    if (!desc->sec_state.encrypted) {
-      printf("Encrypt connection failed - disconnecting");
-      /** Find the client with the connection handle provided in desc */
-      NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
-      return;
-    }
+    if (desc->sec_state.encrypted) return;
+    printf("Encrypt connection failed - disconnecting");
+    NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
   };
 };
+
+static ClientCallbacks clientCB;
+static NimBLEAdvertisedDevice *advDevice;
 
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
@@ -100,90 +98,38 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
-/** Callback to process the results of the last scan or restart it */
-void scanEndedCB(NimBLEScanResults results) {
-  printf("Scan Ended\n");
-}
-
-/** Create a single global instance of the callback class to be used by all clients */
-static ClientCallbacks clientCB;
-
 /** Handles the provisioning of clients and connects / interfaces with the server */
 bool connectToServer() {
-  NimBLEClient *pClient = nullptr;
-
-  /** Check if we have a client we should reuse first **/
-  if (NimBLEDevice::getClientListSize()) {
-    /** Special case when we already know this device, we send false as the
-        second argument in connect() to prevent refreshing the service database.
-        This saves considerable time and power.
-    */
-    pClient = NimBLEDevice::getClientByPeerAddress(advDevice->getAddress());
-    if (pClient) {
-      if (!pClient->connect(advDevice, false)) {
-        printf("Reconnect failed\n");
-        return false;
-      }
-      printf("Reconnected client\n");
-    }
-    /** We don't already have a client that knows this device,
-        we will check for a client that is disconnected that we can use.
-    */
-    else {
-      pClient = NimBLEDevice::getDisconnectedClient();
-    }
+  if (!advDevice) {
+    printf("No advertised device to connect to\n");
+    return false;
   }
 
-  /** No client to reuse? Create a new one. */
-  if (!pClient) {
-    if (NimBLEDevice::getClientListSize() >= NIMBLE_MAX_CONNECTIONS) {
-      printf("Failed to connect, restarting ESP (0)");
-      return false;
-    }
+  auto pClient = NimBLEDevice::createClient();
+  pClient->setClientCallbacks(&clientCB, false);
+  pClient->setConnectionParams(12, 12, 0, 51);
+  pClient->setConnectTimeout(5);
 
-    pClient = NimBLEDevice::createClient();
-
-    printf("New client created\n");
-    pClient->setClientCallbacks(&clientCB, false);
-    /** Set initial connection parameters: These settings are 15ms interval, 0 latency, 120ms timout.
-        These settings are safe for 3 clients to connect reliably, can go faster if you have less
-        connections. Timeout should be a multiple of the interval, minimum is 100ms.
-        Min interval: 12 * 1.25ms = 15, Max interval: 12 * 1.25ms = 15, 0 latency, 51 * 10ms = 510ms timeout
-    */
-    pClient->setConnectionParams(12, 12, 0, 51);
-    /** Set how long we are willing to wait for the connection to complete (seconds), default is 30. */
-    pClient->setConnectTimeout(5);
-
-    if (!pClient->connect(advDevice)) {
-      printf("Failed to connect, restarting ESP (1)");
-      ESP.restart();
-      return false;
-    }
+  if (!pClient->connect(advDevice)) {
+    printf("Failed to connect, restarting ESP (1)");
+    ESP.restart();
+    return false;
   }
 
   if (!pClient->isConnected()) {
-    if (!pClient->connect(advDevice)) {
-      printf("Failed to connect, restarting ESP (2)");
-      ESP.restart();
-      return false;
-    }
+    printf("Failed to connect, restarting ESP (2)");
+    ESP.restart();
+    return false;
   }
 
   printf("Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
 
-  /** Now we can read/write/subscribe the charateristics of the services we are interested in */
-  NimBLERemoteService *pSvc = nullptr;
-  //  NimBLERemoteCharacteristic *pChr = nullptr;
-  std::vector<NimBLERemoteCharacteristic *> *pChrs = nullptr;
-
-  NimBLERemoteDescriptor *pDsc = nullptr;
-
-  pSvc = pClient->getService(serviceUUID);
+  auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
     return printf("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
   }
 
-  pChrs = pSvc->getCharacteristics(true);
+  auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
     return printf("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
   }
@@ -209,16 +155,13 @@ bool connectToServer() {
 extern "C" void init_arduino() {
   printf("Starting NimBLE Client\n");
 
-  // NimBLEDevice::init("");
-
+  NimBLEDevice::init("");
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  /** Optional: set the transmit power, default is 3db */
-  NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** +9db */
-  /** create new scan */
-  NimBLEScan *pScan = NimBLEDevice::getScan();
+  NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
-  /** create a callback that gets called when advertisers are found */
-  printf("Scan started\n");
+  printf("Starting BLE scan\n");
+
+  auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   pScan->setActiveScan(true);
   pScan->setInterval(97);
