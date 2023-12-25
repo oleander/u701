@@ -51,6 +51,7 @@ class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertised) {
     auto macAddr = advertised->getAddress();
 
+    Serial.printf("[SCAN] %s\n", macAddr.toString().c_str());
     // esp_task_wdt_reset();
 
     if (macAddr != buttonMacAddress) {
@@ -61,7 +62,7 @@ class ScanCallback : public NimBLEAdvertisedDeviceCallbacks {
     Serial.printf("[SCAN] Terrain Command found\n");
     printf("[SCAN] Terrain Command found\n");
     client = NimBLEDevice::createClient(macAddr);
-    advertised->getScan()->stop();
+    // advertised->getScan()->stop();
   }
 };
 
@@ -229,11 +230,11 @@ void startBLEScanForDevice() {
 
   auto scan = NimBLEDevice::getScan();
   scan->setAdvertisedDeviceCallbacks(&scanCallback);
-  scan->setInterval(SCAN_INTERVAL);
-  scan->setWindow(SCAN_WINDOW);
-  scan->setActiveScan(true);
+  // scan->setInterval(SCAN_INTERVAL);
+  // scan->setWindow(SCAN_WINDOW);
+  // scan->setActiveScan(true);
   // scan->setMaxResults(0); // do not store the scan results, use callback only.
-  scan->start(0, *onScanComplete, false);
+  scan->start(0, false);
 
   Log.noticeln("BLE scan finished");
   if (client == nullptr) {
