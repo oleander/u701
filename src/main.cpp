@@ -90,6 +90,16 @@ void restart(const char *format, ...) {
 }
 
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
+static NimBLEClient *pClient;
+
+/* Event received from the Terrain Command */
+static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
+  if (!isNotify) {
+    return;
+  }
+
+  c_on_event(data, length);
+}
 
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
@@ -131,16 +141,56 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
+    Serial.println("Connection with Terrain Command established");
+
     if (!desc->sec_state.encrypted) {
       restart("Encrypt connection failed: %s", desc);
     }
 
-    Serial.println("Connection with Terrain Command established");
-    printf("Connection with Terrain Command established: %s\n", desc);
+    Serial.println("Fetching service ...");
+    auto pSvc = pClient->getService(serviceUUID);
+    if (!pSvc) {
+      Serial.println("Failed to find our service UUID");
+      Serial.println("Will disconnect the device");
+      pClient->disconnect();
+      restart("Device has been manually disconnected");
+    }
+
+    Serial.println("Fetching all characteristics ...");
+    auto pChrs = pSvc->getCharacteristics(true);
+    if (!pChrs) {
+      Serial.println("Failed to find our characteristic UUID");
+      Serial.println("Will disconnect the device");
+      pClient->disconnect();
+      restart("Device has been manually disconnected");
+    }
+
+    for (int i = 0; i < pChrs->size(); i++) {
+      if (!pChrs->at(i)->canNotify()) {
+        Serial.println("Characteristic cannot notify");
+        continue;
+      }
+
+      if (!pChrs->at(i)->getUUID().equals(charUUID)) {
+        Serial.println("Characteristic UUID does not match");
+        continue;
+      }
+
+      if (!pChrs->at(i)->subscribe(true, onEvent, true)) {
+        Serial.println("Failed to subscribe to characteristic");
+        Serial.println("Will disconnect the device");
+        pClient->disconnect();
+        restart("Device has been manually disconnected");
+      }
+
+      Serial.println("Successfully subscribed to characteristic");
+      return;
+    }
+
+    restart("[BUG] Didn't find any matching characteristics");
   };
 };
 
-static NimBLEClient *pClient;
 ClientCallbacks clientCallbacks;
 
 /** Define a class to handle the callbacks when advertisments are received */
@@ -163,15 +213,6 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     advertisedDevice->getScan()->stop();
   };
 };
-
-/* Event received from the Terrain Command */
-static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
-  if (!isNotify) {
-    return;
-  }
-
-  c_on_event(data, length);
-}
 
 extern "C" void init_arduino() {
   Serial.begin(SERIAL_BAUD_RATE);
@@ -215,48 +256,6 @@ extern "C" void init_arduino() {
   } else {
     Serial.println("Successfully connected to the Terrain Command");
   }
-
-  Serial.println("Fetching service ...");
-  auto pSvc = pClient->getService(serviceUUID);
-  if (!pSvc) {
-    Serial.println("Failed to find our service UUID");
-    Serial.println("Will disconnect the device");
-    pClient->disconnect();
-    restart("Device has been manually disconnected");
-  }
-
-  Serial.println("Fetching all characteristics ...");
-  auto pChrs = pSvc->getCharacteristics(true);
-  if (!pChrs) {
-    Serial.println("Failed to find our characteristic UUID");
-    Serial.println("Will disconnect the device");
-    pClient->disconnect();
-    restart("Device has been manually disconnected");
-  }
-
-  for (int i = 0; i < pChrs->size(); i++) {
-    if (!pChrs->at(i)->canNotify()) {
-      Serial.println("Characteristic cannot notify");
-      continue;
-    }
-
-    if (!pChrs->at(i)->getUUID().equals(charUUID)) {
-      Serial.println("Characteristic UUID does not match");
-      continue;
-    }
-
-    if (!pChrs->at(i)->subscribe(true, onEvent, true)) {
-      Serial.println("Failed to subscribe to characteristic");
-      Serial.println("Will disconnect the device");
-      pClient->disconnect();
-      restart("Device has been manually disconnected");
-    }
-
-    Serial.println("Successfully subscribed to characteristic");
-    return;
-  }
-
-  restart("[BUG] Didn't find any matching characteristics");
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
