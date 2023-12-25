@@ -26,12 +26,12 @@ static NimBLEUUID charUUID("2a4d");
 
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    printf("Connected, will update conn params\n");
+    Serial.println("Connected, will update conn params");
     pClient->updateConnParams(120, 120, 0, 1);
   };
 
   void onDisconnect(NimBLEClient *pClient) {
-    printf("Disconnected\n");
+    Serial.println("Disconnected");
     ESP.restart();
   };
 
@@ -40,7 +40,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         the currently used parameters. Default will return true.
   */
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-    printf("Connection parameter update request: ");
+    Serial.println("Connection parameter update request: ");
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
@@ -58,7 +58,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
     if (desc->sec_state.encrypted) return;
-    printf("Encrypt connection failed - disconnecting");
+    Serial.println("Encrypt connection failed - disconnecting");
     NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
   };
 };
@@ -97,22 +97,22 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 
 extern "C" void init_arduino() {
   Serial.begin(SERIAL_BAUD_RATE);
-  Serial.println("Starting NimBLE Client\n");
+  Serial.println("Starting NimBLE Client");
 
   NimBLEDevice::init("");
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
-  Serial.println("Starting BLE scan\n");
+  Serial.println("Starting BLE scan");
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-  pScan->setActiveScan(false);
-  pScan->setInterval(97);
-  pScan->setWindow(37);
   pScan->start(std::numeric_limits<uint32_t>::max());
+  pScan->setInterval(SCAN_INTERVAL);
+  pScan->setWindow(SCAN_WINDOW);
+  pScan->setActiveScan(true);
 
-  Serial.println("Starting keyboard\n");
+  Serial.println("Starting keyboard");
   keyboard.begin();
 
   if (!advDevice) {
@@ -138,47 +138,47 @@ extern "C" void init_arduino() {
     ESP.restart();
   }
 
-  Serial.println("Connected to: %s\n", pClient->getPeerAddress().toString().c_str());
+  Serial.println("Connected to server");
 
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
-    Serial.println("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
-    Serial.println("Will logout the device\n");
+    Serial.println("Failed to find our service UUID");
+    Serial.println("Will logout the device");
     pClient->disconnect();
-    Serial.println("Will restart the ESP\n");
+    Serial.println("Will restart the ESP");
     ESP.restart();
   }
 
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
-    Serial.println("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
-    Serial.println("Will logout the device\n");
+    Serial.println("Failed to find our characteristic UUID");
+    Serial.println("Will logout the device");
     pClient->disconnect();
-    Serial.println("Will restart the ESP\n");
+    Serial.println("Will restart the ESP");
     ESP.restart();
   }
 
   for (int i = 0; i < pChrs->size(); i++) {
     if (!pChrs->at(i)->canNotify()) {
-      printf("Characteristic cannot notify\n");
+      Serial.println("Characteristic cannot notify");
       continue;
     }
 
     if (!pChrs->at(i)->getUUID().equals(charUUID)) {
-      printf("Found characteristic UUID: %s\n", pChrs->at(i)->getUUID().toString().c_str());
+      Serial.println("Found characteristic UUID");
       continue;
     }
 
     if (!pChrs->at(i)->registerForNotify(onEvent)) {
-      printf("Failed to register for notify\n");
+      Serial.println("Failed to register for notify");
       continue;
     }
 
     if (!pChrs->at(i)->subscribe(true, onEvent, false)) {
-      printf("Failed to subscribe for notify\n");
-      printf("Will logout the device\n");
+      Serial.println("Failed to subscribe for notify");
+      Serial.println("Will logout the device");
       pClient->disconnect();
-      printf("Will restart the ESP\n");
+      Serial.println("Will restart the ESP");
       ESP.restart();
     }
   }
