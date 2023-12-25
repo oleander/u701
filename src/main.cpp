@@ -153,10 +153,11 @@ extern "C" void init_arduino() {
     restart("Could not connect to the Terrain Command");
   } else if (!pClient->isConnected()) {
     restart("Could not connect to the Terrain Command");
+  } else {
+    Serial.println("Successfully connected to the Terrain Command");
   }
 
-  Serial.println("Connected to server");
-
+  Serial.println("Fetching service ...");
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
     Serial.println("Failed to find our service UUID");
@@ -165,6 +166,7 @@ extern "C" void init_arduino() {
     restart("Device has been manually disconnected");
   }
 
+  Serial.println("Fetching all characteristics ...");
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
     Serial.println("Failed to find our characteristic UUID");
