@@ -9,3 +9,4 @@ CMakeFiles/
 src/CMakeLists.txt
 sdkconfig.*.old
 sdkconfig.old
+sdkconfig.release.old
