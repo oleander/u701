@@ -107,7 +107,7 @@ extern "C" void init_arduino() {
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-  pScan->start(std::numeric_limits<uint32_t>::max());
+  pScan->start(50200, false);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setActiveScan(true);
