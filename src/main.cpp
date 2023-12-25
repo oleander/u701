@@ -22,6 +22,21 @@
 NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM);
 // NimBLEAddress ServerAddress = 0xF797AC1FF8C0; // REAL
 
+#include <stdarg.h>
+
+void restart(const char *format, ...) {
+  char buffer[256];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buffer, sizeof(buffer), format, args);
+  va_end(args);
+
+  Serial.println(buffer);
+  Serial.println("Will restart the ESP in 2 seconds");
+  delay(2000);
+  ESP.restart();
+}
+
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 void scanEndedCB(NimBLEScanResults results);
 static NimBLEUUID serviceUUID("1812");
@@ -34,8 +49,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 
   void onDisconnect(NimBLEClient *pClient) {
-    Serial.println("Disconnected");
-    ESP.restart();
+    restart("Terrain Command disconnected");
   };
 
   /** Called when the peripheral requests a change to the connection parameters.
@@ -127,9 +141,7 @@ extern "C" void init_arduino() {
   keyboard.begin();
 
   if (!advDevice) {
-    Serial.println("No advertised device to connect to");
-    Serial.println("Will restart the ESP");
-    ESP.restart();
+    restart("No advertised device to connect to");
   }
 
   auto pClient = NimBLEDevice::createClient();
