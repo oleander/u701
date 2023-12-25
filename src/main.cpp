@@ -111,7 +111,7 @@ extern "C" void init_arduino() {
   pScan->setActiveScan(true);
   pScan->setInterval(97);
   pScan->setWindow(37);
-  pScan->start(0);
+  pScan->start(std::numeric_limits<uint32_t>::max());
 
   // printf("Starting keyboard\n");
   // keyboard.begin();
