@@ -141,7 +141,7 @@ extern "C" void init_arduino() {
   keyboard.begin();
 
   if (!advDevice) {
-    restart("No advertised device to connect to");
+    restart("No advertised device found while scanning");
   }
 
   auto pClient = NimBLEDevice::createClient();
@@ -150,15 +150,9 @@ extern "C" void init_arduino() {
   pClient->setConnectTimeout(5);
 
   if (!pClient->connect(advDevice)) {
-    Serial.println("Failed to connect, restarting ESP (1)");
-    Serial.println("Will restart the ESP");
-    ESP.restart();
-  }
-
-  if (!pClient->isConnected()) {
-    Serial.println("Failed to connect, restarting ESP (2)");
-    Serial.println("Will restart the ESP");
-    ESP.restart();
+    restart("Could not connect to the Terrain Command");
+  } else if (!pClient->isConnected()) {
+    restart("Could not connect to the Terrain Command");
   }
 
   Serial.println("Connected to server");
@@ -166,19 +160,17 @@ extern "C" void init_arduino() {
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
     Serial.println("Failed to find our service UUID");
-    Serial.println("Will logout the device");
+    Serial.println("Will disconnect the device");
     pClient->disconnect();
-    Serial.println("Will restart the ESP");
-    ESP.restart();
+    restart("Device has been manually disconnected");
   }
 
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
     Serial.println("Failed to find our characteristic UUID");
-    Serial.println("Will logout the device");
+    Serial.println("Will disconnect the device");
     pClient->disconnect();
-    Serial.println("Will restart the ESP");
-    ESP.restart();
+    restart("Device has been manually disconnected");
   }
 
   for (int i = 0; i < pChrs->size(); i++) {
@@ -188,22 +180,19 @@ extern "C" void init_arduino() {
     }
 
     if (!pChrs->at(i)->getUUID().equals(charUUID)) {
-      Serial.println("Found characteristic UUID");
-      continue;
-    }
-
-    if (!pChrs->at(i)->registerForNotify(onEvent)) {
-      Serial.println("Failed to register for notify");
+      Serial.warnln("Characteristic UUID does not match");
       continue;
     }
 
     if (!pChrs->at(i)->subscribe(true, onEvent, false)) {
-      Serial.println("Failed to subscribe for notify");
-      Serial.println("Will logout the device");
+      Serial.println("Failed to subscribe to characteristic");
+      Serial.println("Will disconnect the device");
       pClient->disconnect();
-      Serial.println("Will restart the ESP");
-      ESP.restart();
+      restart("Device has been manually disconnected");
     }
+
+    Serial.println("Successfully subscribed to characteristic");
+    return;
   }
 }
 
