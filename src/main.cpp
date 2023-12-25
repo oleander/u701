@@ -14,14 +14,12 @@
 #define DEVICE_BATTERY      100
 #define ServerName          "u701"
 
-BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
-NimBLEAddress ServerAddress = 0xA842E3CD0C6;
+NimBLEAddress ServerAddress = 0xA842E3CD0C6;  // TEST
+NimBLEAddress ClientAddress = 0xF797AC1FF8C0; // REAL
 
+BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 void scanEndedCB(NimBLEScanResults results);
-
-// UUID HID
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
@@ -100,9 +98,9 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 extern "C" void init_arduino() {
   printf("Starting NimBLE Client\n");
 
-  // NimBLEDevice::init("");
-  // NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  // NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+  NimBLEDevice::init("");
+  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+  NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
   printf("Starting BLE scan\n");
 
@@ -113,8 +111,8 @@ extern "C" void init_arduino() {
   pScan->setWindow(37);
   pScan->start(std::numeric_limits<uint32_t>::max());
 
-  // printf("Starting keyboard\n");
-  // keyboard.begin();
+  printf("Starting keyboard\n");
+  keyboard.begin();
 
   if (!advDevice) {
     printf("No advertised device to connect to\n");
