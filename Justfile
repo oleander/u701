@@ -11,8 +11,6 @@ clean:
     cargo pio exec -- run --target clean
 super_clean: clean
     rm -f sdkconfig*
-build RELEASE:
-    cargo pio build {{RELEASE}}
 ota:
     cargo pio exec -- run -t upload -e ota
 erase:
@@ -40,3 +38,7 @@ menuconfig mod = "release":
 # upload release | debug
 upload $ENVIRONMENT = "release": setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
+
+# build release | debug
+build mod = "release":
+    cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
