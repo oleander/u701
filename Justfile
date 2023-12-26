@@ -21,8 +21,8 @@ erase:
     esptool.py erase_region 0x9000 0x5000 # nvs
 monitor:
     tools/monitor.sh --port {{UPLOAD_PORT}} --baud $MONITOR_SPEED
-menuconfig:
-    cargo pio espidf menuconfig -r true
+menuconfig RELEASE = "-r true":
+    cargo pio espidf menuconfig {{RELEASE}}
 update:
     cargo pio exec -- pkg update
 setup:
