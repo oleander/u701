@@ -135,7 +135,7 @@ AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
 extern "C" void init_arduino() {
-  esp_task_wdt_add(NULL);
+  // esp_task_wdt_add(NULL);
 
   initArduino();
 
@@ -228,7 +228,7 @@ extern "C" void init_arduino() {
   }
 
   Serial.println("Setup complete");
-  esp_task_wdt_deinit();
+  // esp_task_wdt_deinit();
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
