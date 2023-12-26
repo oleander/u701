@@ -11,8 +11,8 @@ clean:
     cargo pio exec -- run --target clean
 super_clean: clean
     rm -f sdkconfig*
-build:
-    cargo pio build -r
+build RELEASE:
+    cargo pio build {{RELEASE}}
 upload: setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 ota:
