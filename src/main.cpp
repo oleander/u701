@@ -135,6 +135,7 @@ AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
 extern "C" void init_arduino() {
+  initArduino();
   esp_task_wdt_init(60 * 5, true);
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting ESP32 BLE Proxy");
