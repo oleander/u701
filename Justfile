@@ -40,5 +40,5 @@ upload $ENVIRONMENT = "release": setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 # build release | debug
-build mod = "release":
+build mod = "release": setup
     cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
