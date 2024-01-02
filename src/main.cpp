@@ -188,8 +188,8 @@ extern "C" void init_arduino() {
     Serial.println("Successfully connected to the Terrain Command");
   }
 
-  Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
-  xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
+  // Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
+  // xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
 
   Serial.println("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
