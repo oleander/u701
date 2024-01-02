@@ -9,8 +9,6 @@ clean:
     cargo clean
     cargo pio exec -- run --target clean -e $ENVIRONMENT
     cargo pio exec -- run --target clean
-super_clean: clean
-    rm -f sdkconfig*
 ota:
     cargo pio exec -- run -t upload -e ota
 erase:
@@ -25,7 +23,7 @@ test:
     source ./.espup.sh && cargo test
 unset_cache:
     unset RUSTC_WRAPPER
-redo: super_clean unset_cache upload monitor
+redo: clean unset_cache upload monitor
 try: upload && monitor
     git add .
     git commit --no-edit
@@ -40,5 +38,5 @@ upload $ENVIRONMENT = "release": setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 # build release | debug
-build mod = "release":
-    cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
+build mod = "release": setup
+    . ./.espup.sh && cargo pio build {{ if mod == "release" { "-r" } else { "" } }}

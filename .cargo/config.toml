@@ -1,9 +1,12 @@
 [build]
-target = "riscv32imc-esp-espidf"
-# target = "xtensa-esp32-espidf"
+# target = "riscv32imc-esp-espidf"
+target = "xtensa-esp32-espidf"
 # target = "aarch64-apple-darwin"
 
 [target.riscv32imc-esp-espidf]
+linker = "ldproxy"
+
+[target.xtensa-esp32-espidf]
 linker = "ldproxy"
 
 [unstable]
