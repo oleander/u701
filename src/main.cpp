@@ -197,6 +197,7 @@ extern "C" void init_arduino() {
   // xTaskCreate(checkKeyboardConnection, "keyboard", 2048, NULL, 5, NULL);
 
   Serial.println("Disble watchdog");
+  // TODO: Is this needed?
   esp_task_wdt_delete(NULL);
 
   Serial.println("Starting BLE scan for the Terrain Command");
