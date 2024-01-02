@@ -71,8 +71,8 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     Serial.println("Connected to Terrain Command");
-    Serial.println("Update connection parameters");
-    pClient->updateConnParams(120, 120, 0, 1);
+    // Serial.println("Update connection parameters");
+    // pClient->updateConnParams(120, 120, 0, 1);
   };
 
   void onDisconnect(NimBLEClient *pClient) {
