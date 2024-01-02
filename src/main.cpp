@@ -24,8 +24,8 @@
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 // 08:3a:8d:9a:44:4a
-NimBLEAddress serverAddress(0x083A8D9A444A);
-// NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
+// NimBLEAddress serverAddress(0x083A8D9A444A);
+NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
@@ -115,16 +115,24 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
+    auto addr = advertisedDevice->getAddress();
     Serial.print(".");
 
-    if (advertisedDevice->getAddress() != serverAddress) {
+    if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
+      //   return;
+      // }
+      // if (addr != serverAddress) {
+      Serial.print("\nFound a device that is not the Terrain Command");
+      Serial.print(advertisedDevice->getName().c_str());
+      Serial.print(advertisedDevice->getAddress().toString().c_str());
+      Serial.print("\n");
+      Serial.print(advertisedDevice->getServiceUUID().toString().c_str());
       return;
     } else {
       Serial.println("\nFound the Terrain Command");
     }
 
-    auto addr = advertisedDevice->getAddress();
-    pClient   = NimBLEDevice::createClient(addr);
+    pClient = NimBLEDevice::createClient(addr);
     advertisedDevice->getScan()->stop();
   };
 };
@@ -154,7 +162,7 @@ extern "C" void init_arduino() {
   Serial.println("Starting ESP32 BLE Proxy (2)");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  // NimBLEDevice::setPower(ESP_PWR_LVL_N0);
+  NimBLEDevice::setPower(ESP_PWR_LVL_N0);
   NimBLEDevice::init(DEVICE_NAME);
 
   // Setup HID keyboard and wait for the client to connect
@@ -181,6 +189,7 @@ extern "C" void init_arduino() {
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
+  // pScan->setLimitedOnly(true);
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
   pScan->start(SCAN_DURATION, false);
