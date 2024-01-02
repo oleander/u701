@@ -132,7 +132,18 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
+void checkKeyboardConnection(void *pvParameters) {
+  while (true) {
+    if (!keyboard.isConnected()) {
+      restart("Keyboard is not connected");
+    }
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
 extern "C" void init_arduino() {
+  esp_task_wdt_init(60, true);
   esp_task_wdt_add(NULL);
 
   initArduino();
@@ -159,6 +170,12 @@ extern "C" void init_arduino() {
   Serial.println("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
+  Serial.println("Starting keyboard connection check task");
+  xTaskCreate(checkKeyboardConnection, "keyboard", 2048, NULL, 5, NULL);
+
+  Serial.println("Disble watchdog");
+  esp_task_wdt_delete(NULL);
+
   Serial.println("Starting BLE scan for the Terrain Command");
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
@@ -167,6 +184,10 @@ extern "C" void init_arduino() {
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
   pScan->start(SCAN_DURATION, false);
+
+  Serial.println("Enable watch dog");
+  esp_task_wdt_init(60, true);
+  esp_task_wdt_add(NULL);
 
   if (!pClient) {
     restart("The Terrain Command was not found");
@@ -228,7 +249,9 @@ extern "C" void init_arduino() {
   }
 
   Serial.println("Setup complete");
-  esp_task_wdt_deinit();
+
+  Serial.println("Disable watch dog");
+  esp_task_wdt_delete(NULL);
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
