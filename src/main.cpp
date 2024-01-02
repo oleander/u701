@@ -48,8 +48,8 @@ void restart(const char *format, ...) {
 
   // Print message and restart
   Serial.println(buffer.data());
-  Serial.println("Will restart the ESP in 2 seconds");
-  delay(2000);
+  Serial.println("Will restart the ESP in 5 seconds");
+  delay(5000);
   ESP.restart();
 }
 
@@ -72,7 +72,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     Serial.println("Connected to Terrain Command");
     Serial.println("Update connection parameters");
-    pClient->updateConnParams(120, 120, 0, 1);
+    pClient->updateConnParams(120, 120, 0, 60);
   };
 
   void onDisconnect(NimBLEClient *pClient) {
@@ -81,10 +81,10 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
     Serial.println("Connection parameters update request received");
-    // Serial.println("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
-    //           params->itvl_min,
-    //           params->latency,
-    //           params->supervision_timeout);
+    printf("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
+           params->itvl_min,
+           params->latency,
+           params->supervision_timeout);
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
@@ -172,11 +172,9 @@ extern "C" void init_arduino() {
     xSemaphoreGive(outgoingClientSemaphore);
   });
 
-  keyboard.whenClientDisconnects([](BLEServer *_server) {
-    Serial.println("Client disconnected from the keyboard");
-    Serial.println("Will restart the ESP in 2 seconds");
-    ESP.restart();
-  });
+  // Restart the ESP if the client disconnects
+  keyboard.whenClientDisconnects(
+      [](BLEServer *_server) { restart("Client disconnected from the keyboard, will restart"); });
 
   Serial.println("Broadcasting BLE keyboard");
   keyboard.begin();
