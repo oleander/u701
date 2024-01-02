@@ -36,7 +36,7 @@ menuconfig mod = "release":
     cargo pio espidf menuconfig {{ if mod == "release" { "-r true" } else { "" } }}
 
 # upload release | debug
-upload $ENVIRONMENT = "release": setup
+upload $ENVIRONMENT = "release":
     . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
 
 # build release | debug
