@@ -1,7 +1,7 @@
 // #include <BleKeyboard.h>
 #include "ffi.h"
 #include <Arduino.h>
-#include <ArduinoLog.h>
+// #include <ArduinoLog.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
@@ -47,8 +47,8 @@ void restart(const char *format, ...) {
   }
 
   // Print message and restart
-  Log.fatal(buffer.data());
-  Log.fatal("Will restart the ESP in 2 seconds");
+  Serial.println(buffer.data());
+  Serial.println("Will restart the ESP in 2 seconds");
   delay(2000);
   ESP.restart();
 }
@@ -70,8 +70,8 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    Log.notice("Connected to Terrain Command");
-    Log.trace("Update connection parameters");
+    Serial.println("Connected to Terrain Command");
+    Serial.println("Update connection parameters");
     pClient->updateConnParams(120, 120, 0, 1);
   };
 
@@ -80,11 +80,11 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-    Log.notice("Connection parameters update request received");
-    Log.trace("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
-              params->itvl_min,
-              params->latency,
-              params->supervision_timeout);
+    Serial.println("Connection parameters update request received");
+    // Serial.println("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
+    //           params->itvl_min,
+    //           params->latency,
+    //           params->supervision_timeout);
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
@@ -101,13 +101,13 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
-    Log.notice("Connection with Terrain Command established");
+    Serial.println("Connection with Terrain Command established");
 
     if (!desc->sec_state.encrypted) {
       restart("Encrypt connection failed: %s", desc);
     }
 
-    Log.trace("Release Terrain Command semaphore (input) (semaphore)");
+    Serial.println("Release Terrain Command semaphore (input) (semaphore)");
     xSemaphoreGive(incommingClientSemaphore);
   };
 };
@@ -120,7 +120,7 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     if (advertisedDevice->getAddress() != serverAddress) {
       return;
     } else {
-      Log.notice("\nFound the Terrain Command");
+      Serial.println("\nFound the Terrain Command");
     }
 
     auto addr = advertisedDevice->getAddress();
@@ -139,7 +139,7 @@ extern "C" void init_arduino() {
 
   Serial.begin(SERIAL_BAUD_RATE);
   // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  Log.notice("Starting ESP32 BLE Proxy (1)");
+  Serial.println("Starting ESP32 BLE Proxy (1)");
   Serial.println("Starting ESP32 BLE Proxy (2)");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
@@ -148,18 +148,18 @@ extern "C" void init_arduino() {
 
   // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
-    Log.notice("Client connected to the keyboard");
-    Log.trace("Release keyboard semaphore (output) (semaphore)");
+    Serial.println("Client connected to the keyboard");
+    Serial.println("Release keyboard semaphore (output) (semaphore)");
     xSemaphoreGive(outgoingClientSemaphore);
   });
 
-  Log.notice("Broadcasting BLE keyboard");
+  Serial.println("Broadcasting BLE keyboard");
   keyboard.begin();
 
-  Log.notice("Wait for the keyboard to connect (output) (semaphore)");
+  Serial.println("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
-  Log.notice("Starting BLE scan for the Terrain Command");
+  Serial.println("Starting BLE scan for the Terrain Command");
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
   pScan->setInterval(SCAN_INTERVAL);
@@ -176,58 +176,58 @@ extern "C" void init_arduino() {
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
 
-  Log.notice("Wait for the Terrain Command to establish connection (input)");
+  Serial.println("Wait for the Terrain Command to establish connection (input)");
   if (pClient->isConnected()) {
-    Log.warning("Terrain Command already connected, will continue");
+    Serial.println("Terrain Command already connected, will continue");
   } else if (pClient->connect()) {
-    Log.notice("Successfully connected to the Terrain Command");
+    Serial.println("Successfully connected to the Terrain Command");
   } else {
     restart("Could not connect to the Terrain Command");
   }
 
-  Log.notice("Wait for the Terrain Command to authenticate (input) (semaphore)");
+  Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
   xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
 
-  Log.trace("Fetching service from the Terrain Command ...");
+  Serial.println("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
-    Log.fatal("Failed to find our service UUID");
-    Log.fatal("Will disconnect the device");
+    Serial.println("Failed to find our service UUID");
+    Serial.println("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
   }
 
-  Log.notice("Fetching all characteristics from the Terrain Command ...");
+  Serial.println("Fetching all characteristics from the Terrain Command ...");
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
-    Log.fatal("Failed to find our characteristic UUID");
-    Log.fatal("Will disconnect the device");
+    Serial.println("Failed to find our characteristic UUID");
+    Serial.println("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
   }
 
   for (auto &chr: *pChrs) {
     if (!chr->canNotify()) {
-      Log.trace("Characteristic cannot notify, skipping");
+      Serial.println("Characteristic cannot notify, skipping");
       continue;
     }
 
     if (!chr->getUUID().equals(charUUID)) {
-      Log.trace("Characteristic UUID does not match, skipping");
+      Serial.println("Characteristic UUID does not match, skipping");
       continue;
     }
 
     if (!chr->subscribe(true, onEvent, false)) {
-      Log.trace("Failed to subscribe to characteristic");
+      Serial.println("Failed to subscribe to characteristic");
       pClient->disconnect();
       restart("Device has been manually disconnected");
     }
 
-    Log.notice("Successfully subscribed to characteristic");
+    Serial.println("Successfully subscribed to characteristic");
     break;
   }
 
-  Log.notice("Setup complete");
+  Serial.println("Setup complete");
   esp_task_wdt_deinit();
 }
 
