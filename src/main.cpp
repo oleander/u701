@@ -138,6 +138,7 @@ AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
 extern "C" void init_arduino() {
+  esp_task_wdt_init(100, true);
   esp_task_wdt_add(NULL);
 
   initArduino();
@@ -164,6 +165,7 @@ extern "C" void init_arduino() {
   Log.notice("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
+  esp_task_wdt_delete(NULL);
   Log.notice("Starting BLE scan for the Terrain Command");
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
@@ -172,6 +174,8 @@ extern "C" void init_arduino() {
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
   pScan->start(SCAN_DURATION, false);
+  esp_task_wdt_init(60, true);
+  esp_task_wdt_add(NULL);
 
   if (!pClient) {
     restart("The Terrain Command was not found");
