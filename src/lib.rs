@@ -5,7 +5,7 @@ use log::{debug, info, error};
 use lazy_static::lazy_static;
 use anyhow::{bail, Result};
 use std::sync::Mutex;
-// use machine::Action;
+use machine::Action;
 use ffi::*;
 
 lazy_static! {
@@ -19,17 +19,17 @@ lazy_static! {
 fn main() -> Result<()> {
   info!("[main] Starting main loop");
 
-  // let receiver = CHANNEL.1.lock().unwrap();
-  // let mut state = machine::State::default();
+  let receiver = CHANNEL.1.lock().unwrap();
+  let mut state = machine::State::default();
 
-  // info!("[main] Entering loop, waiting for events");
-  // while let Ok(event_id) = receiver.recv() {
-  //   match state.transition(event_id) {
-  //     Some(Action::Media(keys)) => send_media_key(keys),
-  //     Some(Action::Short(index)) => send_shortcut(index),
-  //     None => debug!("[main] No action {}", event_id)
-  //   }
-  // }
+  info!("[main] Entering loop, waiting for events");
+  while let Ok(event_id) = receiver.recv() {
+    match state.transition(event_id) {
+      Some(Action::Media(keys)) => send_media_key(keys),
+      Some(Action::Short(index)) => send_shortcut(index),
+      None => debug!("[main] No action {}", event_id)
+    }
+  }
 
   bail!("[main] Event loop ended");
 }

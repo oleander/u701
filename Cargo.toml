@@ -17,7 +17,7 @@ lazy_static = { version = "1.4.0", default-features = false }
 env_logger = { version = "0.10.1", default-features = false }
 anyhow = { version = "1.0.75", default-features = false }
 log = { version = "0.4.20", default-features = false }
-# machine = { path = "machine" }
+machine = { path = "machine" }
 
 # [profile.release]
 # codegen-units = 1
