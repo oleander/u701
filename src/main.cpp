@@ -141,7 +141,7 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(CORE_DEBUG_LEVEL, &Serial);
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   Log.notice("Starting ESP32 BLE Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
