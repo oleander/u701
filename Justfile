@@ -42,3 +42,8 @@ upload $ENVIRONMENT = "release":
 # build release | debug
 build mod = "release": setup
     cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
+
+update_deps:
+    platformio pkg update
+    cargo upgrade
+    cargo update
