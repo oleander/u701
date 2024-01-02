@@ -18,12 +18,14 @@
 #define SERIAL_BAUD_RATE 115200
 #define DEVICE_BATTERY   100
 
-#define CLIENT_NAME         "Terrain Comman"
 #define DEVICE_NAME         "u701"
 #define DEVICE_MANUFACTURER "HVA"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
+#define CLIENT_NAME "key"
 NimBLEAddress serverAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM); // TEST
+
+// #define CLIENT_NAME "Terrain Comman"
 // NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
