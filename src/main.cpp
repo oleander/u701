@@ -193,9 +193,6 @@ extern "C" void init_arduino() {
   Serial.println("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
-  // Serial.println("Starting keyboard connection check task");
-  // xTaskCreate(checkKeyboardConnection, "keyboard", 2048, NULL, 5, NULL);
-
   Serial.println("Disble watchdog");
   // TODO: Is this needed?
   esp_task_wdt_delete(NULL);
@@ -205,7 +202,7 @@ extern "C" void init_arduino() {
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
-  // pScan->setLimitedOnly(true);
+  pScan->setLimitedOnly(true);
   pScan->setActiveScan(true);
   pScan->setMaxResults(0);
   pScan->start(SCAN_DURATION, false);
