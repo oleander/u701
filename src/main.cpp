@@ -25,6 +25,7 @@
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 NimBLEAddress serverAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM); // TEST
 // NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL static NimBLEUUID serviceUUID("1812");
+static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
 void restart(const char *format, ...) {
