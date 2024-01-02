@@ -24,8 +24,8 @@
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 // 08:3a:8d:9a:44:4a
-// NimBLEAddress serverAddress(0x083A8D9A444A);
-NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
+NimBLEAddress serverAddress(0x083A8D9A444A);
+// NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
@@ -140,15 +140,15 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
-void checkKeyboardConnection(void *pvParameters) {
-  while (true) {
-    if (!keyboard.isConnected()) {
-      restart("Keyboard is not connected");
-    }
+// void checkKeyboardConnection(void *pvParameters) {
+//   while (true) {
+//     if (!keyboard.isConnected()) {
+//       restart("Keyboard is not connected");
+//     }
 
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
+//     vTaskDelay(1000 / portTICK_PERIOD_MS);
+//   }
+// }
 
 extern "C" void init_arduino() {
   esp_task_wdt_init(60, true);
@@ -172,14 +172,20 @@ extern "C" void init_arduino() {
     xSemaphoreGive(outgoingClientSemaphore);
   });
 
+  keyboard.whenClientDisconnects([](BLEServer *_server) {
+    Serial.println("Client disconnected from the keyboard");
+    Serial.println("Will restart the ESP in 2 seconds");
+    ESP.restart();
+  });
+
   Serial.println("Broadcasting BLE keyboard");
   keyboard.begin();
 
   Serial.println("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
-  Serial.println("Starting keyboard connection check task");
-  xTaskCreate(checkKeyboardConnection, "keyboard", 2048, NULL, 5, NULL);
+  // Serial.println("Starting keyboard connection check task");
+  // xTaskCreate(checkKeyboardConnection, "keyboard", 2048, NULL, 5, NULL);
 
   Serial.println("Disble watchdog");
   esp_task_wdt_delete(NULL);
