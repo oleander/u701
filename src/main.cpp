@@ -177,12 +177,12 @@ extern "C" void init_arduino() {
   pClient->setConnectTimeout(10);
 
   Serial.println("Wait for the Terrain Command to establish connection (input)");
-  if (!pClient->connect()) {
-    restart("Could not connect to the Terrain Command");
-  } else if (!pClient->isConnected()) {
-    restart("Could not connect to the Terrain Command");
-  } else {
+  if (pClient->isConnected()) {
+    Serial.println("Terrain Command already connected, will continue");
+  } else if (pClient->connect()) {
     Serial.println("Successfully connected to the Terrain Command");
+  } else {
+    restart("Could not connect to the Terrain Command");
   }
 
   Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
