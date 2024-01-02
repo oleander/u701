@@ -23,8 +23,9 @@
 #define DEVICE_MANUFACTURER "HVA"
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
-// NimBLEAddress ServerAddress(0xA842E3CD0C6, BLE_ADDR_RANDOM); // TEST
-NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
+// 08:3a:8d:9a:44:4a
+NimBLEAddress serverAddress(0x083A8D9A444A);
+// NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
@@ -116,11 +117,7 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
     Serial.print(".");
 
-    if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-      return;
-    } else if (advertisedDevice->getName() != CLIENT_NAME) {
-      return;
-    } else if (advertisedDevice->getAddress() != serverAddress) {
+    if (advertisedDevice->getAddress() != serverAddress) {
       return;
     } else {
       Log.notice("\nFound the Terrain Command");
@@ -142,7 +139,8 @@ extern "C" void init_arduino() {
 
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  Log.notice("Starting ESP32 BLE Proxy");
+  Log.notice("Starting ESP32 BLE Proxy (1)");
+  Serial.println("Starting ESP32 BLE Proxy (2)");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   // NimBLEDevice::setPower(ESP_PWR_LVL_N0);
