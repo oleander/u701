@@ -145,7 +145,7 @@ extern "C" void init_arduino() {
   Log.notice("Starting ESP32 BLE Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::setPower(ESP_PWR_LVL_N0);
+  // NimBLEDevice::setPower(ESP_PWR_LVL_N0);
   NimBLEDevice::init(DEVICE_NAME);
 
   // Setup HID keyboard and wait for the client to connect
