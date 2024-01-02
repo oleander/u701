@@ -24,8 +24,8 @@
 
 // A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
 // 08:3a:8d:9a:44:4a
-NimBLEAddress serverAddress(0x083A8D9A444A);
-// NimBLEAddress serverAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
+NimBLEAddress testServerAddress(0x083A8D9A444A); // TEST
+NimBLEAddress realServerAddress(0xF797AC1FF8C0); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
@@ -112,43 +112,54 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 };
 
+bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
+  Serial.print("Found a new device");
+  if (!advertisedDevice->haveServiceUUID()) {
+    Serial.println(" with no service UUID");
+    return false;
+  }
+
+  if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
+    Serial.println(" that does not advertise our service");
+    return false;
+  }
+
+  if (!advertisedDevice->haveName()) {
+    Serial.println(" with no name");
+    return false;
+  }
+
+  // Check if name is the Terrain Comman or key
+  auto name = advertisedDevice->getName();
+  if (name != "Terrain Comman" && name != "key") {
+    Serial.print(" that is not the Terrain Command, got ");
+    Serial.println(name.c_str());
+    return false;
+  }
+
+  auto serverAddress = advertisedDevice->getAddress();
+  if (serverAddress != testServerAddress && serverAddress != realServerAddress) {
+    Serial.print(" that is not the Terrain Command, got ");
+    Serial.println(serverAddress.toString().c_str());
+    return false;
+  }
+
+  Serial.println(" that is the Terrain Command");
+  return true;
+}
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    auto addr = advertisedDevice->getAddress();
-    Serial.print(".");
-
-    if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-      //   return;
-      // }
-      // if (addr != serverAddress) {
-      Serial.print("\nFound a device that is not the Terrain Command");
-      Serial.print(advertisedDevice->getName().c_str());
-      Serial.print(advertisedDevice->getAddress().toString().c_str());
-      Serial.print("\n");
-      Serial.print(advertisedDevice->getServiceUUID().toString().c_str());
-      return;
-    } else {
-      Serial.println("\nFound the Terrain Command");
+    if (isValidAdvertisement(advertisedDevice)) {
+      auto addr = advertisedDevice->getAddress();
+      pClient   = NimBLEDevice::createClient(addr);
+      advertisedDevice->getScan()->stop();
     }
-
-    pClient = NimBLEDevice::createClient(addr);
-    advertisedDevice->getScan()->stop();
   };
 };
 
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
-
-// void checkKeyboardConnection(void *pvParameters) {
-//   while (true) {
-//     if (!keyboard.isConnected()) {
-//       restart("Keyboard is not connected");
-//     }
-
-//     vTaskDelay(1000 / portTICK_PERIOD_MS);
-//   }
-// }
 
 extern "C" void init_arduino() {
   esp_task_wdt_init(60, true);
