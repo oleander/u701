@@ -116,6 +116,8 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
     Serial.print(".");
 
+    esp_task_wdt_reset();
+
     if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
       return;
     } else if (advertisedDevice->getName() != CLIENT_NAME) {
@@ -142,7 +144,8 @@ extern "C" void init_arduino() {
 
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(CORE_DEBUG_LEVEL, &Serial);
-  Log.notice("Starting ESP32 BLE Proxy");
+  Serial.println("(0) Starting ESP32 BLE Proxy");
+  Log.notice("(1) Starting ESP32 BLE Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setPower(ESP_PWR_LVL_N0);

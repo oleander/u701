@@ -35,6 +35,9 @@ install: upload monitor
 menuconfig mod = "release":
     cargo pio espidf menuconfig {{ if mod == "release" { "-r true" } else { "" } }}
 
+boards:
+    cargo pio exec -- boards
+
 # upload release | debug
 upload $ENVIRONMENT = "release": setup
     . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
