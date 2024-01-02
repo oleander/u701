@@ -143,7 +143,7 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(CORE_DEBUG_LEVEL, &Serial);
+  Log.begin(LOG_LEVEL_TRACE, &Serial);
   Serial.println("(0) Starting ESP32 BLE Proxy");
   Log.notice("(1) Starting ESP32 BLE Proxy");
 
