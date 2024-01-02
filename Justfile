@@ -47,3 +47,4 @@ update_deps:
     platformio pkg update
     cargo upgrade
     cargo update
+    cargo udeps
