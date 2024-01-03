@@ -208,15 +208,11 @@ extern "C" void init_arduino() {
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
-  if (keyboard.isConnected()) {
-    keyboard.write(c);
-  }
+  keyboard.write(c);
 }
 
 extern "C" void ble_keyboard_print(const uint8_t *format) {
-  if (keyboard.isConnected()) {
-    keyboard.print(reinterpret_cast<const char *>(format));
-  }
+  keyboard.print(reinterpret_cast<const char *>(format));
 }
 
 extern "C" bool ble_keyboard_is_connected() {
