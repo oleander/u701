@@ -1,8 +1,8 @@
-use esp32_nimble::{enums::{SecurityIOCap, PowerType, PowerLevel, AuthReq}, BLEDevice};
+use esp32_nimble::{enums::{SecurityIOCap, PowerType, PowerLevel, AuthReq}, BLEDevice, BLEClient};
 use log::{error, info};
 use crate::Keyboard;
 use std::sync::Arc;
-use bstr::ext_slice::ByteSlice;
+use bstr::ByteSlice;
 use tokio::sync::Notify;
 
 #[no_mangle]
@@ -23,7 +23,7 @@ pub async extern "C" fn app_main() -> i32 {
 
   unsafe {
     setup_arduino();
-    setup_ble();
+    // setup_ble();
   }
 
   info!("Setup keyboard");
@@ -67,8 +67,11 @@ pub async extern "C" fn app_main() -> i32 {
     return 1;
   };
 
-  info!("Connecting to {:?}", device);
-  device.connect().await.unwrap();
+  let mut client = BLEClient::new();
+  client.connect(device.addr()).await.unwrap();
+  client.secure_connection().await.unwrap();
+
+  info!("Connected to {:?}", device);
 
   if let Err(e) = crate::runtime(keyboard).await {
     error!("[error] Error: {:?}", e);
