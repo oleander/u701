@@ -13,35 +13,32 @@ extern "C" {
 }
 
 #[no_mangle]
-pub extern "C" fn app_main() -> i32 {
+#[tokio::main(flavor = "current_thread")]
+pub async extern "C" fn app_main() -> i32 {
   env_logger::builder().filter(None, log::LevelFilter::Info).init();
 
-  info!("[app_main] Calling setup");
+  info!("Setup keyboard");
+  let mut keyboard = Keyboard::new();
+
+  let notify = Arc::new(Notify::new());
+  let notify_clone = notify.clone();
+
+  keyboard.on_authentication_complete(move |conn| {
+    info!("Connected to {:?}", conn);
+    info!("Notifying notify");
+    notify_clone.notify_one();
+  });
+
+  info!("Waiting for notify to be notified");
+  notify.notified().await;
 
   unsafe {
     init_arduino();
   }
 
-  info!("[app_main] Entering main loop");
-  tokio::spawn(async move {
-    let mut keyboard = Keyboard::new();
-
-    let notify = Arc::new(Notify::new());
-    let notify_clone = notify.clone();
-
-    keyboard.on_authentication_complete(move |conn| {
-      info!("Connected to {:?}", conn);
-      info!("Notifying notify");
-      notify_clone.notify_one();
-    });
-
-    info!("Waiting for notify to be notified");
-    notify.notified().await;
-
-    if let Err(e) = crate::runtime(keyboard).await {
-      error!("[error] Error: {:?}", e);
-    }
-  });
+  if let Err(e) = crate::runtime(keyboard).await {
+    error!("[error] Error: {:?}", e);
+  }
 
   return 0;
 }
