@@ -48,8 +48,6 @@ void printPrefix(Print *_logOutput, int logLevel) {
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    Log.noticeln("Connected to Terrain Command");
-    Log.traceln("Update connection parameters");
     pClient->updateConnParams(120, 120, 0, 60);
   };
 
@@ -57,34 +55,27 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     restart("Disconnected from Terrain Command");
   };
 
-  // bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-  //   Log.traceln("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
-  //               params->itvl_min,
-  //               params->latency,
-  //               params->supervision_timeout);
-
-  //   if (params->itvl_min < 24) { /** 1.25ms units */
-  //     return false;
-  //   } else if (params->itvl_max > 40) { /** 1.25ms units */
-  //     return false;
-  //   } else if (params->latency > 2) { /** Number of intervals allowed to skip */
-  //     return false;
-  //   } else if (params->supervision_timeout > 100) { /** 10ms units */
-  //     return false;
-  //   }
-
-  //   return true;
-  // };
+  bool onConnParamsUpdateRequest(NimBLEClient *_pClient, const ble_gap_upd_params *params) {
+    if (params->itvl_min < 24) {
+      return false;
+    } else if (params->itvl_max > 40) {
+      return false;
+    } else if (params->latency > 2) {
+      return false;
+    } else if (params->supervision_timeout > 100) {
+      return false;
+    } else {
+      return true;
+    }
+  };
 
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
-    if (!desc->sec_state.encrypted) {
+    if (desc->sec_state.encrypted) {
+      xSemaphoreGive(incommingClientSemaphore);
+    } else {
       restart("Encrypt connection failed: %s", desc);
     }
-
-    Log.noticeln("Secure connection to Terrain Command established");
-    Log.traceln("Release Terrain Command semaphore (input) (semaphore)");
-    xSemaphoreGive(incommingClientSemaphore);
   };
 };
 
@@ -118,9 +109,7 @@ extern "C" void init_arduino() {
     xSemaphoreGive(outgoingClientSemaphore);
   });
 
-  // Restart the ESP if the client disconnects
-  keyboard.whenClientDisconnects(
-      [](BLEServer *_server) { restart("Client disconnected from the keyboard, will restart"); });
+  keyboard.whenClientDisconnects([](BLEServer *_server) { restart("Client disconnected from the keyboard"); });
 
   Log.infoln("Broadcasting BLE keyboard");
   keyboard.begin();
@@ -133,15 +122,15 @@ extern "C" void init_arduino() {
 
   updateWatchdogTimeout(5 * 60);
 
-  Log.infoln("Starting BLE scan for the Terrain Command");
+  Log.traceln("Starting BLE scan for the Terrain Command");
+
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
   pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
-  pScan->setActiveScan(true);
+  pScan->setActiveScan(false);
   pScan->setMaxResults(1);
 
   auto results = pScan->start(0);
-
   auto device  = results.getDevice(0);
   auto addr    = device.getAddress();
   auto pClient = NimBLEDevice::createClient(addr);
