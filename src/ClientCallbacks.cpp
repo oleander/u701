@@ -20,7 +20,7 @@ bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient *_pClient, const bl
     return false;
   } else if (params->latency > 2) {
     return false;
-  } else if (params->supervision_timeout > 100) {
+  } else if (params->supervision_timeout > 900) {
     return false;
   } else {
     return true;
