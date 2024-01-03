@@ -21,8 +21,18 @@ tokio = { version = "1.35.1", features = ["sync"] }
 
 esp32-nimble = { path = "../esp32-nimble" }
 machine = { path = "machine" }
+
 esp-idf-hal = "0.42.5"
-bstr = "1.9.0"
+esp-idf-sys = "0.33.7"
+
+[dependencies.esp-idf-svc]
+features = ["embassy-time-isr-queue"]
+default-features = true
+version = "0.47.3"
+
+[dependencies.embassy-time]
+features = ["tick-hz-1_000_000"]
+version = "0.1"
 
 # [profile.release]
 # codegen-units = 1
