@@ -143,17 +143,16 @@ void connectToClient(void *client) {
   auto pClient = static_cast<NimBLEClient *>(client);
 }
 
+#include <host/ble_hs_pvcy.h>
+
 extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial, true);
-  // Log.setPrefix(printPrefix);
-  Log.infoln("Starting ESP32 Proxy");
-
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::setPower(ESP_PWR_LVL_N0);
   NimBLEDevice::init(DEVICE_NAME);
+  Log.infoln("Starting ESP32 Proxy");
 
   // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
