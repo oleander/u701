@@ -53,10 +53,6 @@ void onClientConnect(ble_gap_conn_desc *_desc) {
   xSemaphoreGive(outgoingClientSemaphore);
 }
 
-void onClientDisconnect(BLEServer *_server) {
-  restart("Client disconnected from the keyboard");
-}
-
 void disconnect(NimBLEClient *pClient, const char *format, ...) {
   Log.traceln("Disconnect from Terrain Command");
   pClient->disconnect();
