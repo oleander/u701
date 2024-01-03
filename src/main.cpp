@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <vector>
 
+#include "AdvertisedDeviceCallbacks.h"
+
 #define SCAN_DURATION 5 * 60 // in seconds
 #define SCAN_INTERVAL 500    // in ms
 #define SCAN_WINDOW   450    // in ms
@@ -76,13 +78,6 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     } else {
       restart("Encrypt connection failed: %s", desc);
     }
-  };
-};
-
-/** Define a class to handle the callbacks when advertisments are received */
-class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
-  void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    advertisedDevice->getScan()->stop();
   };
 };
 
