@@ -91,19 +91,29 @@ fn app_main() {
     let mut client = BLEClient::new();
 
     // client.on_passkey_request(callback)
-    client.on_connect(move |_thing| {
+    client.on_connect(move |client| {
       info!("Connected to device");
+      info!("Updating connection parameters");
+      client.update_conn_params(120, 120, 0, 60);
     });
 
-    client.connect(device.addr()).await.expect("Failed to connect to device");
-    client
-      .secure_connection()
-      .await
-      .expect("Failed to secure connection");
+    client.on_disconnect(move |_thing| {
+      warn!("Disconnected from device");
+      unsafe { esp_idf_sys::esp_restart(); };
+    });
 
+    info!("Connecting to device");
+    client.connect(device.addr()).await.expect("Failed to connect to device");
+    info!("Securing connection");
+    client.secure_connection().await.expect("Failed to secure connection");
+    info!("Connection secured");
+
+    info!("Getting service");
     let service = client.get_service(SERVICE_UUID).await.expect("Failed to get service");
+    info!("Getting characteristic");
     let characteristic = service.get_characteristic(CHAR_UUID).await.expect("Failed to get characteristic");
 
+    info!("Subscribing to notifications");
     let status = characteristic
       .on_notify(move |_data| {
         info!("Received notification from device");
@@ -113,10 +123,12 @@ fn app_main() {
         }
       })
       .subscribe_notify(false)
-      .await
-      .ok();
+      .await;
 
-    info!("Waiting for notifications: {:?}", status);
+    match status {
+      Ok(_) => info!("Subscribed to notifications"),
+      Err(e) => warn!("Failed to subscribe to notifications: {:?}", e)
+    }
 
     loop {
       Timer::after(Duration::from_secs(1)).await;
