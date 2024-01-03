@@ -47,10 +47,6 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
-void printPrefix(Print *_logOutput, int logLevel) {
-  _logOutput->printf("(%02d) ", millis());
-}
-
 extern "C" void init_arduino() {
   initArduino();
 
