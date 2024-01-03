@@ -36,6 +36,7 @@ void restart(const char *format, ...) {
 void removeWatchdog() {
   Log.traceln("Remove watchdog");
   esp_task_wdt_delete(NULL);
+  esp_task_wdt_deinit();
 }
 
 void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
