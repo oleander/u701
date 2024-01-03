@@ -226,7 +226,7 @@ impl Keyboard {
     let device = BLEDevice::take();
     device
       .security()
-      .set_auth(AuthReq::Bond | AuthReq::Sc)
+      .set_auth(AuthReq::Bond)
       .set_io_cap(SecurityIOCap::NoInputNoOutput)
       .resolve_rpa();
 

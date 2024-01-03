@@ -1,6 +1,8 @@
+use esp32_nimble::{enums::{SecurityIOCap, PowerType, PowerLevel, AuthReq}, BLEDevice};
 use log::{error, info};
 use crate::Keyboard;
 use std::sync::Arc;
+use bstr::ext_slice::ByteSlice;
 use tokio::sync::Notify;
 
 #[no_mangle]
@@ -39,12 +41,34 @@ pub async extern "C" fn app_main() -> i32 {
   info!("Waiting for notify to be notified");
   notify.notified().await;
 
-  info!("Wait a bit");
-  esp_idf_hal::delay::Ets::delay_ms(150);
+  let device = BLEDevice::take();
+  device
+    .set_power(PowerType::Default, PowerLevel::P9)
+    .unwrap();
+  device
+    .security()
+    .set_auth(AuthReq::Bond)
+    .set_io_cap(SecurityIOCap::NoInputNoOutput);
 
-  unsafe {
-    setup_app();
-  }
+  let ble_scan = device.get_scan();
+
+  let device = ble_scan
+    .active_scan(true)
+    .interval(100)
+    .window(99)
+    .find_device(i32::MAX, move |device| {
+      device.name().contains_str("key") || device.name().contains_str("Terrain")
+    })
+    .await
+    .unwrap();
+
+  let Some(device) = device else {
+    ::log::warn!("device not found");
+    return 1;
+  };
+
+  info!("Connecting to {:?}", device);
+  device.connect().await.unwrap();
 
   if let Err(e) = crate::runtime(keyboard).await {
     error!("[error] Error: {:?}", e);
