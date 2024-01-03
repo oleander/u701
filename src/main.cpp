@@ -36,13 +36,6 @@ AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
 /* Event received from the Terrain Command */
-static void onEvent(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *data, size_t length, bool isNotify) {
-  if (!isNotify) {
-    return;
-  }
-
-  c_on_event(data, length);
-}
 
 extern "C" void init_arduino() {
   initArduino();

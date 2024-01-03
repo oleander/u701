@@ -1,4 +1,5 @@
 #include "utility.h"
+#include "ffi.h"
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <esp_task_wdt.h>
@@ -57,4 +58,12 @@ void onClientConnect(ble_gap_conn_desc *_desc) {
   Log.traceln("Connected to keyboard");
   Log.traceln("Release keyboard semaphore (output) (semaphore)");
   xSemaphoreGive(outgoingClientSemaphore);
+}
+
+void onEvent(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *data, size_t length, bool isNotify) {
+  if (!isNotify) {
+    return;
+  }
+
+  c_on_event(data, length);
 }
