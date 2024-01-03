@@ -26,6 +26,21 @@ SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
+bool subscribeToCharacteristic(NimBLEClient *pClient, NimBLERemoteCharacteristic *chr) {
+  if (!chr->getUUID().equals(charUUID)) {
+    Log.traceln("Characteristic UUID does not match, skipping");
+    return false;
+  } else if (chr->canNotify() && chr->subscribe(true, onEvent)) {
+    Log.noticeln("Successfully subscribed to characteristic (notify)");
+    return true;
+  } else if (chr->canIndicate() && chr->subscribe(false, onEvent)) {
+    Log.noticeln("Successfully subscribed to characteristic (indicate))");
+    return true;
+  } else {
+    Log.warningln("Characteristic cannot notify or indicate, skipping");
+    return false;
+  }
+}
 extern "C" void init_arduino() {
   initArduino();
 
@@ -66,7 +81,7 @@ extern "C" void init_arduino() {
 
   pClient->setClientCallbacks(&clientCallbacks);
   pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
-  pClient->setConnectionParams(32, 160, 0, 500);
+  // pClient->setConnectionParams(12, 12, 0, 51);
 
   updateWatchdogTimeout(60);
 
@@ -86,23 +101,9 @@ extern "C" void init_arduino() {
   if (!pChrs) disconnect(pClient, "Failed to find our characteristic UUID");
 
   for (auto &chr: *pChrs) {
-    if (!chr->canNotify()) {
-      Log.traceln("Characteristic cannot notify, skipping");
-      continue;
+    if (subscribeToCharacteristic(pClient, chr)) {
+      return removeWatchdog();
     }
-
-    if (!chr->getUUID().equals(charUUID)) {
-      Log.traceln("Characteristic UUID does not match, skipping");
-      continue;
-    }
-
-    if (!chr->subscribe(true, onEvent, false)) {
-      disconnect(pClient, "Failed to subscribe to characteristic");
-    }
-
-    Log.infoln("Successfully subscribed to characteristic");
-    removeWatchdog();
-    return;
   }
 
   disconnect(pClient, "Failed to subscribe");
