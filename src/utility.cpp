@@ -44,3 +44,9 @@ void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
 void onClientDisconnect(NimBLEServer *_server) {
   restart("Client disconnected from the keyboard");
 }
+
+void disconnect(NimBLEClient *pClient, const char *format, ...) {
+  Log.traceln("Disconnect from Terrain Command");
+  pClient->disconnect();
+  restart(format);
+}

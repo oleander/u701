@@ -53,12 +53,6 @@ void onClientConnect(ble_gap_conn_desc *_desc) {
   xSemaphoreGive(outgoingClientSemaphore);
 }
 
-void disconnect(NimBLEClient *pClient, const char *format, ...) {
-  Log.traceln("Disconnect from Terrain Command");
-  pClient->disconnect();
-  restart(format);
-}
-
 extern "C" void init_arduino() {
   initArduino();
 
