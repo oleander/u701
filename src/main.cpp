@@ -26,17 +26,22 @@ SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
-extern "C" void init_arduino() {
+extern "C" void setup_ble() {
+  NimBLEDevice::init(DEVICE_NAME);
+  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+}
+
+extern "C" void setup_arduino() {
   initArduino();
+}
+
+extern "C" void setup_app() {
 
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(LOG_LEVEL_NOTICE, &Serial, true);
   Log.infoln("Starting ESP32 Proxy");
 
   updateWatchdogTimeout(120);
-
-  NimBLEDevice::init(DEVICE_NAME);
-  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
 
   // Log.infoln("Broadcasting BLE keyboard");
   // keyboard.whenClientConnects(onClientConnect);

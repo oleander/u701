@@ -9,13 +9,20 @@ pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
 }
 
 extern "C" {
-  pub fn init_arduino();
+  pub fn setup_arduino();
+  pub fn setup_ble();
+  pub fn setup_app();
 }
 
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async extern "C" fn app_main() -> i32 {
   env_logger::builder().filter(None, log::LevelFilter::Info).init();
+
+  unsafe {
+    setup_arduino();
+    setup_ble();
+  }
 
   info!("Setup keyboard");
   let mut keyboard = Keyboard::new();
@@ -35,9 +42,8 @@ pub async extern "C" fn app_main() -> i32 {
   info!("Wait a bit");
   esp_idf_hal::delay::Ets::delay_ms(150);
 
-
   unsafe {
-    init_arduino();
+    setup_app();
   }
 
   if let Err(e) = crate::runtime(keyboard).await {
