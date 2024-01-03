@@ -29,10 +29,7 @@ NimBLEAddress realServerAddress(0xF797AC1FF8C0); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
-void connectToClient(void *client);
-
 void restart(const char *format, ...) {
-  // Simplify memory management with std::vector
   std::vector<char> buffer(256);
 
   va_list args;
@@ -68,20 +65,6 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
-void onCompletedScan(NimBLEScanResults results) {
-  Serial.println("Scan completed");
-
-  auto pAdvertisedDevice = results.getDevice(0);
-  auto addr              = pAdvertisedDevice.getAddress();
-
-  auto pClient = NimBLEDevice::createClient(addr);
-  if (!pClient) {
-    restart("[BUG] The Terrain Command was not found");
-  }
-
-  // Run pClient connect in background task on CPU1
-  xTaskCreatePinnedToCore(connectToClient, "connect", 8192, pClient, 5, NULL, 0);
-}
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
@@ -179,63 +162,6 @@ ClientCallbacks clientCallbacks;
 
 void connectToClient(void *client) {
   auto pClient = static_cast<NimBLEClient *>(client);
-
-  pClient->setClientCallbacks(&clientCallbacks, false);
-  pClient->setConnectionParams(12, 12, 0, 51);
-  pClient->setConnectTimeout(10);
-
-  Serial.println("Wait for the Terrain Command to establish connection (input)");
-  if (pClient->isConnected()) {
-    Serial.println("Terrain Command already connected, will continue");
-  } else if (pClient->connect()) {
-    Serial.println("Successfully connected to the Terrain Command");
-  } else {
-    restart("Could not connect to the Terrain Command");
-  }
-
-  Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
-  xSemaphoreTake(incommingClientSemaphore, 5000 / portTICK_PERIOD_MS);
-
-  Serial.println("Fetching service from the Terrain Command ...");
-  auto pSvc = pClient->getService(serviceUUID);
-  if (!pSvc) {
-    Serial.println("[BUG] Failed to find our service UUID");
-    Serial.println("Will disconnect the device");
-    pClient->disconnect();
-    restart("Device has been manually disconnected");
-  }
-
-  Serial.println("Fetching all characteristics from the Terrain Command ...");
-  auto pChrs = pSvc->getCharacteristics(true);
-  if (!pChrs) {
-    Serial.println("[BUG] Failed to find our characteristic UUID");
-    Serial.println("Will disconnect the device");
-    pClient->disconnect();
-    restart("Device has been manually disconnected");
-  }
-
-  for (auto &chr: *pChrs) {
-    if (!chr->canNotify()) {
-      Serial.println("Characteristic cannot notify, skipping");
-      continue;
-    }
-
-    if (!chr->getUUID().equals(charUUID)) {
-      Serial.println("Characteristic UUID does not match, skipping");
-      continue;
-    }
-
-    if (!chr->subscribe(true, onEvent, false)) {
-      Serial.println("[BUG] Failed to subscribe to characteristic");
-      pClient->disconnect();
-      restart("Device has been manually disconnected");
-    }
-
-    Serial.println("Successfully subscribed to characteristic");
-    return;
-  }
-
-  restart("Failed to find our characteristic UUID");
 }
 
 extern "C" void init_arduino() {
@@ -280,7 +206,68 @@ extern "C" void init_arduino() {
   pScan->setLimitedOnly(false);
   pScan->setActiveScan(true);
   pScan->setMaxResults(1);
-  pScan->start(SCAN_DURATION, onCompletedScan, false);
+  pScan->start(SCAN_DURATION, false);
+
+  auto advDevice = pScan->getResults().getDevice(0);
+  auto addr      = advDevice.getAddress();
+  auto pClient   = NimBLEDevice::createClient(addr);
+
+  pClient->setClientCallbacks(&clientCallbacks, false);
+  pClient->setConnectionParams(12, 12, 0, 51);
+  pClient->setConnectTimeout(10);
+
+  Serial.println("Wait for the Terrain Command to establish connection (input)");
+  if (pClient->isConnected()) {
+    Serial.println("Terrain Command already connected, will continue");
+  } else if (pClient->connect()) {
+    Serial.println("Successfully connected to the Terrain Command");
+  } else {
+    restart("Could not connect to the Terrain Command");
+  }
+
+  Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
+  xSemaphoreTake(incommingClientSemaphore, 10000 / portTICK_PERIOD_MS);
+
+  Serial.println("Fetching service from the Terrain Command ...");
+  auto pSvc = pClient->getService(serviceUUID);
+  if (!pSvc) {
+    Serial.println("[BUG] Failed to find our service UUID");
+    Serial.println("Will disconnect the device");
+    pClient->disconnect();
+    restart("Device has been manually disconnected");
+  }
+
+  Serial.println("Fetching all characteristics from the Terrain Command ...");
+  auto pChrs = pSvc->getCharacteristics(true);
+  if (!pChrs) {
+    Serial.println("[BUG] Failed to find our characteristic UUID");
+    Serial.println("Will disconnect the device");
+    pClient->disconnect();
+    restart("Device has been manually disconnected");
+  }
+
+  for (auto &chr: *pChrs) {
+    if (!chr->canNotify()) {
+      Serial.println("Characteristic cannot notify, skipping");
+      continue;
+    }
+
+    if (!chr->getUUID().equals(charUUID)) {
+      Serial.println("Characteristic UUID does not match, skipping");
+      continue;
+    }
+
+    if (!chr->subscribe(true, onEvent, false)) {
+      Serial.println("[BUG] Failed to subscribe to characteristic");
+      pClient->disconnect();
+      restart("Device has been manually disconnected");
+    }
+
+    Serial.println("Successfully subscribed to characteristic");
+    return;
+  }
+
+  restart("Failed to find our characteristic UUID");
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
