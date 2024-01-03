@@ -96,6 +96,10 @@ fn app_main() {
     });
 
     client.connect(device.addr()).await.expect("Failed to connect to device");
+    client
+      .secure_connection()
+      .await
+      .expect("Failed to secure connection");
 
     let service = client.get_service(SERVICE_UUID).await.expect("Failed to get service");
     let characteristic = service.get_characteristic(CHAR_UUID).await.expect("Failed to get characteristic");
