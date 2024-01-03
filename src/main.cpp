@@ -43,6 +43,10 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
+void printPrefix(Print *_logOutput, int logLevel) {
+  _logOutput->printf("(%02d) ", millis());
+}
+
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
@@ -143,7 +147,8 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_VERBOSE, &Serial, true);
+  Log.begin(LOG_LEVEL_INFO, &Serial, true);
+  Log.setPrefix(printPrefix);
   Log.noticeln("Starting ESP32 Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
