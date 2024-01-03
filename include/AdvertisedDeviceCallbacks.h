@@ -1,6 +1,6 @@
-#include <NimBLEAdvertisedDevice.h>
+// #include <NimBLEAdvertisedDevice.h>
 
-class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
-public:
-  void onResult(NimBLEAdvertisedDevice *advertisedDevice);
-};
+// class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
+// public:
+//   void onResult(NimBLEAdvertisedDevice *advertisedDevice);
+// };
