@@ -65,7 +65,6 @@ extern "C" void init_arduino() {
   auto pClient = NimBLEDevice::createClient(addr);
 
   pClient->setClientCallbacks(&clientCallbacks);
-  pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
 
   updateWatchdogTimeout(60);
