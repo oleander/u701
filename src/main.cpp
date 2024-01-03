@@ -87,38 +87,38 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 };
 
 bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
-  Serial.print("Found a new device");
+  Log.trace("Found a new device");
   if (!advertisedDevice->haveServiceUUID()) {
-    Serial.println(" with no service UUID");
+    Log.trace("\twith no service UUID");
     return false;
   }
 
   if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-    Serial.println(" that does not advertise our service");
-    return false;
-  }
-
-  if (!advertisedDevice->haveName()) {
-    Serial.println(" with no name");
+    Log.trace("Does not advertise %s, got %s",
+              serviceUUID.toString().c_str(),
+              advertisedDevice->getServiceUUID().toString().c_str());
     return false;
   }
 
   // Check if name is the Terrain Comman or key
+  auto e1   = "Terrain Comman";
+  auto e2   = "key";
   auto name = advertisedDevice->getName();
-  if (name != "Terrain Comman" && name != "key") {
-    Serial.print(" that is not the Terrain Command, got ");
-    Serial.println(name.c_str());
+  if (name != e1 && name != e2) {
+    Log.trace("Does not advertise %s or %s, got %s", e1, e2, name.c_str());
     return false;
   }
 
   auto serverAddress = advertisedDevice->getAddress();
   if (serverAddress != testServerAddress && serverAddress != realServerAddress) {
-    Serial.print(" that is not the Terrain Command, got ");
-    Serial.println(serverAddress.toString().c_str());
+    Log.trace("Does not advertise %s or %s, got %s",
+              testServerAddress.toString().c_str(),
+              realServerAddress.toString().c_str(),
+              serverAddress.toString().c_str());
     return false;
   }
 
-  Serial.println(" that is the Terrain Command");
+  Log.trace("Found BLE client named %s", name.c_str());
   return true;
 }
 /** Define a class to handle the callbacks when advertisments are received */
@@ -144,8 +144,7 @@ extern "C" void init_arduino() {
 
   Serial.begin(SERIAL_BAUD_RATE);
   // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  Serial.println("Starting ESP32 BLE Proxy (1)");
-  Serial.println("Starting ESP32 BLE Proxy (2)");
+  Log.notice("Starting ESP32 Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setPower(ESP_PWR_LVL_N0);
