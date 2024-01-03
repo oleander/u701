@@ -6,8 +6,6 @@ pub unsafe extern "C" fn c_on_event(event: *const u8, len: usize) {
 }
 
 extern "C" {
-  // pub fn ble_keyboard_print(xs: *const u8);
-  // pub fn ble_keyboard_write(xs: *const u8);
   pub fn init_arduino();
 }
 
@@ -24,19 +22,8 @@ pub extern "C" fn app_main() -> i32 {
   tokio::spawn(async move {
     if let Err(e) = crate::main().await {
       error!("[error] Error: {:?}", e);
-      return 1;
     }
   });
 
   return 0;
-}
-
-pub fn send_media_key(keys: [u8; 2]) {
-  info!("[media] Sending media key {:?}", keys);
-  unsafe { ble_keyboard_write(keys.as_ptr()) };
-}
-
-pub fn send_shortcut(index: u8) {
-  info!("[shortcut] Sending shortcut at index {}", index);
-  unsafe { ble_keyboard_print([b'a' + index, 0].as_ptr()) };
 }

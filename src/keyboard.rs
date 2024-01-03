@@ -2,9 +2,8 @@
 #![allow(dead_code)]
 
 use esp32_nimble::{
-  enums::*, hid::*, utilities::mutex::Mutex, BLECharacteristic, BLEDevice, BLEHIDDevice, BLEServer,
+  enums::*, hid::*, utilities::mutex::Mutex, BLECharacteristic, BLEDevice, BLEHIDDevice, BLEServer, BLEConnDesc,
 };
-use esp_idf_sys as _;
 use std::sync::Arc;
 
 const KEYBOARD_ID: u8 = 0x01;
@@ -268,6 +267,10 @@ impl Keyboard {
 
   pub fn connected(&self) -> bool {
     self.server.connected_count() > 0
+  }
+
+  pub fn on_authentication_complete(&mut self, callback: impl Fn(&BLEConnDesc) + Send + Sync + 'static) {
+    self.server.on_authentication_complete(callback);
   }
 
   pub fn write(&mut self, str: &str) {

@@ -1,14 +1,15 @@
-mod ffi;
 mod keyboard;
+mod ffi;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
 use log::{debug, info, error};
 use lazy_static::lazy_static;
 use anyhow::{bail, Result};
+use tokio::sync::Notify;
+use keyboard::Keyboard;
 use std::sync::Mutex;
 use machine::Action;
-use keyboard::Keyboard;
-use ffi::*;
+use std::sync::Arc;
 
 lazy_static! {
   static ref CHANNEL: (Sender<u8>, Mutex<Receiver<u8>>) = {
@@ -18,15 +19,11 @@ lazy_static! {
   };
 }
 
-use tokio::sync::Notify;
-
-
 async fn main() -> Result<()> {
   info!("[main] Starting main loop");
 
-  let receiver = CHANNEL.1.lock().unwrap();
-  let mut keyboard = Keyboard::new();
   let mut state = machine::State::default();
+  let mut keyboard = Keyboard::new();
 
   let notify = Arc::new(Notify::new());
   let notify_clone = notify.clone();
@@ -40,6 +37,7 @@ async fn main() -> Result<()> {
   info!("Waiting for notify to be notified");
   notify.notified().await;
 
+  let receiver = CHANNEL.1.lock().unwrap();
   info!("[main] Entering loop, waiting for events");
   while let Ok(event_id) = receiver.recv() {
     match state.transition(event_id) {
