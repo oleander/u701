@@ -21,7 +21,6 @@ void restart(const char *format, ...) {
     va_end(args);
   }
 
-  // Print message and restart
   Log.fatalln(buffer.data());
   Log.fatalln("Will restart the ESP in %d seconds", RESTART_INTERVAL);
   delay(RESTART_INTERVAL * 1000);

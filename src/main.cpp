@@ -47,29 +47,36 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
+void onClientConnect(ble_gap_conn_desc *_desc) {
+  Log.traceln("Connected to keyboard");
+  Log.traceln("Release keyboard semaphore (output) (semaphore)");
+  xSemaphoreGive(outgoingClientSemaphore);
+}
+
+void onClientDisconnect(BLEServer *_server) {
+  restart("Client disconnected from the keyboard");
+}
+
+void disconnect(NimBLEClient *pClient, const char *format, ...) {
+  Log.traceln("Disconnect from Terrain Command");
+  pClient->disconnect();
+  restart(format);
+}
+
 extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial, true);
+  Log.infoln("Starting ESP32 Proxy");
 
+  updateWatchdogTimeout(120);
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::init(DEVICE_NAME);
 
-  updateWatchdogTimeout(120);
-
-  Log.infoln("Starting ESP32 Proxy");
-
-  // Setup HID keyboard and wait for the client to connect
-  keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
-    Log.traceln("Connected to keyboard");
-    Log.traceln("Release keyboard semaphore (output) (semaphore)");
-    xSemaphoreGive(outgoingClientSemaphore);
-  });
-
-  keyboard.whenClientDisconnects([](BLEServer *_server) { restart("Client disconnected from the keyboard"); });
-
   Log.infoln("Broadcasting BLE keyboard");
+  keyboard.whenClientConnects(onClientConnect);
+  keyboard.whenClientDisconnects(onClientDisconnect);
   keyboard.begin();
 
   Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
@@ -99,12 +106,7 @@ extern "C" void init_arduino() {
 
   updateWatchdogTimeout(60);
 
-  Log.noticeln("Wait for the Terrain Command to establish connection (input)");
-  if (pClient->isConnected()) {
-    Log.warning("Terrain Command already connected, will continue");
-  } else if (pClient->connect()) {
-    Log.infoln("Successfully connected to the Terrain Command");
-  } else {
+  if (!pClient->connect()) {
     restart("Could not connect to the Terrain Command");
   }
 
@@ -113,37 +115,23 @@ extern "C" void init_arduino() {
 
   Log.noticeln("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
-  if (!pSvc) {
-    Log.fatalln("[BUG] Failed to find our service UUID");
-    Log.fatalln("Will disconnect the device");
-    pClient->disconnect();
-    restart("Device has been manually disconnected");
-  }
+  if (!pSvc) disconnect(pClient, "Failed to find our service UUID");
 
   Log.noticeln("Fetching all characteristics from the Terrain Command ...");
   auto pChrs = pSvc->getCharacteristics(true);
-  if (!pChrs) {
-    Log.fatalln("[BUG] Failed to find our characteristic UUID");
-    Log.fatalln("Will disconnect the device");
-    pClient->disconnect();
-    restart("Device has been manually disconnected");
-  }
+  if (!pChrs) disconnect(pClient, "Failed to find our characteristic UUID");
 
   for (auto &chr: *pChrs) {
     if (!chr->canNotify()) {
-      Log.traceln("Characteristic cannot notify, skipping");
-      continue;
+      return Log.traceln("Characteristic cannot notify, skipping");
     }
 
     if (!chr->getUUID().equals(charUUID)) {
-      Log.traceln("Characteristic UUID does not match, skipping");
-      continue;
+      return Log.traceln("Characteristic UUID does not match, skipping");
     }
 
     if (!chr->subscribe(true, onEvent, false)) {
-      Log.fatalln("[BUG] Failed to subscribe to characteristic");
-      pClient->disconnect();
-      restart("Device has been manually disconnected");
+      disconnect(pClient, "Failed to subscribe to characteristic");
     }
 
     Log.infoln("Successfully subscribed to characteristic");
