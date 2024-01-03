@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "AdvertisedDeviceCallbacks.h"
+#include "ClientCallbacks.h"
 
 #define SCAN_DURATION 5 * 60 // in seconds
 #define SCAN_INTERVAL 500    // in ms
@@ -34,6 +35,9 @@ SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
 SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
+ClientCallbacks clientCallbacks;
+AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
+
 /* Event received from the Terrain Command */
 static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
   if (!isNotify) {
@@ -46,43 +50,6 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 void printPrefix(Print *_logOutput, int logLevel) {
   _logOutput->printf("(%02d) ", millis());
 }
-
-// Terrain Command BLE buttons
-class ClientCallbacks : public NimBLEClientCallbacks {
-  void onConnect(NimBLEClient *pClient) {
-    pClient->updateConnParams(120, 120, 0, 60);
-  };
-
-  void onDisconnect(NimBLEClient *pClient) {
-    restart("Disconnected from Terrain Command");
-  };
-
-  bool onConnParamsUpdateRequest(NimBLEClient *_pClient, const ble_gap_upd_params *params) {
-    if (params->itvl_min < 24) {
-      return false;
-    } else if (params->itvl_max > 40) {
-      return false;
-    } else if (params->latency > 2) {
-      return false;
-    } else if (params->supervision_timeout > 100) {
-      return false;
-    } else {
-      return true;
-    }
-  };
-
-  /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
-  void onAuthenticationComplete(ble_gap_conn_desc *desc) {
-    if (desc->sec_state.encrypted) {
-      xSemaphoreGive(incommingClientSemaphore);
-    } else {
-      restart("Encrypt connection failed: %s", desc);
-    }
-  };
-};
-
-AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
-ClientCallbacks clientCallbacks;
 
 extern "C" void init_arduino() {
   initArduino();
