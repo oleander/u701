@@ -21,22 +21,19 @@
 #define SERIAL_BAUD_RATE 115200
 #define DEVICE_BATTERY   100
 
-#define REAL_CLIENT_NAME    "Terrain Comman"
-#define TEST_CLIENT_NAME    "key"
 #define DEVICE_NAME         "u701"
 #define DEVICE_MANUFACTURER "HVA"
 
-NimBLEAddress testServerAddress(0x083A8D9A444A);                  // TEST
-NimBLEAddress realServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
+static NimBLEAddress testServerAddress(0x083A8D9A444A);                  // TEST
+static NimBLEAddress realServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
+BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
 SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
-BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-
-ClientCallbacks clientCallbacks;
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
+ClientCallbacks clientCallbacks;
 
 /* Event received from the Terrain Command */
 static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
@@ -55,6 +52,7 @@ extern "C" void init_arduino() {
   Log.infoln("Starting ESP32 Proxy");
 
   updateWatchdogTimeout(120);
+
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::init(DEVICE_NAME);
 
