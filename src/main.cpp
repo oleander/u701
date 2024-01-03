@@ -46,7 +46,7 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    Log.notice("Connected to Terrain Command");
+    Log.noticeln("Connected to Terrain Command");
     Log.trace("Update connection parameters");
     pClient->updateConnParams(120, 120, 0, 60);
   };
@@ -80,7 +80,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
       restart("Encrypt connection failed: %s", desc);
     }
 
-    Log.notice("Secure connection to Terrain Command established");
+    Log.noticeln("Secure connection to Terrain Command established");
     Log.trace("Release Terrain Command semaphore (input) (semaphore)");
     xSemaphoreGive(incommingClientSemaphore);
   };
@@ -143,8 +143,8 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  Log.notice("Starting ESP32 Proxy");
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial, true);
+  Log.noticeln("Starting ESP32 Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setPower(ESP_PWR_LVL_N0);
@@ -152,7 +152,7 @@ extern "C" void init_arduino() {
 
   // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
-    Log.notice("Connected to keyboard");
+    Log.noticeln("Connected to keyboard");
     Log.trace("Release keyboard semaphore (output) (semaphore)");
     xSemaphoreGive(outgoingClientSemaphore);
   });
@@ -161,7 +161,7 @@ extern "C" void init_arduino() {
   keyboard.whenClientDisconnects(
       [](BLEServer *_server) { restart("Client disconnected from the keyboard, will restart"); });
 
-  Log.notice("Broadcasting BLE keyboard");
+  Log.noticeln("Broadcasting BLE keyboard");
   keyboard.begin();
 
   Log.trace("Wait for the keyboard to connect (output) (semaphore)");
@@ -170,7 +170,7 @@ extern "C" void init_arduino() {
   NimBLEDevice::whiteListAdd(testServerAddress);
   NimBLEDevice::whiteListAdd(realServerAddress);
 
-  Log.notice("Starting BLE scan for the Terrain Command");
+  Log.noticeln("Starting BLE scan for the Terrain Command");
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
@@ -190,19 +190,19 @@ extern "C" void init_arduino() {
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
 
-  Log.notice("Wait for the Terrain Command to establish connection (input)");
+  Log.noticeln("Wait for the Terrain Command to establish connection (input)");
   if (pClient->isConnected()) {
     Log.warning("Terrain Command already connected, will continue");
   } else if (pClient->connect()) {
-    Log.notice("Successfully connected to the Terrain Command");
+    Log.noticeln("Successfully connected to the Terrain Command");
   } else {
     restart("Could not connect to the Terrain Command");
   }
 
-  Log.notice("Wait for the Terrain Command to authenticate (input) (semaphore)");
+  Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
   xSemaphoreTake(incommingClientSemaphore, 10000 / portTICK_PERIOD_MS);
 
-  Log.notice("Fetching service from the Terrain Command ...");
+  Log.noticeln("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
     Log.fatal("[BUG] Failed to find our service UUID");
@@ -211,7 +211,7 @@ extern "C" void init_arduino() {
     restart("Device has been manually disconnected");
   }
 
-  Log.notice("Fetching all characteristics from the Terrain Command ...");
+  Log.noticeln("Fetching all characteristics from the Terrain Command ...");
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
     Log.fatal("[BUG] Failed to find our characteristic UUID");
@@ -237,7 +237,7 @@ extern "C" void init_arduino() {
       restart("Device has been manually disconnected");
     }
 
-    Log.notice("Successfully subscribed to characteristic");
+    Log.noticeln("Successfully subscribed to characteristic");
     return;
   }
 
