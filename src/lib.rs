@@ -72,7 +72,7 @@ fn app_main() {
 
     client.on_disconnect(move |_thing| unsafe {
       warn!("Disconnected from device");
-        esp_idf_sys::esp_restart();
+      esp_idf_sys::esp_restart();
     });
 
     info!("Connecting to device");
@@ -84,43 +84,51 @@ fn app_main() {
     info!("Waiting for connection to be established");
     Timer::after(Duration::from_millis(150)).await;
 
-    'done: for service in client.get_services().await.unwrap() {
-      if service.uuid() != SERVICE_UUID {
-        continue;
-      }
-
-      for characteristic in service.get_characteristics().await.unwrap() {
-        if characteristic.uuid() != CHAR_UUID || !characteristic.can_notify() {
+    let result = 'done: {
+      for service in client.get_services().await.unwrap() {
+        if service.uuid() != SERVICE_UUID {
           continue;
         }
 
-        let sender = tx.clone();
-        characteristic.on_notify(move |event| {
-          info!("Received notification from device: {:?}", event);
-
-          match event {
-            [_, _, 0, _] => debug!("Button was released"),
-            [_, _, n, _] => sender.send(*n).unwrap(),
-            otherwise => {
-              error!("[on_event] [BUG] Received {:?} event", otherwise)
-            }
+        'next1: for characteristic in service.get_characteristics().await.unwrap() {
+          if characteristic.uuid() != CHAR_UUID || !characteristic.can_notify() {
+            continue;
           }
-        });
 
-        match characteristic.subscribe_notify(false).await {
-          Ok(_) => {
-            info!("Subscribed to notifications!");
-            break 'done;
-          },
-          Err(e) => {
-            warn!("Failed to subscribe to notifications: {:?}", e);
-            warn!("Will continue to try to subscribe to notifications");
+          match characteristic.subscribe_notify(false).await {
+            Ok(_) => {
+              info!("Subscribed to notifications!");
+              break 'done Some(characteristic);
+            },
+            Err(e) => {
+              warn!("Failed to subscribe to notifications: {:?}", e);
+              warn!("Will continue to try to subscribe to notifications");
+            }
           }
         }
       }
-    }
 
-    info!("Done!");
+      None
+    };
+
+    let Some(characteristic) = result else {
+      error!("Failed to find characteristic");
+      unsafe {
+        esp_idf_sys::esp_restart();
+      };
+    };
+
+    characteristic.on_notify(move |event| {
+      info!("Received notification from device: {:?}", event);
+
+      match event {
+        [_, _, 0, _] => debug!("Button was released"),
+        [_, _, n, _] => tx.send(*n).unwrap(),
+        otherwise => {
+          error!("[on_event] [BUG] Received {:?} event", otherwise)
+        }
+      }
+    });
 
     let mut state = machine::State::default();
     let timeout = std::time::Duration::from_millis(50);
@@ -134,12 +142,10 @@ fn app_main() {
 
     loop {
       match rx.recv_timeout(timeout) {
-        Ok(event_id) => {
+        Ok(event_id) => unsafe {
           info!("[main] Received event {}", event_id);
 
-          unsafe {
-            esp_idf_sys::esp_task_wdt_reset();
-          };
+          esp_idf_sys::esp_task_wdt_reset();
 
           match state.transition(event_id) {
             Some(Action::Media(keys)) => keyboard.send_media_key(keys).await,
@@ -147,18 +153,16 @@ fn app_main() {
             None => info!("[main] No action {}", event_id)
           }
 
-          unsafe {
-            esp_idf_sys::esp_task_wdt_reset();
-          };
+          esp_idf_sys::esp_task_wdt_reset();
         },
 
         Err(RecvTimeoutError::Timeout) => unsafe {
-            esp_idf_sys::esp_task_wdt_reset();
+          esp_idf_sys::esp_task_wdt_reset();
         },
 
         Err(RecvTimeoutError::Disconnected) => unsafe {
           error!("Disconnected from channel, will restart");
-            esp_idf_sys::esp_restart();
+          esp_idf_sys::esp_restart();
         }
       }
     }
