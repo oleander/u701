@@ -1,3 +1,5 @@
+#pragma once
+
 #include "utility.h"
 #include "ffi.h"
 #include <Arduino.h>

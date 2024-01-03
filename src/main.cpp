@@ -1,30 +1,21 @@
-// #include <BleKeyboard.h>
-#include "ffi.h"
-#include "utility.h"
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
-#include <NimBLEUtils.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <vector>
 
 #include "AdvertisedDeviceCallbacks.h"
 #include "ClientCallbacks.h"
+#include "ffi.h"
+#include "utility.h"
 
-#define SCAN_DURATION 5 * 60 // in seconds
-#define SCAN_INTERVAL 500    // in ms
-#define SCAN_WINDOW   450    // in ms
+#define SERIAL_BAUD_RATE       115200
+#define DEVICE_NAME            "u701"
+#define DEVICE_MANUFACTURER    "HVA"
+#define DEVICE_BATTERY         100
+#define CLIENT_CONNECT_TIMEOUT 30
 
-#define SERIAL_BAUD_RATE 115200
-#define DEVICE_BATTERY   100
-
-#define DEVICE_NAME         "u701"
-#define DEVICE_MANUFACTURER "HVA"
-
-static NimBLEAddress testServerAddress(0x083A8D9A444A);                  // TEST
+static NimBLEAddress testServerAddress(0x083A8D9A444A, BLE_ADDR_PUBLIC); // TEST
 static NimBLEAddress realServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
@@ -34,8 +25,6 @@ SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
 SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
-
-/* Event received from the Terrain Command */
 
 extern "C" void init_arduino() {
   initArduino();
@@ -77,7 +66,7 @@ extern "C" void init_arduino() {
 
   pClient->setClientCallbacks(&clientCallbacks);
   pClient->setConnectionParams(12, 12, 0, 51);
-  pClient->setConnectTimeout(10);
+  pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
 
   updateWatchdogTimeout(60);
 
@@ -114,5 +103,5 @@ extern "C" void init_arduino() {
     return;
   }
 
-  restart("Failed to find our characteristic UUID");
+  disconnect(pClient, "Failed to subscribe");
 }
