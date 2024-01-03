@@ -45,7 +45,7 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_NOTICE, &Serial, true);
+  Log.begin(LOG_LEVEL_TRACE, &Serial, true);
   Log.infoln("Starting ESP32 Proxy");
 
   updateWatchdogTimeout(120);
@@ -79,9 +79,9 @@ extern "C" void init_arduino() {
   auto addr    = device.getAddress();
   auto pClient = NimBLEDevice::createClient(addr);
 
-  pClient->setClientCallbacks(&clientCallbacks);
+  pClient->setClientCallbacks(&clientCallbacks, false);
   pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
-  // pClient->setConnectionParams(12, 12, 0, 51);
+  pClient->setConnectionParams(12, 12, 0, 51);
 
   updateWatchdogTimeout(60);
 
