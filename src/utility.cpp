@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
+#include <esp_task_wdt.h>
 #include <vector>
 
 #define RESTART_INTERVAL 5 // in seconds
@@ -25,4 +26,16 @@ void restart(const char *format, ...) {
   Log.fatalln("Will restart the ESP in %d seconds", RESTART_INTERVAL);
   delay(RESTART_INTERVAL * 1000);
   ESP.restart();
+}
+
+void removeWatchdog() {
+  Log.traceln("Remove watchdog");
+  esp_task_wdt_delete(NULL);
+}
+
+void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
+  Log.traceln("Update watchdog timeout to %d seconds", newTimeoutInSeconds);
+  esp_task_wdt_deinit();
+  esp_task_wdt_init(newTimeoutInSeconds, true);
+  esp_task_wdt_add(NULL);
 }

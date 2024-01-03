@@ -7,7 +7,6 @@
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 #include <NimBLEUtils.h>
-#include <esp_task_wdt.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <vector>
@@ -89,61 +88,15 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 };
 
-bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
-  Log.traceln("Found a new device");
-  if (!advertisedDevice->haveServiceUUID()) {
-    Log.traceln("\twith no service UUID");
-    return false;
-  }
-
-  if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-    Log.traceln("Does not advertise %s, got %s",
-                serviceUUID.toString().c_str(),
-                advertisedDevice->getServiceUUID().toString().c_str());
-    return false;
-  }
-
-  // Check if name is the Terrain Comman or key
-  auto e1   = REAL_CLIENT_NAME;
-  auto e2   = TEST_CLIENT_NAME;
-  auto name = advertisedDevice->getName();
-  if (name != e1 && name != e2) {
-    Log.traceln("Does not advertise %s or %s, got %s", e1, e2, name.c_str());
-    return false;
-  }
-
-  auto serverAddress = advertisedDevice->getAddress();
-  if (serverAddress != testServerAddress && serverAddress != realServerAddress) {
-    Log.traceln("Does not advertise %s or %s, got %s",
-                testServerAddress.toString().c_str(),
-                realServerAddress.toString().c_str(),
-                serverAddress.toString().c_str());
-    return false;
-  }
-
-  Log.infoln("Found BLE client named %s", name.c_str());
-  return true;
-}
-
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    // if (isValidAdvertisement(advertisedDevice)) {
     advertisedDevice->getScan()->stop();
-    // } else {
-    //   advertisedDevice->getScan()->clearResults();
-    // }
   };
 };
 
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
-
-void connectToClient(void *client) {
-  auto pClient = static_cast<NimBLEClient *>(client);
-}
-
-#include <host/ble_hs_pvcy.h>
 
 extern "C" void init_arduino() {
   initArduino();
@@ -153,6 +106,8 @@ extern "C" void init_arduino() {
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::init(DEVICE_NAME);
+
+  updateWatchdogTimeout(120);
 
   Log.infoln("Starting ESP32 Proxy");
 
@@ -176,15 +131,13 @@ extern "C" void init_arduino() {
   NimBLEDevice::whiteListAdd(testServerAddress);
   NimBLEDevice::whiteListAdd(realServerAddress);
 
-  Log.infoln("Starting BLE scan for the Terrain Command");
+  updateWatchdogTimeout(5 * 60);
 
+  Log.infoln("Starting BLE scan for the Terrain Command");
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
   pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
-  pScan->setInterval(SCAN_INTERVAL);
-  pScan->setWindow(SCAN_WINDOW);
-  pScan->setLimitedOnly(false);
-  pScan->setActiveScan(false);
+  pScan->setActiveScan(true);
   pScan->setMaxResults(1);
 
   auto results = pScan->start(0);
@@ -196,6 +149,8 @@ extern "C" void init_arduino() {
   pClient->setClientCallbacks(&clientCallbacks);
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
+
+  updateWatchdogTimeout(60);
 
   Log.noticeln("Wait for the Terrain Command to establish connection (input)");
   if (pClient->isConnected()) {
@@ -245,6 +200,7 @@ extern "C" void init_arduino() {
     }
 
     Log.infoln("Successfully subscribed to characteristic");
+    removeWatchdog();
     return;
   }
 
