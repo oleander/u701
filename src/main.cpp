@@ -128,11 +128,11 @@ bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    if (isValidAdvertisement(advertisedDevice)) {
-      advertisedDevice->getScan()->stop();
-    } else {
-      advertisedDevice->getScan()->clearResults();
-    }
+    // if (isValidAdvertisement(advertisedDevice)) {
+    advertisedDevice->getScan()->stop();
+    // } else {
+    //   advertisedDevice->getScan()->clearResults();
+    // }
   };
 };
 
@@ -185,7 +185,9 @@ extern "C" void init_arduino() {
   pScan->setLimitedOnly(false);
   pScan->setActiveScan(false);
   pScan->setMaxResults(1);
-  pScan->start(SCAN_DURATION, false);
+  pScan->start(0);
+
+  Log.noticeln("Wait for the Terrain Command to advertise (input)");
 
   auto advDevice = pScan->getResults().getDevice(0);
   auto addr      = advDevice.getAddress();
