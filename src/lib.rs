@@ -102,7 +102,9 @@ fn app_main() {
       .active_scan(true)
       .interval(490)
       .window(450)
-      .find_device(i32::MAX, |device| device.is_advertising_service(&SERVICE_UUID))
+      .find_device(i32::MAX, |device| {
+        device.is_advertising_service(&SERVICE_UUID)
+      })
       .await
       .expect("Failed to find device")
       .expect("No device found");
@@ -124,16 +126,33 @@ fn app_main() {
     });
 
     info!("Connecting to device");
-    client.connect(device.addr()).await.expect("Failed to connect to device");
+    client
+      .connect(device.addr())
+      .await
+      .expect("Failed to connect to device");
     info!("Securing connection");
-    client.secure_connection().await.expect("Failed to secure connection");
+    client
+      .secure_connection()
+      .await
+      .expect("Failed to secure connection");
     info!("Connection secured");
 
     info!("Waiting for connection to be established");
     Timer::after(Duration::from_millis(2000)).await;
 
-    let characteristic = client.get_service(SERVICE_UUID).await.unwrap().get_characteristics().await.unwrap().find(|x| x.uuid() == CHAR_UUID && x.can_notify()).unwrap();
-    info!("Subscribing to characteristic: {:?}", characteristic.uuid());
+    let characteristic = client
+      .get_service(SERVICE_UUID)
+      .await
+      .unwrap()
+      .get_characteristics()
+      .await
+      .unwrap()
+      .find(|x| x.uuid() == CHAR_UUID && x.can_notify())
+      .unwrap();
+    info!(
+      "Subscribing to characteristic: {:?}",
+      characteristic.uuid()
+    );
 
     let status = characteristic
       .on_notify(move |event| {
@@ -142,7 +161,9 @@ fn app_main() {
         match event {
           [_, _, 0, _] => debug!("Button was released"),
           [_, _, n, _] => send.send(*n).unwrap(),
-          otherwise => error!("[on_event] [BUG] Received {:?} event", otherwise)
+          otherwise => {
+            error!("[on_event] [BUG] Received {:?} event", otherwise)
+          },
         }
       })
       .subscribe_notify(true)

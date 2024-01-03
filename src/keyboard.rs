@@ -1,8 +1,12 @@
 // originally: https://github.com/T-vK/ESP32-BLE-Keyboard
 #![allow(dead_code)]
 
+use log::info;
+use esp32_nimble::enums::*;
+use esp32_nimble::hid::*;
+use esp32_nimble::utilities::mutex::Mutex;
 use esp32_nimble::{
-  enums::*, hid::*, utilities::mutex::Mutex, BLECharacteristic, BLEDevice, BLEHIDDevice, BLEServer, BLEConnDesc,
+  BLECharacteristic, BLEConnDesc, BLEDevice, BLEHIDDevice, BLEServer
 };
 use std::sync::Arc;
 
@@ -42,34 +46,34 @@ const HID_REPORT_DISCRIPTOR: &[u8] = hid!(
   (USAGE_PAGE, 0x07), //   USAGE_PAGE (Kbrd/Keypad)
   (USAGE_MINIMUM, 0x00), //   USAGE_MINIMUM (0)
   (USAGE_MAXIMUM, 0x65), //   USAGE_MAXIMUM (0x65)
-  (HIDINPUT, 0x00),  //   INPUT (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-  (END_COLLECTION),  // END_COLLECTION
+  (HIDINPUT, 0x00), //   INPUT (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  (END_COLLECTION), // END_COLLECTION
   // ------------------------------------------------- Media Keys
-  (USAGE_PAGE, 0x0C),         // USAGE_PAGE (Consumer)
-  (USAGE, 0x01),              // USAGE (Consumer Control)
-  (COLLECTION, 0x01),         // COLLECTION (Application)
+  (USAGE_PAGE, 0x0C), // USAGE_PAGE (Consumer)
+  (USAGE, 0x01),      // USAGE (Consumer Control)
+  (COLLECTION, 0x01), // COLLECTION (Application)
   (REPORT_ID, MEDIA_KEYS_ID), //   REPORT_ID (3)
-  (USAGE_PAGE, 0x0C),         //   USAGE_PAGE (Consumer)
-  (LOGICAL_MINIMUM, 0x00),    //   LOGICAL_MINIMUM (0)
-  (LOGICAL_MAXIMUM, 0x01),    //   LOGICAL_MAXIMUM (1)
-  (REPORT_SIZE, 0x01),        //   REPORT_SIZE (1)
-  (REPORT_COUNT, 0x10),       //   REPORT_COUNT (16)
-  (USAGE, 0xB5),              //   USAGE (Scan Next Track)     ; bit 0: 1
-  (USAGE, 0xB6),              //   USAGE (Scan Previous Track) ; bit 1: 2
-  (USAGE, 0xB7),              //   USAGE (Stop)                ; bit 2: 4
-  (USAGE, 0xCD),              //   USAGE (Play/Pause)          ; bit 3: 8
-  (USAGE, 0xE2),              //   USAGE (Mute)                ; bit 4: 16
-  (USAGE, 0xE9),              //   USAGE (Volume Increment)    ; bit 5: 32
-  (USAGE, 0xEA),              //   USAGE (Volume Decrement)    ; bit 6: 64
-  (USAGE, 0x23, 0x02),        //   Usage (WWW Home)            ; bit 7: 128
-  (USAGE, 0x94, 0x01),        //   Usage (My Computer) ; bit 0: 1
-  (USAGE, 0x92, 0x01),        //   Usage (Calculator)  ; bit 1: 2
-  (USAGE, 0x2A, 0x02),        //   Usage (WWW fav)     ; bit 2: 4
-  (USAGE, 0x21, 0x02),        //   Usage (WWW search)  ; bit 3: 8
-  (USAGE, 0x26, 0x02),        //   Usage (WWW stop)    ; bit 4: 16
-  (USAGE, 0x24, 0x02),        //   Usage (WWW back)    ; bit 5: 32
-  (USAGE, 0x83, 0x01),        //   Usage (Media sel)   ; bit 6: 64
-  (USAGE, 0x8A, 0x01),        //   Usage (Mail)        ; bit 7: 128
+  (USAGE_PAGE, 0x0C), //   USAGE_PAGE (Consumer)
+  (LOGICAL_MINIMUM, 0x00), //   LOGICAL_MINIMUM (0)
+  (LOGICAL_MAXIMUM, 0x01), //   LOGICAL_MAXIMUM (1)
+  (REPORT_SIZE, 0x01), //   REPORT_SIZE (1)
+  (REPORT_COUNT, 0x10), //   REPORT_COUNT (16)
+  (USAGE, 0xB5),      //   USAGE (Scan Next Track)     ; bit 0: 1
+  (USAGE, 0xB6),      //   USAGE (Scan Previous Track) ; bit 1: 2
+  (USAGE, 0xB7),      //   USAGE (Stop)                ; bit 2: 4
+  (USAGE, 0xCD),      //   USAGE (Play/Pause)          ; bit 3: 8
+  (USAGE, 0xE2),      //   USAGE (Mute)                ; bit 4: 16
+  (USAGE, 0xE9),      //   USAGE (Volume Increment)    ; bit 5: 32
+  (USAGE, 0xEA),      //   USAGE (Volume Decrement)    ; bit 6: 64
+  (USAGE, 0x23, 0x02), //   Usage (WWW Home)            ; bit 7: 128
+  (USAGE, 0x94, 0x01), //   Usage (My Computer) ; bit 0: 1
+  (USAGE, 0x92, 0x01), //   Usage (Calculator)  ; bit 1: 2
+  (USAGE, 0x2A, 0x02), //   Usage (WWW fav)     ; bit 2: 4
+  (USAGE, 0x21, 0x02), //   Usage (WWW search)  ; bit 3: 8
+  (USAGE, 0x26, 0x02), //   Usage (WWW stop)    ; bit 4: 16
+  (USAGE, 0x24, 0x02), //   Usage (WWW back)    ; bit 5: 32
+  (USAGE, 0x83, 0x01), //   Usage (Media sel)   ; bit 6: 64
+  (USAGE, 0x8A, 0x01), //   Usage (Mail)        ; bit 7: 128
   (HIDINPUT, 0x02), // INPUT (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
   (END_COLLECTION), // END_COLLECTION
 );
@@ -203,22 +207,22 @@ const ASCII_MAP: &[u8] = &[
   0x31 | SHIFT, // |
   0x30 | SHIFT, // }
   0x35 | SHIFT, // ~
-  0,            // DEL
+  0             // DEL
 ];
 
 #[repr(packed)]
 pub struct KeyReport {
   modifiers: u8,
-  reserved: u8,
-  keys: [u8; 6],
+  reserved:  u8,
+  keys:      [u8; 6]
 }
 
 pub struct Keyboard {
-  server: &'static mut BLEServer,
-  input_keyboard: Arc<Mutex<BLECharacteristic>>,
-  output_keyboard: Arc<Mutex<BLECharacteristic>>,
+  server:           &'static mut BLEServer,
+  input_keyboard:   Arc<Mutex<BLECharacteristic>>,
+  output_keyboard:  Arc<Mutex<BLECharacteristic>>,
   input_media_keys: Arc<Mutex<BLECharacteristic>>,
-  key_report: KeyReport,
+  key_report:       KeyReport
 }
 
 impl Keyboard {
@@ -228,7 +232,7 @@ impl Keyboard {
       .security()
       .set_auth(AuthReq::Bond)
       .set_io_cap(SecurityIOCap::NoInputNoOutput);
-      // .resolve_rpa();
+    // .resolve_rpa();
 
     let server = device.get_server();
     let mut hid = BLEHIDDevice::new(server);
@@ -253,6 +257,11 @@ impl Keyboard {
       .scan_response(false);
     ble_advertising.start().unwrap();
 
+    server.on_disconnect(|desc, reason| {
+      warn!("Disconnected keyboard {:?}, {:?}", desc, reason);
+      unsafe { esp_idf_sys::esp_restart(); };
+    });
+
     Self {
       server,
       input_keyboard,
@@ -260,9 +269,9 @@ impl Keyboard {
       input_media_keys,
       key_report: KeyReport {
         modifiers: 0,
-        reserved: 0,
-        keys: [0; 6],
-      },
+        reserved:  0,
+        keys:      [0; 6]
+      }
     }
   }
 
@@ -270,7 +279,10 @@ impl Keyboard {
     self.server.connected_count() > 0
   }
 
-  pub fn on_authentication_complete(&mut self, callback: impl Fn(&BLEConnDesc) + Send + Sync + 'static) {
+  pub fn on_authentication_complete(
+    &mut self,
+    callback: impl Fn(&BLEConnDesc) + Send + Sync + 'static
+  ) {
     self.server.on_authentication_complete(callback);
   }
 
