@@ -36,7 +36,7 @@ AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
 /* Event received from the Terrain Command */
-static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
+static void onEvent(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *data, size_t length, bool isNotify) {
   if (!isNotify) {
     return;
   }
