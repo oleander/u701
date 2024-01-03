@@ -1,8 +1,8 @@
 // #include <BleKeyboard.h>
 #include "ffi.h"
-#include <Arduino.h>
-// #include <ArduinoLog.h>
 #include "utility.h"
+#include <Arduino.h>
+#include <ArduinoLog.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
@@ -46,8 +46,8 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
-    Serial.println("Connected to Terrain Command");
-    Serial.println("Update connection parameters");
+    Log.notice("Connected to Terrain Command");
+    Log.trace("Update connection parameters");
     pClient->updateConnParams(120, 120, 0, 60);
   };
 
@@ -56,11 +56,10 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-    Serial.println("Connection parameters update request received");
-    printf("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
-           params->itvl_min,
-           params->latency,
-           params->supervision_timeout);
+    Log.trace("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
+              params->itvl_min,
+              params->latency,
+              params->supervision_timeout);
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
@@ -77,13 +76,12 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
-    Serial.println("Connection with Terrain Command established");
-
     if (!desc->sec_state.encrypted) {
       restart("Encrypt connection failed: %s", desc);
     }
 
-    Serial.println("Release Terrain Command semaphore (input) (semaphore)");
+    Log.notice("Secure connection to Terrain Command established");
+    Log.trace("Release Terrain Command semaphore (input) (semaphore)");
     xSemaphoreGive(incommingClientSemaphore);
   };
 };
