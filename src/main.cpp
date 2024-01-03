@@ -47,12 +47,6 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
-void onClientConnect(ble_gap_conn_desc *_desc) {
-  Log.traceln("Connected to keyboard");
-  Log.traceln("Release keyboard semaphore (output) (semaphore)");
-  xSemaphoreGive(outgoingClientSemaphore);
-}
-
 extern "C" void init_arduino() {
   initArduino();
 

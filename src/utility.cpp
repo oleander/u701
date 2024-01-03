@@ -4,6 +4,8 @@
 #include <esp_task_wdt.h>
 #include <vector>
 
+extern SemaphoreHandle_t outgoingClientSemaphore;
+
 #define RESTART_INTERVAL 5 // in seconds
 
 void restart(const char *format, ...) {
@@ -49,4 +51,10 @@ void disconnect(NimBLEClient *pClient, const char *format, ...) {
   Log.traceln("Disconnect from Terrain Command");
   pClient->disconnect();
   restart(format);
+}
+
+void onClientConnect(ble_gap_conn_desc *_desc) {
+  Log.traceln("Connected to keyboard");
+  Log.traceln("Release keyboard semaphore (output) (semaphore)");
+  xSemaphoreGive(outgoingClientSemaphore);
 }
