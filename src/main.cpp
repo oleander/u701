@@ -183,7 +183,7 @@ extern "C" void init_arduino() {
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setLimitedOnly(false);
-  pScan->setActiveScan(true);
+  pScan->setActiveScan(false);
   pScan->setMaxResults(1);
   pScan->start(SCAN_DURATION, false);
 
