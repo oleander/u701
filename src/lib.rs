@@ -1,6 +1,7 @@
-#![no_main]
-#![feature(never_type)]
 #![allow(unused_imports)]
+#![feature(never_type)]
+#![allow(dead_code)]
+#![no_main]
 
 // mod keyboard;
 // mod ffi;
@@ -8,8 +9,7 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 // use log::{debug, info, error};
 use lazy_static::lazy_static;
-use log::debug;
-use log::error;
+use log::{debug, error};
 use machine::Action;
 // use anyhow::{bail, Result};
 // use keyboard::Keyboard;
@@ -109,8 +109,8 @@ fn app_main() {
     // client.on_passkey_request(callback)
     client.on_connect(move |client| {
       info!("Connected to device");
-      info!("Updating connection parameters");
-      client.update_conn_params(120, 120, 0, 60).unwrap();
+      // info!("Updating connection parameters");
+      // client.update_conn_params(120, 120, 0, 60).unwrap();
     });
 
     client.on_disconnect(move |_thing| {
@@ -126,15 +126,17 @@ fn app_main() {
     client.secure_connection().await.expect("Failed to secure connection");
     info!("Connection secured");
 
-    info!("Getting service");
-    let service = client.get_service(SERVICE_UUID).await.expect("Failed to get service");
-    info!("Getting characteristic");
-    let characteristic = service.get_characteristic(CHAR_UUID).await.expect("Failed to get characteristic");
+    info!("Waiting for connection to be established");
+    Timer::after(Duration::from_millis(2000)).await;
 
-    info!("Subscribing to notifications");
+    let mut characteristic =
+      client.get_service(SERVICE_UUID).await.unwrap().get_characteristics().await.unwrap().find(|x| x.uuid() == CHAR_UUID && x.can_notify()).unwrap();
+    info!("Subscribing to characteristic: {:?}", characteristic.uuid());
+
     let status = characteristic
       .on_notify(move |event| {
-        info!("Received notification from device");
+        info!("Received notification from device: {:?}", event);
+
         match event {
           [_, _, 0, _] => debug!("Button was released"),
           [_, _, n, _] => CHANNEL.0.send(*n).unwrap(),
@@ -151,9 +153,8 @@ fn app_main() {
 
     let mut state = machine::State::default();
 
-    let receiver = CHANNEL.1.lock();
     info!("[main] Entering loop, waiting for events");
-    while let Ok(event_id) = receiver.recv() {
+    while let Ok(event_id) = CHANNEL.1.lock().recv() {
       match state.transition(event_id) {
         Some(Action::Media(_keys)) => keyboard.write("M"),
         Some(Action::Short(_index)) => keyboard.write("S"),
