@@ -79,8 +79,8 @@ void onCompletedScan(NimBLEScanResults results) {
     restart("[BUG] The Terrain Command was not found");
   }
 
-  // Run pClient connect in background task
-  xTaskCreate(connectToClient, "connect", 8192, pClient, 5, NULL);
+  // Run pClient connect in background task on CPU1
+  xTaskCreatePinnedToCore(connectToClient, "connect", 8192, pClient, 5, NULL, 1);
 }
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
@@ -169,8 +169,7 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     if (isValidAdvertisement(advertisedDevice)) {
       advertisedDevice->getScan()->stop();
     } else {
-      auto address = advertisedDevice->getAddress();
-      advertisedDevice->getScan()->erase(address);
+      advertisedDevice->getScan()->clearResults();
     }
   };
 };
@@ -227,7 +226,7 @@ void connectToClient(void *client) {
     }
 
     if (!chr->subscribe(true, onEvent, false)) {
-      Serial.println("Failed to subscribe to characteristic");
+      Serial.println("[BUG] Failed to subscribe to characteristic");
       pClient->disconnect();
       restart("Device has been manually disconnected");
     }
@@ -250,9 +249,6 @@ extern "C" void init_arduino() {
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setPower(ESP_PWR_LVL_N0);
   NimBLEDevice::init(DEVICE_NAME);
-
-  Serial.print("CPU: ");
-  Serial.println(uxTaskGetStackHighWaterMark(NULL));
 
   // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
@@ -282,7 +278,7 @@ extern "C" void init_arduino() {
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setLimitedOnly(false);
-  pScan->setActiveScan(true);
+  pScan->setActiveScan(false);
   pScan->setMaxResults(1);
   pScan->start(SCAN_DURATION, onCompletedScan, false);
 }
