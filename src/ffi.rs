@@ -1,5 +1,7 @@
 use esp32_nimble::{enums::{SecurityIOCap, PowerType, PowerLevel, AuthReq}, BLEDevice, BLEClient};
-use log::{error, info};
+use esp32_nimble::utilities::BleUuid;
+use esp32_nimble::utilities::BleUuid::Uuid16;
+use log::{error, info, debug};
 use crate::Keyboard;
 use std::sync::Arc;
 use bstr::ByteSlice;
@@ -15,6 +17,9 @@ extern "C" {
   pub fn setup_ble();
   pub fn setup_app();
 }
+
+const SERVICE_UUID: BleUuid = Uuid16(0x1812);
+const CHAR_UUID: BleUuid = Uuid16(0x2A4D);
 
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
@@ -72,6 +77,34 @@ pub async extern "C" fn app_main() -> i32 {
   client.secure_connection().await.unwrap();
 
   info!("Connected to {:?}", device);
+
+  debug!("[characteristic] finding service ...");
+  let mut characteristic = client
+    .get_service(SERVICE_UUID)
+    .await
+    .unwrap()
+    .get_characteristics()
+    .await
+    .unwrap()
+    .find(|x| x.uuid() == CHAR_UUID && x.can_notify())
+    .unwrap()
+    .to_owned();
+
+  debug!("[characteristic] subscribing to notifications ...");
+  characteristic.on_notify(move |data| {
+    info!("[on_notify] data={:?}", data);
+
+    if let [0, 0, id, _] = data {
+      crate::on_event(Some(&[0, 0, *id, 0]));
+    } else {
+      error!("[on_notify] invalid data: {:?}", data);
+    }
+  });
+
+  if let Err(e) = characteristic.subscribe_notify(false).await {
+    error!("[characteristic] could not subscribe to notifications: {:?}", e);
+  }
+
 
   if let Err(e) = crate::runtime(keyboard).await {
     error!("[error] Error: {:?}", e);

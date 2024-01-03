@@ -227,8 +227,8 @@ impl Keyboard {
     device
       .security()
       .set_auth(AuthReq::Bond)
-      .set_io_cap(SecurityIOCap::NoInputNoOutput)
-      .resolve_rpa();
+      .set_io_cap(SecurityIOCap::NoInputNoOutput);
+      // .resolve_rpa();
 
     let server = device.get_server();
     let mut hid = BLEHIDDevice::new(server);
