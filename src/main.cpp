@@ -80,7 +80,7 @@ void onCompletedScan(NimBLEScanResults results) {
   }
 
   // Run pClient connect in background task on CPU1
-  xTaskCreatePinnedToCore(connectToClient, "connect", 8192, pClient, 5, NULL, 1);
+  xTaskCreatePinnedToCore(connectToClient, "connect", 8192, pClient, 5, NULL, 0);
 }
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
@@ -278,7 +278,7 @@ extern "C" void init_arduino() {
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setLimitedOnly(false);
-  pScan->setActiveScan(false);
+  pScan->setActiveScan(true);
   pScan->setMaxResults(1);
   pScan->start(SCAN_DURATION, onCompletedScan, false);
 }
