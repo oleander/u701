@@ -70,11 +70,9 @@ fn app_main() {
       client.update_conn_params(120, 120, 0, 60).unwrap();
     });
 
-    client.on_disconnect(move |_thing| {
+    client.on_disconnect(move |_thing| unsafe {
       warn!("Disconnected from device");
-      unsafe {
         esp_idf_sys::esp_restart();
-      };
     });
 
     info!("Connecting to device");
@@ -155,16 +153,12 @@ fn app_main() {
         },
 
         Err(RecvTimeoutError::Timeout) => unsafe {
-          unsafe {
             esp_idf_sys::esp_task_wdt_reset();
-          };
         },
 
-        Err(RecvTimeoutError::Disconnected) => {
+        Err(RecvTimeoutError::Disconnected) => unsafe {
           error!("Disconnected from channel, will restart");
-          unsafe {
             esp_idf_sys::esp_restart();
-          }
         }
       }
     }
