@@ -35,8 +35,8 @@ extern "C" void init_arduino() {
 
   updateWatchdogTimeout(120);
 
-  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::init(DEVICE_NAME);
+  // NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+  // NimBLEDevice::init(DEVICE_NAME);
 
   // Log.infoln("Broadcasting BLE keyboard");
   // keyboard.whenClientConnects(onClientConnect);
@@ -46,8 +46,8 @@ extern "C" void init_arduino() {
   // Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
   // xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
-  NimBLEDevice::whiteListAdd(testServerAddress);
-  NimBLEDevice::whiteListAdd(realServerAddress);
+  // NimBLEDevice::whiteListAdd(testServerAddress);
+  // NimBLEDevice::whiteListAdd(realServerAddress);
 
   updateWatchdogTimeout(5 * 60);
 
@@ -55,7 +55,7 @@ extern "C" void init_arduino() {
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
-  pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
+  // pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
   pScan->setActiveScan(true);
   pScan->setMaxResults(1);
 
