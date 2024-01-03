@@ -1,6 +1,7 @@
 #include "ClientCallbacks.h"
 #include "utility.h"
 #include <Arduino.h>
+#include <ArduinoLog.h>
 #include <NimBLEClient.h>
 
 extern SemaphoreHandle_t incommingClientSemaphore;
