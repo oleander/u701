@@ -112,8 +112,8 @@ fn app_main() {
     // client.on_passkey_request(callback)
     client.on_connect(move |client| {
       info!("Connected to device");
-      // info!("Updating connection parameters");
-      // client.update_conn_params(120, 120, 0, 60).unwrap();
+      info!("Updating connection parameters");
+      client.update_conn_params(120, 120, 0, 60).unwrap();
     });
 
     client.on_disconnect(move |_thing| {
@@ -135,18 +135,17 @@ fn app_main() {
     let characteristic = client.get_service(SERVICE_UUID).await.unwrap().get_characteristics().await.unwrap().find(|x| x.uuid() == CHAR_UUID && x.can_notify()).unwrap();
     info!("Subscribing to characteristic: {:?}", characteristic.uuid());
 
-    let cloned_tx = send.clone();
     let status = characteristic
       .on_notify(move |event| {
         info!("Received notification from device: {:?}", event);
 
         match event {
           [_, _, 0, _] => debug!("Button was released"),
-          [_, _, n, _] => cloned_tx.send(*n).unwrap(),
+          [_, _, n, _] => send.send(*n).unwrap(),
           otherwise => error!("[on_event] [BUG] Received {:?} event", otherwise)
         }
       })
-      .subscribe_notify(false)
+      .subscribe_notify(true)
       .await;
 
     match status {
@@ -161,7 +160,7 @@ fn app_main() {
       match state.transition(event_id) {
         Some(Action::Media(_keys)) => keyboard.write("M"),
         Some(Action::Short(_index)) => keyboard.write("S"),
-        None => debug!("[main] No action {}", event_id)
+        None => info!("[main] No action {}", event_id)
       }
     }
   });
