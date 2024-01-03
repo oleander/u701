@@ -1,21 +1,28 @@
+#![no_main]
+#![feature(never_type)]
+#![allow(unused_imports)]
+
 // mod keyboard;
 // mod ffi;
 
-// use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{channel, Receiver, Sender};
 // use log::{debug, info, error};
-// use lazy_static::lazy_static;
+use lazy_static::lazy_static;
+use log::debug;
+use log::error;
+use machine::Action;
 // use anyhow::{bail, Result};
 // use keyboard::Keyboard;
 // use std::sync::Mutex;
 // use machine::Action;
 
-// lazy_static! {
-//   static ref CHANNEL: (Sender<u8>, Mutex<Receiver<u8>>) = {
-//     let (send, recv) = channel();
-//     let recv = Mutex::new(recv);
-//     (send, recv)
-//   };
-// }
+lazy_static! {
+  static ref CHANNEL: (Sender<u8>, Mutex<Receiver<u8>>) = {
+    let (send, recv) = channel();
+    let recv = Mutex::new(recv);
+    (send, recv)
+  };
+}
 
 // async fn runtime(mut keyboard: Keyboard) -> Result<()> {
 //   info!("[main] Starting main loop");
@@ -43,16 +50,13 @@
 //   }
 // }
 
-#![no_main]
-#![feature(never_type)]
-#![allow(unused_imports)]
-
 extern crate esp_idf_hal;
 extern crate lazy_static;
 extern crate log;
 
 mod keyboard;
 
+use std::sync::Arc;
 use embassy_time::{Duration, Timer};
 use esp32_nimble::utilities::mutex::Mutex;
 use esp32_nimble::utilities::BleUuid;
@@ -61,6 +65,7 @@ use esp32_nimble::{BLEClient, BLEDevice};
 use esp_idf_hal::task::block_on;
 use keyboard::Keyboard;
 use log::{info, warn};
+use tokio::sync::Notify;
 
 const SERVICE_UUID: BleUuid = Uuid16(0x1812);
 const CHAR_UUID: BleUuid = Uuid16(0x2A4D);
@@ -74,7 +79,18 @@ fn app_main() {
 
   info!("Setup connection to BLE buttons");
   block_on(async {
-    let keyboard = Mutex::new(Keyboard::new());
+    let mut keyboard = Keyboard::new();
+    let notify = Arc::new(Notify::new());
+    let notify_clone = notify.clone();
+
+    keyboard.on_authentication_complete(move |conn| {
+      info!("Connected to {:?}", conn);
+      info!("Notifying notify");
+      notify_clone.notify_one();
+    });
+
+    info!("Waiting for notify to be notified");
+    notify.notified().await;
 
     let device = BLEDevice::take();
     let scan = device.get_scan();
@@ -94,12 +110,14 @@ fn app_main() {
     client.on_connect(move |client| {
       info!("Connected to device");
       info!("Updating connection parameters");
-      client.update_conn_params(120, 120, 0, 60);
+      client.update_conn_params(120, 120, 0, 60).unwrap();
     });
 
     client.on_disconnect(move |_thing| {
       warn!("Disconnected from device");
-      unsafe { esp_idf_sys::esp_restart(); };
+      unsafe {
+        esp_idf_sys::esp_restart();
+      };
     });
 
     info!("Connecting to device");
@@ -115,11 +133,12 @@ fn app_main() {
 
     info!("Subscribing to notifications");
     let status = characteristic
-      .on_notify(move |_data| {
+      .on_notify(move |event| {
         info!("Received notification from device");
-        let mut keyboard = keyboard.lock();
-        if keyboard.connected() {
-          keyboard.write("Hello world");
+        match event {
+          [_, _, 0, _] => debug!("Button was released"),
+          [_, _, n, _] => CHANNEL.0.send(*n).unwrap(),
+          otherwise => error!("[on_event] [BUG] Received {:?} event", otherwise)
         }
       })
       .subscribe_notify(false)
@@ -130,8 +149,16 @@ fn app_main() {
       Err(e) => warn!("Failed to subscribe to notifications: {:?}", e)
     }
 
-    loop {
-      Timer::after(Duration::from_secs(1)).await;
+    let mut state = machine::State::default();
+
+    let receiver = CHANNEL.1.lock();
+    info!("[main] Entering loop, waiting for events");
+    while let Ok(event_id) = receiver.recv() {
+      match state.transition(event_id) {
+        Some(Action::Media(_keys)) => keyboard.write("M"),
+        Some(Action::Short(_index)) => keyboard.write("S"),
+        None => debug!("[main] No action {}", event_id)
+      }
     }
   });
 }
