@@ -161,7 +161,7 @@ fn app_main() {
           }
         });
 
-        match status {
+        match characteristic.subscribe_notify(false).await {
           Ok(_) => {
             info!("Subscribed to notifications!");
             break 'done;
@@ -181,8 +181,8 @@ fn app_main() {
     info!("[main] Entering loop, waiting for events");
     while let Ok(event_id) = recv.recv() {
       match state.transition(event_id) {
-        Some(Action::Media(keys)) => keyboard.send_media_key(keys),
-        Some(Action::Short(index)) => keyboard.send_shortcut(index),
+        Some(Action::Media(keys)) => keyboard.send_media_key(keys).await,
+        Some(Action::Short(index)) => keyboard.send_shortcut(index).await,
         None => info!("[main] No action {}", event_id)
       }
     }
