@@ -32,6 +32,10 @@ pub async extern "C" fn app_main() -> i32 {
   info!("Waiting for notify to be notified");
   notify.notified().await;
 
+  info!("Wait a bit");
+  esp_idf_hal::delay::Ets::delay_ms(150);
+
+
   unsafe {
     init_arduino();
   }

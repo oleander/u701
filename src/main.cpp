@@ -15,7 +15,7 @@
 #define DEVICE_BATTERY         100
 #define CLIENT_CONNECT_TIMEOUT 30
 
-static NimBLEAddress testServerAddress(0x083A8D9A444A, BLE_ADDR_PUBLIC); // TEST
+static NimBLEAddress testServerAddress(0x083A8D9A444A, BLE_ADDR_RANDOM); // TEST
 static NimBLEAddress realServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
@@ -35,8 +35,8 @@ extern "C" void init_arduino() {
 
   updateWatchdogTimeout(120);
 
-  // NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  // NimBLEDevice::init(DEVICE_NAME);
+  NimBLEDevice::init(DEVICE_NAME);
+  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
 
   // Log.infoln("Broadcasting BLE keyboard");
   // keyboard.whenClientConnects(onClientConnect);
@@ -51,11 +51,11 @@ extern "C" void init_arduino() {
 
   updateWatchdogTimeout(5 * 60);
 
-  Log.traceln("Starting BLE scan for the Terrain Command");
+  // Log.traceln("Starting BLE scan for the Terrain Command");
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
-  // pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
+  // // pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
   pScan->setActiveScan(true);
   pScan->setMaxResults(1);
 
@@ -70,7 +70,8 @@ extern "C" void init_arduino() {
   updateWatchdogTimeout(60);
 
   if (!pClient->connect()) {
-    restart("Could not connect to the Terrain Command");
+    // restart("Could not connect to the Terrain Command");
+    Log.errorln("Could not connect to the Terrain Command");
   }
 
   Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");

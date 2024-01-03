@@ -14,6 +14,8 @@ void ClientCallbacks::onDisconnect(NimBLEClient *pClient) {
 }
 
 bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient *_pClient, const ble_gap_upd_params *params) {
+  return true;
+
   if (params->itvl_min < 24) {
     return false;
   } else if (params->itvl_max > 40) {
