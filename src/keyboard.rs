@@ -207,7 +207,7 @@ const ASCII_MAP: &[u8] = &[
 ];
 
 #[repr(packed)]
-struct KeyReport {
+pub struct KeyReport {
   modifiers: u8,
   reserved: u8,
   keys: [u8; 6],
