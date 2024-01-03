@@ -18,6 +18,7 @@ env_logger = { version = "0.10.1", default-features = false }
 anyhow = { version = "1.0.79", default-features = false }
 log = { version = "0.4.20", default-features = false }
 machine = { path = "machine" }
+esp32-nimble = { path = "../esp32-nimble" }
 
 [profile.release]
 codegen-units = 1

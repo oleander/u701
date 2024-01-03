@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
-#include <BleKeyboard.h>
+// #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 
@@ -20,7 +20,7 @@ static NimBLEAddress realServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
-BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
+// BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
 SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
@@ -38,13 +38,13 @@ extern "C" void init_arduino() {
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::init(DEVICE_NAME);
 
-  Log.infoln("Broadcasting BLE keyboard");
-  keyboard.whenClientConnects(onClientConnect);
-  keyboard.whenClientDisconnects(onClientDisconnect);
-  keyboard.begin();
+  // Log.infoln("Broadcasting BLE keyboard");
+  // keyboard.whenClientConnects(onClientConnect);
+  // keyboard.whenClientDisconnects(onClientDisconnect);
+  // keyboard.begin();
 
-  Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
-  xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
+  // Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
+  // xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
   NimBLEDevice::whiteListAdd(testServerAddress);
   NimBLEDevice::whiteListAdd(realServerAddress);
