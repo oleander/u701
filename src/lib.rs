@@ -3,54 +3,10 @@
 #![allow(dead_code)]
 #![no_main]
 
-// mod keyboard;
-// mod ffi;
-
-// use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
-// use log::{debug, info, error};
+use std::sync::mpsc::{sync_channel, RecvTimeoutError};
 use lazy_static::lazy_static;
 use log::{debug, error};
 use machine::Action;
-// use anyhow::{bail, Result};
-// use keyboard::Keyboard;
-// use std::sync::Mutex;
-// use machine::Action;
-
-lazy_static! {
-  static ref CHANNEL: (SyncSender<u8>, Mutex<Receiver<u8>>) = {
-    let (send, recv) = sync_channel(3);
-    // let (send, recv) = channel();
-    let recv = Mutex::new(recv);
-    (send, recv)
-  };
-}
-
-// async fn runtime(mut keyboard: Keyboard) -> Result<()> {
-//   info!("[main] Starting main loop");
-
-//   let mut state = machine::State::default();
-
-//   let receiver = CHANNEL.1.lock().unwrap();
-//   info!("[main] Entering loop, waiting for events");
-//   while let Ok(event_id) = receiver.recv() {
-//     match state.transition(event_id) {
-//       Some(Action::Media(_keys)) => keyboard.write("M"),
-//       Some(Action::Short(_index)) => keyboard.write("S"),
-//       None => debug!("[main] No action {}", event_id)
-//     }
-//   }
-
-//   bail!("[main] Event loop ended");
-// }
-
-// pub fn on_event(event: Option<&[u8; 4]>) {
-//   match event {
-//     Some(&[_, _, 0, _]) => debug!("Button was released"),
-//     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-//     None => error!("[on_event] [BUG] Received {:?} event", event)
-//   }
-// }
 
 extern crate esp_idf_hal;
 extern crate lazy_static;
@@ -84,7 +40,7 @@ fn app_main() {
     let mut keyboard = Keyboard::new();
     let notify = Arc::new(Notify::new());
     let notify_clone = notify.clone();
-    let (send, recv) = sync_channel(3);
+    let (tx, rx) = sync_channel(3);
 
     keyboard.on_authentication_complete(move |conn| {
       info!("Connected to {:?}", conn);
@@ -100,8 +56,8 @@ fn app_main() {
 
     let device = scan
       .active_scan(true)
-      .interval(490)
-      .window(450)
+      .interval(100)
+      .window(99)
       .find_device(i32::MAX, |device| device.is_advertising_service(&SERVICE_UUID))
       .await
       .expect("Failed to find device")
@@ -109,9 +65,7 @@ fn app_main() {
 
     let mut client = BLEClient::new();
 
-    // client.on_passkey_request(callback)
     client.on_connect(move |client| {
-      info!("Connected to device");
       info!("Updating connection parameters");
       client.update_conn_params(120, 120, 0, 60).unwrap();
     });
@@ -130,7 +84,7 @@ fn app_main() {
     info!("Connection secured");
 
     info!("Waiting for connection to be established");
-    Timer::after(Duration::from_millis(2000)).await;
+    Timer::after(Duration::from_millis(150)).await;
 
     'done: for service in client.get_services().await.unwrap() {
       if service.uuid() != SERVICE_UUID {
@@ -138,23 +92,17 @@ fn app_main() {
       }
 
       for characteristic in service.get_characteristics().await.unwrap() {
-        if characteristic.uuid() != CHAR_UUID {
+        if characteristic.uuid() != CHAR_UUID || !characteristic.can_notify() {
           continue;
         }
 
-        if !characteristic.can_notify() {
-          continue;
-        }
-
-        info!("Characteristic: {:?}", characteristic.uuid());
-
-        let cloned_send = send.clone();
+        let sender = tx.clone();
         characteristic.on_notify(move |event| {
           info!("Received notification from device: {:?}", event);
 
           match event {
             [_, _, 0, _] => debug!("Button was released"),
-            [_, _, n, _] => cloned_send.send(*n).unwrap(),
+            [_, _, n, _] => sender.send(*n).unwrap(),
             otherwise => {
               error!("[on_event] [BUG] Received {:?} event", otherwise)
             }
@@ -177,14 +125,79 @@ fn app_main() {
     info!("Done!");
 
     let mut state = machine::State::default();
+    let timeout = Duration::from_millis(100);
 
-    info!("[main] Entering loop, waiting for events");
-    while let Ok(event_id) = recv.recv() {
-      match state.transition(event_id) {
-        Some(Action::Media(keys)) => keyboard.send_media_key(keys).await,
-        Some(Action::Short(index)) => keyboard.send_shortcut(index).await,
-        None => info!("[main] No action {}", event_id)
+    unsafe {
+      esp_idf_sys::esp_task_wdt_init(timeout * 2, true);
+      esp_idf_sys::esp_task_wdt_add(esp_idf_sys::xTaskGetCurrentTaskHandle());
+    }
+
+    info!("Entering loop, waiting for events");
+
+    loop {
+      match rx.recv_timeout(timeout) {
+        Ok(event_id) => {
+          info!("[main] Received event {}", event_id);
+
+          unsafe {
+            esp_idf_sys::esp_task_wdt_reset();
+          };
+
+          match state.transition(event_id) {
+            Some(Action::Media(keys)) => keyboard.send_media_key(keys).await,
+            Some(Action::Short(index)) => keyboard.send_shortcut(index).await,
+            None => info!("[main] No action {}", event_id)
+          }
+
+          unsafe {
+            esp_idf_sys::esp_task_wdt_reset();
+          };
+        },
+
+        Err(RecvTimeoutError::Timeout) => unsafe {
+          unsafe {
+            esp_idf_sys::esp_task_wdt_reset();
+          };
+        },
+
+        Err(RecvTimeoutError::Disconnected) => {
+          error!("Disconnected from channel, will restart");
+          unsafe {
+            esp_idf_sys::esp_restart();
+          }
+        }
       }
     }
   });
 }
+
+// use anyhow::{bail, Result};
+// use keyboard::Keyboard;
+// use std::sync::Mutex;
+// use machine::Action;
+
+// async fn runtime(mut keyboard: Keyboard) -> Result<()> {
+//   info!("[main] Starting main loop");
+
+//   let mut state = machine::State::default();
+
+//   let receiver = CHANNEL.1.lock().unwrap();
+//   info!("[main] Entering loop, waiting for events");
+//   while let Ok(event_id) = receiver.recv() {
+//     match state.transition(event_id) {
+//       Some(Action::Media(_keys)) => keyboard.write("M"),
+//       Some(Action::Short(_index)) => keyboard.write("S"),
+//       None => debug!("[main] No action {}", event_id)
+//     }
+//   }
+
+//   bail!("[main] Event loop ended");
+// }
+
+// pub fn on_event(event: Option<&[u8; 4]>) {
+//   match event {
+//     Some(&[_, _, 0, _]) => debug!("Button was released"),
+//     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
+//     None => error!("[on_event] [BUG] Received {:?} event", event)
+//   }
+// }
