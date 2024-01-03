@@ -2,6 +2,7 @@
 #include "ffi.h"
 #include <Arduino.h>
 // #include <ArduinoLog.h>
+#include "utility.h"
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
@@ -28,29 +29,6 @@ NimBLEAddress testServerAddress(0x083A8D9A444A); // TEST
 NimBLEAddress realServerAddress(0xF797AC1FF8C0); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
-
-void restart(const char *format, ...) {
-  std::vector<char> buffer(256);
-
-  va_list args;
-  va_start(args, format);
-  int needed = vsnprintf(buffer.data(), buffer.size(), format, args);
-  va_end(args);
-
-  // Resize buffer if needed and reformat message
-  if (needed >= buffer.size()) {
-    buffer.resize(needed + 1);
-    va_start(args, format);
-    vsnprintf(buffer.data(), buffer.size(), format, args);
-    va_end(args);
-  }
-
-  // Print message and restart
-  Serial.println(buffer.data());
-  Serial.println("Will restart the ESP in 5 seconds");
-  delay(5000);
-  ESP.restart();
-}
 
 SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
 SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
