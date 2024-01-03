@@ -19,12 +19,11 @@
 #define SERIAL_BAUD_RATE 115200
 #define DEVICE_BATTERY   100
 
-#define CLIENT_NAME         "Terrain Comman"
+#define REAL_CLIENT_NAME    "Terrain Comman"
+#define TEST_CLIENT_NAME    "key"
 #define DEVICE_NAME         "u701"
 #define DEVICE_MANUFACTURER "HVA"
 
-// A8:42:E3:CD:FB:C6, f7:97:ac:1f:f8:c0
-// 08:3a:8d:9a:44:4a
 NimBLEAddress testServerAddress(0x083A8D9A444A); // TEST
 NimBLEAddress realServerAddress(0xF797AC1FF8C0); // REAL
 static NimBLEUUID serviceUUID("1812");
@@ -105,8 +104,8 @@ bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
   }
 
   // Check if name is the Terrain Comman or key
-  auto e1   = "Terrain Comman";
-  auto e2   = "key";
+  auto e1   = REAL_CLIENT_NAME;
+  auto e2   = TEST_CLIENT_NAME;
   auto name = advertisedDevice->getName();
   if (name != e1 && name != e2) {
     Log.traceln("Does not advertise %s or %s, got %s", e1, e2, name.c_str());
@@ -122,9 +121,10 @@ bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
     return false;
   }
 
-  Log.traceln("Found BLE client named %s", name.c_str());
+  Log.infoln("Found BLE client named %s", name.c_str());
   return true;
 }
+
 /** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
@@ -149,7 +149,7 @@ extern "C" void init_arduino() {
   Serial.begin(SERIAL_BAUD_RATE);
   Log.begin(LOG_LEVEL_INFO, &Serial, true);
   Log.setPrefix(printPrefix);
-  Log.noticeln("Starting ESP32 Proxy");
+  Log.infoln("Starting ESP32 Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setPower(ESP_PWR_LVL_N0);
@@ -157,7 +157,7 @@ extern "C" void init_arduino() {
 
   // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
-    Log.noticeln("Connected to keyboard");
+    Log.traceln("Connected to keyboard");
     Log.traceln("Release keyboard semaphore (output) (semaphore)");
     xSemaphoreGive(outgoingClientSemaphore);
   });
@@ -166,7 +166,7 @@ extern "C" void init_arduino() {
   keyboard.whenClientDisconnects(
       [](BLEServer *_server) { restart("Client disconnected from the keyboard, will restart"); });
 
-  Log.noticeln("Broadcasting BLE keyboard");
+  Log.infoln("Broadcasting BLE keyboard");
   keyboard.begin();
 
   Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
@@ -175,7 +175,7 @@ extern "C" void init_arduino() {
   NimBLEDevice::whiteListAdd(testServerAddress);
   NimBLEDevice::whiteListAdd(realServerAddress);
 
-  Log.noticeln("Starting BLE scan for the Terrain Command");
+  Log.infoln("Starting BLE scan for the Terrain Command");
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
@@ -199,13 +199,13 @@ extern "C" void init_arduino() {
   if (pClient->isConnected()) {
     Log.warning("Terrain Command already connected, will continue");
   } else if (pClient->connect()) {
-    Log.noticeln("Successfully connected to the Terrain Command");
+    Log.infoln("Successfully connected to the Terrain Command");
   } else {
     restart("Could not connect to the Terrain Command");
   }
 
   Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
-  xSemaphoreTake(incommingClientSemaphore, 10000 / portTICK_PERIOD_MS);
+  xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
 
   Log.noticeln("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
@@ -242,7 +242,7 @@ extern "C" void init_arduino() {
       restart("Device has been manually disconnected");
     }
 
-    Log.noticeln("Successfully subscribed to characteristic");
+    Log.infoln("Successfully subscribed to characteristic");
     return;
   }
 
