@@ -66,6 +66,7 @@ extern "C" void init_arduino() {
 
   pClient->setClientCallbacks(&clientCallbacks);
   pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
+  pClient->setConnectionParams(32, 160, 0, 500);
 
   updateWatchdogTimeout(60);
 

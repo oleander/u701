@@ -6,6 +6,7 @@
 extern SemaphoreHandle_t incommingClientSemaphore;
 
 void ClientCallbacks::onConnect(NimBLEClient *pClient) {
+  Log.traceln("Connected to Terrain Command");
   pClient->updateConnParams(120, 120, 0, 60);
 }
 
@@ -20,18 +21,33 @@ bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient *_pClient, const bl
     return false;
   } else if (params->latency > 2) {
     return false;
-  } else if (params->supervision_timeout > 900) {
+  } else if (params->supervision_timeout > 100) {
     return false;
   } else {
     return true;
   }
 }
 
-/** Pairing process complete, we can check the results in ble_gap_conn_desc */
+uint32_t onPassKeyRequest() {
+  Log.traceln("Passkey request");
+  return 111111;
+};
+
+bool onConfirmPIN(uint32_t pass_key) {
+  Log.traceln("Confirm PIN %d", pass_key);
+  return pass_key == 111111;
+};
+
 void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc) {
   if (desc->sec_state.encrypted) {
-    xSemaphoreGive(incommingClientSemaphore);
-  } else {
-    restart("Encrypt connection failed: %s", desc);
+    return xSemaphoreGive(incommingClientSemaphore);
   }
+
+  Log.fatalln("Encrypt connection failed: %s", desc);
+  Log.warningln("Will try to disconnect and reconnect");
+  auto client = NimBLEDevice::getClientByID(desc->conn_handle);
+  if (client != nullptr) {
+    client->disconnect();
+  }
+  restart("Encrypt connection failed: %s", desc);
 }
