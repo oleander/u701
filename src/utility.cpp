@@ -9,7 +9,7 @@
 
 extern SemaphoreHandle_t outgoingClientSemaphore;
 
-#define RESTART_INTERVAL 5 // in seconds
+#define RESTART_INTERVAL 300 // ms
 
 void restart(const char *format, ...) {
   std::vector<char> buffer(256);
@@ -28,8 +28,8 @@ void restart(const char *format, ...) {
   }
 
   Log.fatalln(buffer.data());
-  Log.fatalln("Will restart the ESP in %d seconds", RESTART_INTERVAL);
-  delay(RESTART_INTERVAL * 1000);
+  Log.fatalln("Will restart the ESP in %d ms", RESTART_INTERVAL);
+  delay(RESTART_INTERVAL);
   ESP.restart();
 }
 
