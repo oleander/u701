@@ -30,7 +30,7 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_VERBOSE, &Serial, true);
+  Log.begin(LOG_LEVEL_NOTICE, &Serial, true);
   Log.infoln("Starting ESP32 Proxy");
 
   updateWatchdogTimeout(120);
