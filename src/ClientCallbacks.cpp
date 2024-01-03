@@ -30,12 +30,12 @@ bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient *_pClient, const bl
   }
 }
 
-uint32_t onPassKeyRequest() {
+uint32_t ClientCallbacks::onPassKeyRequest() {
   Log.traceln("Passkey request");
   return 111111;
 };
 
-bool onConfirmPIN(uint32_t pass_key) {
+bool ClientCallbacks::onConfirmPIN(uint32_t pass_key) {
   Log.traceln("Confirm PIN %d", pass_key);
   return pass_key == 111111;
 };
