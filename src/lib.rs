@@ -142,6 +142,10 @@ fn app_main() {
           continue;
         }
 
+        if !characteristic.can_notify() {
+          continue;
+        }
+
         info!("Characteristic: {:?}", characteristic.uuid());
 
         let cloned_send = send.clone();
@@ -170,7 +174,7 @@ fn app_main() {
           }
         }
       }
-    };
+    }
 
     info!("Done!");
 
