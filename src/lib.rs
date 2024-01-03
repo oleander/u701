@@ -27,7 +27,17 @@ use tokio::sync::Notify;
 
 const SERVICE_UUID: BleUuid = Uuid16(0x1812);
 const CHAR_UUID: BleUuid = Uuid16(0x2A4D);
-const BLE_BUTTONS_NAME: &str = "tob";
+
+macro_rules! reboot {
+  ($($arg:tt)*) => ({
+    error!($($arg)*);
+    error!("Restarting device in 300ms");
+    unsafe {
+      esp_idf_hal::delay::Ets::delay_ms(300);
+      esp_idf_sys::esp_restart();
+    }
+  })
+}
 
 #[no_mangle]
 fn app_main() {
@@ -35,33 +45,23 @@ fn app_main() {
   esp_idf_svc::log::EspLogger::initialize_default();
   esp_idf_svc::timer::embassy_time::driver::link();
 
-  info!("Setup connection to BLE buttons");
+  info!("Starting up ESP32 BLE Proxy");
+
   block_on(async {
     let mut keyboard = Keyboard::new();
     let notify = Arc::new(Notify::new());
     let notify_clone = notify.clone();
-    let (tx, rx) = sync_channel(3);
 
     keyboard.on_authentication_complete(move |conn| {
-      info!("Connected to {:?}", conn);
-      info!("Notifying notify");
+      info!("Terrain Command connected to {:?}", conn);
       notify_clone.notify_one();
     });
 
-    info!("Waiting for notify to be notified");
+    info!("Waiting for Terrain Command to connect");
     notify.notified().await;
 
     let device = BLEDevice::take();
     let scan = device.get_scan();
-
-    let device = scan
-      .active_scan(true)
-      .interval(100)
-      .window(99)
-      .find_device(i32::MAX, |device| device.is_advertising_service(&SERVICE_UUID))
-      .await
-      .expect("Failed to find device")
-      .expect("No device found");
 
     let mut client = BLEClient::new();
 
@@ -70,19 +70,26 @@ fn app_main() {
       client.update_conn_params(120, 120, 0, 60).unwrap();
     });
 
-    client.on_disconnect(move |_thing| unsafe {
-      warn!("Disconnected from device");
-      esp_idf_sys::esp_restart();
+    client.on_disconnect(move |_| {
+      reboot!("Disconnected from Terrain Command");
     });
 
-    info!("Connecting to device");
+    info!("Scan for device");
+    let device = scan
+      .active_scan(true)
+      .interval(300)
+      .window(270)
+      .find_device(i32::MAX, |device| device.is_advertising_service(&SERVICE_UUID))
+      .await
+      .expect("Failed to find device")
+      .expect("No device found");
+
+    info!("Connecting to {:?}", device);
     client.connect(device.addr()).await.expect("Failed to connect to device");
+
     info!("Securing connection");
     client.secure_connection().await.expect("Failed to secure connection");
     info!("Connection secured");
-
-    info!("Waiting for connection to be established");
-    Timer::after(Duration::from_millis(150)).await;
 
     let result = 'done: {
       for service in client.get_services().await.unwrap() {
@@ -90,7 +97,7 @@ fn app_main() {
           continue;
         }
 
-        'next1: for characteristic in service.get_characteristics().await.unwrap() {
+        for characteristic in service.get_characteristics().await.unwrap() {
           if characteristic.uuid() != CHAR_UUID || !characteristic.can_notify() {
             continue;
           }
@@ -112,20 +119,15 @@ fn app_main() {
     };
 
     let Some(characteristic) = result else {
-      error!("Failed to find characteristic");
-      unsafe {
-        esp_idf_sys::esp_restart();
-      };
+      reboot!("Failed to subscribe to notifications");
     };
 
-    characteristic.on_notify(move |event| {
-      info!("Received notification from device: {:?}", event);
+    let (tx, rx) = sync_channel(5);
 
-      match event {
-        [_, _, 0, _] => debug!("Button was released"),
-        [_, _, n, _] => tx.send(*n).unwrap(),
-        otherwise => {
-          error!("[on_event] [BUG] Received {:?} event", otherwise)
+    characteristic.on_notify(move |event| {
+      if let [0, 0, id, _] = event {
+        if let Err(e) = tx.send(*id) {
+          reboot!("Failed to send event: {:?}", e);
         }
       }
     });
@@ -143,14 +145,12 @@ fn app_main() {
     loop {
       match rx.recv_timeout(timeout) {
         Ok(event_id) => unsafe {
-          info!("[main] Received event {}", event_id);
-
-          esp_idf_sys::esp_task_wdt_reset();
+          info!("Received event {}", event_id);
 
           match state.transition(event_id) {
             Some(Action::Media(keys)) => keyboard.send_media_key(keys).await,
             Some(Action::Short(index)) => keyboard.send_shortcut(index).await,
-            None => info!("[main] No action {}", event_id)
+            None => warn!("No action to be mapped to an event from {}", event_id)
           }
 
           esp_idf_sys::esp_task_wdt_reset();
@@ -160,9 +160,8 @@ fn app_main() {
           esp_idf_sys::esp_task_wdt_reset();
         },
 
-        Err(RecvTimeoutError::Disconnected) => unsafe {
-          error!("Disconnected from channel, will restart");
-          esp_idf_sys::esp_restart();
+        Err(RecvTimeoutError::Disconnected) => {
+          reboot!("Disconnected from channel");
         }
       }
     }
