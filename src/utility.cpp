@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoLog.h>
 #include <vector>
 
 void restart(const char *format, ...) {
@@ -18,8 +19,8 @@ void restart(const char *format, ...) {
   }
 
   // Print message and restart
-  Serial.println(buffer.data());
-  Serial.println("Will restart the ESP in 5 seconds");
+  Log.fatal(buffer.data());
+  Log.fatal("Will restart the ESP in 5 seconds");
   delay(5000);
   ESP.restart();
 }

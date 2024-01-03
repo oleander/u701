@@ -143,7 +143,7 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   Log.notice("Starting ESP32 Proxy");
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
@@ -152,8 +152,8 @@ extern "C" void init_arduino() {
 
   // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
-    Serial.println("Client connected to the keyboard");
-    Serial.println("Release keyboard semaphore (output) (semaphore)");
+    Log.notice("Connected to keyboard");
+    Log.trace("Release keyboard semaphore (output) (semaphore)");
     xSemaphoreGive(outgoingClientSemaphore);
   });
 
@@ -161,16 +161,16 @@ extern "C" void init_arduino() {
   keyboard.whenClientDisconnects(
       [](BLEServer *_server) { restart("Client disconnected from the keyboard, will restart"); });
 
-  Serial.println("Broadcasting BLE keyboard");
+  Log.notice("Broadcasting BLE keyboard");
   keyboard.begin();
 
-  Serial.println("Wait for the keyboard to connect (output) (semaphore)");
+  Log.trace("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
   NimBLEDevice::whiteListAdd(testServerAddress);
   NimBLEDevice::whiteListAdd(realServerAddress);
 
-  Serial.println("Starting BLE scan for the Terrain Command");
+  Log.notice("Starting BLE scan for the Terrain Command");
 
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
@@ -190,54 +190,54 @@ extern "C" void init_arduino() {
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
 
-  Serial.println("Wait for the Terrain Command to establish connection (input)");
+  Log.notice("Wait for the Terrain Command to establish connection (input)");
   if (pClient->isConnected()) {
-    Serial.println("Terrain Command already connected, will continue");
+    Log.warning("Terrain Command already connected, will continue");
   } else if (pClient->connect()) {
-    Serial.println("Successfully connected to the Terrain Command");
+    Log.notice("Successfully connected to the Terrain Command");
   } else {
     restart("Could not connect to the Terrain Command");
   }
 
-  Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
+  Log.notice("Wait for the Terrain Command to authenticate (input) (semaphore)");
   xSemaphoreTake(incommingClientSemaphore, 10000 / portTICK_PERIOD_MS);
 
-  Serial.println("Fetching service from the Terrain Command ...");
+  Log.notice("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
-    Serial.println("[BUG] Failed to find our service UUID");
-    Serial.println("Will disconnect the device");
+    Log.fatal("[BUG] Failed to find our service UUID");
+    Log.fatal("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
   }
 
-  Serial.println("Fetching all characteristics from the Terrain Command ...");
+  Log.notice("Fetching all characteristics from the Terrain Command ...");
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
-    Serial.println("[BUG] Failed to find our characteristic UUID");
-    Serial.println("Will disconnect the device");
+    Log.fatal("[BUG] Failed to find our characteristic UUID");
+    Log.fatal("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
   }
 
   for (auto &chr: *pChrs) {
     if (!chr->canNotify()) {
-      Serial.println("Characteristic cannot notify, skipping");
+      Log.trace("Characteristic cannot notify, skipping");
       continue;
     }
 
     if (!chr->getUUID().equals(charUUID)) {
-      Serial.println("Characteristic UUID does not match, skipping");
+      Log.trace("Characteristic UUID does not match, skipping");
       continue;
     }
 
     if (!chr->subscribe(true, onEvent, false)) {
-      Serial.println("[BUG] Failed to subscribe to characteristic");
+      Log.fatal("[BUG] Failed to subscribe to characteristic");
       pClient->disconnect();
       restart("Device has been manually disconnected");
     }
 
-    Serial.println("Successfully subscribed to characteristic");
+    Log.notice("Successfully subscribed to characteristic");
     return;
   }
 
