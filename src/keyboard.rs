@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 use log::info;
+use log::warn;
 use esp32_nimble::enums::*;
 use esp32_nimble::hid::*;
 use esp32_nimble::utilities::mutex::Mutex;

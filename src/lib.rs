@@ -102,9 +102,7 @@ fn app_main() {
       .active_scan(true)
       .interval(490)
       .window(450)
-      .find_device(i32::MAX, |device| {
-        device.is_advertising_service(&SERVICE_UUID)
-      })
+      .find_device(i32::MAX, |device| device.is_advertising_service(&SERVICE_UUID))
       .await
       .expect("Failed to find device")
       .expect("No device found");
@@ -126,53 +124,55 @@ fn app_main() {
     });
 
     info!("Connecting to device");
-    client
-      .connect(device.addr())
-      .await
-      .expect("Failed to connect to device");
+    client.connect(device.addr()).await.expect("Failed to connect to device");
     info!("Securing connection");
-    client
-      .secure_connection()
-      .await
-      .expect("Failed to secure connection");
+    client.secure_connection().await.expect("Failed to secure connection");
     info!("Connection secured");
 
     info!("Waiting for connection to be established");
     Timer::after(Duration::from_millis(2000)).await;
 
-    let characteristic = client
-      .get_service(SERVICE_UUID)
-      .await
-      .unwrap()
-      .get_characteristics()
-      .await
-      .unwrap()
-      .find(|x| x.uuid() == CHAR_UUID && x.can_notify())
-      .unwrap();
-    info!(
-      "Subscribing to characteristic: {:?}",
-      characteristic.uuid()
-    );
+    'done: for service in client.get_services().await.unwrap() {
+      if service.uuid() != SERVICE_UUID {
+        continue;
+      }
 
-    let status = characteristic
-      .on_notify(move |event| {
-        info!("Received notification from device: {:?}", event);
-
-        match event {
-          [_, _, 0, _] => debug!("Button was released"),
-          [_, _, n, _] => send.send(*n).unwrap(),
-          otherwise => {
-            error!("[on_event] [BUG] Received {:?} event", otherwise)
-          },
+      for characteristic in service.get_characteristics().await.unwrap() {
+        if characteristic.uuid() != CHAR_UUID {
+          continue;
         }
-      })
-      .subscribe_notify(true)
-      .await;
 
-    match status {
-      Ok(_) => info!("Subscribed to notifications"),
-      Err(e) => warn!("Failed to subscribe to notifications: {:?}", e)
-    }
+        info!("Characteristic: {:?}", characteristic.uuid());
+
+        let cloned_send = send.clone();
+        characteristic.on_notify(move |event| {
+          info!("Received notification from device: {:?}", event);
+
+          match event {
+            [_, _, 0, _] => debug!("Button was released"),
+            [_, _, n, _] => cloned_send.send(*n).unwrap(),
+            otherwise => {
+              error!("[on_event] [BUG] Received {:?} event", otherwise)
+            }
+          }
+        });
+
+        let status = characteristic.subscribe_notify(false).await;
+
+        match status {
+          Ok(_) => {
+            info!("Subscribed to notifications!");
+            break 'done;
+          },
+          Err(e) => {
+            warn!("Failed to subscribe to notifications: {:?}", e);
+            warn!("Will continue to try to subscribe to notifications");
+          }
+        }
+      }
+    };
+
+    info!("Done!");
 
     let mut state = machine::State::default();
 
