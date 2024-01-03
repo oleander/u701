@@ -45,13 +45,12 @@ extern "C" void init_arduino() {
   initArduino();
 
   Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_TRACE, &Serial, true);
+  Log.begin(LOG_LEVEL_INFO, &Serial, true);
   Log.infoln("Starting ESP32 Proxy");
 
   updateWatchdogTimeout(120);
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::setSecurityIOCap(BLE_SM_IO_CAP_KEYBOARD_DISP);
   NimBLEDevice::init(DEVICE_NAME);
 
   Log.infoln("Broadcasting BLE keyboard");
