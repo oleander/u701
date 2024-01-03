@@ -17,19 +17,20 @@ lazy_static = { version = "1.4.0", default-features = false }
 env_logger = { version = "0.10.1", default-features = false }
 anyhow = { version = "1.0.79", default-features = false }
 log = { version = "0.4.20", default-features = false }
-machine = { path = "machine" }
-esp32-nimble = { path = "../esp32-nimble" }
 tokio = { version = "1.35.1", features = ["sync"] }
 
-[profile.release]
-codegen-units = 1
-opt-level = 3
-lto = "fat"
+esp32-nimble = { path = "../esp32-nimble" }
+machine = { path = "machine" }
 
-[profile.release.package."*"]
-codegen-units = 1
-opt-level = 3
+# [profile.release]
+# codegen-units = 1
+# opt-level = 3
+# lto = "fat"
 
-[profile.dev]
-debug = true
-opt-level = "z"
+# [profile.release.package."*"]
+# codegen-units = 1
+# opt-level = 3
+
+# [profile.dev]
+# debug = true
+# opt-level = "z"
