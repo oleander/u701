@@ -74,8 +74,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 
   void onDisconnect(NimBLEClient *pClient) {
-    Serial.println("Disconnected from Terrain Command, will start scan");
-    BLEDevice::getScan()->start(SCAN_DURATION, onCompletedScan, false);
+    restart("Disconnected from Terrain Command");
   };
 
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
