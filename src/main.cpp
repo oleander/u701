@@ -47,7 +47,7 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
     Log.noticeln("Connected to Terrain Command");
-    Log.trace("Update connection parameters");
+    Log.traceln("Update connection parameters");
     pClient->updateConnParams(120, 120, 0, 60);
   };
 
@@ -56,10 +56,10 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-    Log.trace("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
-              params->itvl_min,
-              params->latency,
-              params->supervision_timeout);
+    Log.traceln("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
+                params->itvl_min,
+                params->latency,
+                params->supervision_timeout);
 
     if (params->itvl_min < 24) { /** 1.25ms units */
       return false;
@@ -81,22 +81,22 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     }
 
     Log.noticeln("Secure connection to Terrain Command established");
-    Log.trace("Release Terrain Command semaphore (input) (semaphore)");
+    Log.traceln("Release Terrain Command semaphore (input) (semaphore)");
     xSemaphoreGive(incommingClientSemaphore);
   };
 };
 
 bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
-  Log.trace("Found a new device");
+  Log.traceln("Found a new device");
   if (!advertisedDevice->haveServiceUUID()) {
-    Log.trace("\twith no service UUID");
+    Log.traceln("\twith no service UUID");
     return false;
   }
 
   if (!advertisedDevice->isAdvertisingService(serviceUUID)) {
-    Log.trace("Does not advertise %s, got %s",
-              serviceUUID.toString().c_str(),
-              advertisedDevice->getServiceUUID().toString().c_str());
+    Log.traceln("Does not advertise %s, got %s",
+                serviceUUID.toString().c_str(),
+                advertisedDevice->getServiceUUID().toString().c_str());
     return false;
   }
 
@@ -105,20 +105,20 @@ bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
   auto e2   = "key";
   auto name = advertisedDevice->getName();
   if (name != e1 && name != e2) {
-    Log.trace("Does not advertise %s or %s, got %s", e1, e2, name.c_str());
+    Log.traceln("Does not advertise %s or %s, got %s", e1, e2, name.c_str());
     return false;
   }
 
   auto serverAddress = advertisedDevice->getAddress();
   if (serverAddress != testServerAddress && serverAddress != realServerAddress) {
-    Log.trace("Does not advertise %s or %s, got %s",
-              testServerAddress.toString().c_str(),
-              realServerAddress.toString().c_str(),
-              serverAddress.toString().c_str());
+    Log.traceln("Does not advertise %s or %s, got %s",
+                testServerAddress.toString().c_str(),
+                realServerAddress.toString().c_str(),
+                serverAddress.toString().c_str());
     return false;
   }
 
-  Log.trace("Found BLE client named %s", name.c_str());
+  Log.traceln("Found BLE client named %s", name.c_str());
   return true;
 }
 /** Define a class to handle the callbacks when advertisments are received */
@@ -153,7 +153,7 @@ extern "C" void init_arduino() {
   // Setup HID keyboard and wait for the client to connect
   keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
     Log.noticeln("Connected to keyboard");
-    Log.trace("Release keyboard semaphore (output) (semaphore)");
+    Log.traceln("Release keyboard semaphore (output) (semaphore)");
     xSemaphoreGive(outgoingClientSemaphore);
   });
 
@@ -164,7 +164,7 @@ extern "C" void init_arduino() {
   Log.noticeln("Broadcasting BLE keyboard");
   keyboard.begin();
 
-  Log.trace("Wait for the keyboard to connect (output) (semaphore)");
+  Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
   NimBLEDevice::whiteListAdd(testServerAddress);
@@ -222,12 +222,12 @@ extern "C" void init_arduino() {
 
   for (auto &chr: *pChrs) {
     if (!chr->canNotify()) {
-      Log.trace("Characteristic cannot notify, skipping");
+      Log.traceln("Characteristic cannot notify, skipping");
       continue;
     }
 
     if (!chr->getUUID().equals(charUUID)) {
-      Log.trace("Characteristic UUID does not match, skipping");
+      Log.traceln("Characteristic UUID does not match, skipping");
       continue;
     }
 
