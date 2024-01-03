@@ -29,6 +29,8 @@ NimBLEAddress realServerAddress(0xF797AC1FF8C0); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
+void connectToClient(void *client);
+
 void restart(const char *format, ...) {
   // Simplify memory management with std::vector
   std::vector<char> buffer(256);
@@ -56,7 +58,6 @@ void restart(const char *format, ...) {
 SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
 SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-// static NimBLEClient *pClient;
 
 /* Event received from the Terrain Command */
 static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
@@ -67,6 +68,20 @@ static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bo
   c_on_event(data, length);
 }
 
+void onCompletedScan(NimBLEScanResults results) {
+  Serial.println("Scan completed");
+
+  auto pAdvertisedDevice = results.getDevice(0);
+  auto addr              = pAdvertisedDevice.getAddress();
+
+  auto pClient = NimBLEDevice::createClient(addr);
+  if (!pClient) {
+    restart("[BUG] The Terrain Command was not found");
+  }
+
+  // Run pClient connect in background task
+  xTaskCreate(connectToClient, "connect", 8192, pClient, 5, NULL);
+}
 // Terrain Command BLE buttons
 class ClientCallbacks : public NimBLEClientCallbacks {
   void onConnect(NimBLEClient *pClient) {
@@ -76,7 +91,8 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   };
 
   void onDisconnect(NimBLEClient *pClient) {
-    restart("Terrain Command disconnected");
+    Serial.println("Disconnected from Terrain Command, will start scan");
+    BLEDevice::getScan()->start(SCAN_DURATION, onCompletedScan, false);
   };
 
   bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
@@ -179,12 +195,12 @@ void connectToClient(void *client) {
   }
 
   Serial.println("Wait for the Terrain Command to authenticate (input) (semaphore)");
-  xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
+  xSemaphoreTake(incommingClientSemaphore, 5000 / portTICK_PERIOD_MS);
 
   Serial.println("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
-    Serial.println("Failed to find our service UUID");
+    Serial.println("[BUG] Failed to find our service UUID");
     Serial.println("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
@@ -193,7 +209,7 @@ void connectToClient(void *client) {
   Serial.println("Fetching all characteristics from the Terrain Command ...");
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
-    Serial.println("Failed to find our characteristic UUID");
+    Serial.println("[BUG] Failed to find our characteristic UUID");
     Serial.println("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
@@ -221,24 +237,6 @@ void connectToClient(void *client) {
   }
 
   restart("Failed to find our characteristic UUID");
-}
-
-void onCompletedScan(NimBLEScanResults results) {
-  Serial.println("Scan completed (onCompletedScan)");
-  // print current cpu
-  Serial.print("CPU: ");
-  Serial.println(uxTaskGetStackHighWaterMark(NULL));
-
-  auto pAdvertisedDevice = results.getDevice(0);
-  auto addr              = pAdvertisedDevice.getAddress();
-
-  auto pClient = NimBLEDevice::createClient(addr);
-  if (!pClient) {
-    restart("The Terrain Command was not found");
-  }
-
-  // Run pClient connect in background task
-  xTaskCreate(connectToClient, "connect", 8192, pClient, 5, NULL);
 }
 
 extern "C" void init_arduino() {
@@ -273,9 +271,14 @@ extern "C" void init_arduino() {
   Serial.println("Wait for the keyboard to connect (output) (semaphore)");
   xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
 
+  NimBLEDevice::whiteListAdd(testServerAddress);
+  NimBLEDevice::whiteListAdd(realServerAddress);
+
   Serial.println("Starting BLE scan for the Terrain Command");
+
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
+  pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
   pScan->setInterval(SCAN_INTERVAL);
   pScan->setWindow(SCAN_WINDOW);
   pScan->setLimitedOnly(false);
