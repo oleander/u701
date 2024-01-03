@@ -185,15 +185,14 @@ extern "C" void init_arduino() {
   pScan->setLimitedOnly(false);
   pScan->setActiveScan(false);
   pScan->setMaxResults(1);
-  pScan->start(0);
 
-  Log.noticeln("Wait for the Terrain Command to advertise (input)");
+  auto results = pScan->start(0);
 
-  auto advDevice = pScan->getResults().getDevice(0);
-  auto addr      = advDevice.getAddress();
-  auto pClient   = NimBLEDevice::createClient(addr);
+  auto device  = results.getDevice(0);
+  auto addr    = device.getAddress();
+  auto pClient = NimBLEDevice::createClient(addr);
 
-  pClient->setClientCallbacks(&clientCallbacks, false);
+  pClient->setClientCallbacks(&clientCallbacks);
   pClient->setConnectionParams(12, 12, 0, 51);
   pClient->setConnectTimeout(10);
 
