@@ -8,7 +8,7 @@ use esp32_nimble::hid::*;
 use embassy_time::{Duration, Timer};
 use esp32_nimble::utilities::mutex::Mutex;
 use esp32_nimble::{
-  BLECharacteristic, BLEDevice, BLEHIDDevice, BLEServer
+  BLECharacteristic, BLEDevice, BLEHIDDevice, BLEServer, BLEConnDesc
 };
 use std::sync::Arc;
 
