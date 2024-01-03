@@ -27,7 +27,10 @@ AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
 bool subscribeToCharacteristic(NimBLEClient *pClient, NimBLERemoteCharacteristic *chr) {
-  if (!chr->getUUID().equals(charUUID)) {
+  if (!chr->getRemoteService()->getUUID().equals(serviceUUID)) {
+    Log.traceln("Service UUID does not match, skipping");
+    return false;
+  } else if (!chr->getUUID().equals(charUUID)) {
     Log.traceln("Characteristic UUID does not match, skipping");
     return false;
   } else if (chr->canNotify() && chr->subscribe(true, onEvent)) {
@@ -92,19 +95,15 @@ extern "C" void init_arduino() {
   Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
   xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
 
-  Log.noticeln("Fetching service from the Terrain Command ...");
-  auto pSvc = pClient->getService(serviceUUID);
-  if (!pSvc) disconnect(pClient, "Failed to find our service UUID");
+  Log.noticeln("Fetching services & characteristics");
 
-  Log.noticeln("Fetching all characteristics from the Terrain Command ...");
-  auto pChrs = pSvc->getCharacteristics(true);
-  if (!pChrs) disconnect(pClient, "Failed to find our characteristic UUID");
-
-  for (auto &chr: *pChrs) {
-    if (subscribeToCharacteristic(pClient, chr)) {
-      return removeWatchdog();
+  for (auto pService: *pClient->getServices(true)) {
+    for (auto pChar: *pService->getCharacteristics(true)) {
+      if (subscribeToCharacteristic(pClient, pChar)) {
+        return removeWatchdog();
+      }
     }
   }
 
-  disconnect(pClient, "Failed to subscribe");
+  disconnect(pClient, "Failed to subscribe to characteristic");
 }
