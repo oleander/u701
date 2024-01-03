@@ -21,10 +21,12 @@ pub extern "C" fn app_main() -> i32 {
   }
 
   info!("[app_main] Entering main loop");
-  if let Err(e) = crate::main() {
-    error!("[error] Error: {:?}", e);
-    return 1;
-  }
+  tokio::spawn(async move {
+    if let Err(e) = crate::main().await {
+      error!("[error] Error: {:?}", e);
+      return 1;
+    }
+  });
 
   return 0;
 }

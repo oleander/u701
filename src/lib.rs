@@ -21,7 +21,7 @@ lazy_static! {
 use tokio::sync::Notify;
 
 
-fn main() -> Result<()> {
+async fn main() -> Result<()> {
   info!("[main] Starting main loop");
 
   let receiver = CHANNEL.1.lock().unwrap();
