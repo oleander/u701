@@ -205,8 +205,8 @@ extern "C" void init_arduino() {
   Log.noticeln("Fetching service from the Terrain Command ...");
   auto pSvc = pClient->getService(serviceUUID);
   if (!pSvc) {
-    Log.fatal("[BUG] Failed to find our service UUID");
-    Log.fatal("Will disconnect the device");
+    Log.fatalln("[BUG] Failed to find our service UUID");
+    Log.fatalln("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
   }
@@ -214,8 +214,8 @@ extern "C" void init_arduino() {
   Log.noticeln("Fetching all characteristics from the Terrain Command ...");
   auto pChrs = pSvc->getCharacteristics(true);
   if (!pChrs) {
-    Log.fatal("[BUG] Failed to find our characteristic UUID");
-    Log.fatal("Will disconnect the device");
+    Log.fatalln("[BUG] Failed to find our characteristic UUID");
+    Log.fatalln("Will disconnect the device");
     pClient->disconnect();
     restart("Device has been manually disconnected");
   }
@@ -232,7 +232,7 @@ extern "C" void init_arduino() {
     }
 
     if (!chr->subscribe(true, onEvent, false)) {
-      Log.fatal("[BUG] Failed to subscribe to characteristic");
+      Log.fatalln("[BUG] Failed to subscribe to characteristic");
       pClient->disconnect();
       restart("Device has been manually disconnected");
     }

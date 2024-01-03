@@ -2,6 +2,8 @@
 #include <ArduinoLog.h>
 #include <vector>
 
+#define RESTART_INTERVAL 5 // in seconds
+
 void restart(const char *format, ...) {
   std::vector<char> buffer(256);
 
@@ -19,8 +21,8 @@ void restart(const char *format, ...) {
   }
 
   // Print message and restart
-  Log.fatal(buffer.data());
-  Log.fatal("Will restart the ESP in 5 seconds");
-  delay(5000);
+  Log.fatalln(buffer.data());
+  Log.fatalln("Will restart the ESP in %d seconds", RESTART_INTERVAL);
+  delay(RESTART_INTERVAL * 1000);
   ESP.restart();
 }
