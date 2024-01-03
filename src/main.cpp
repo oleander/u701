@@ -24,8 +24,8 @@
 #define DEVICE_NAME         "u701"
 #define DEVICE_MANUFACTURER "HVA"
 
-NimBLEAddress testServerAddress(0x083A8D9A444A); // TEST
-NimBLEAddress realServerAddress(0xF797AC1FF8C0); // REAL
+NimBLEAddress testServerAddress(0x083A8D9A444A);                  // TEST
+NimBLEAddress realServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
 static NimBLEUUID serviceUUID("1812");
 static NimBLEUUID charUUID("2a4d");
 
@@ -152,7 +152,7 @@ extern "C" void init_arduino() {
   Log.begin(LOG_LEVEL_VERBOSE, &Serial, true);
 
   NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::setPower(ESP_PWR_LVL_N3);
+  // NimBLEDevice::setPower(ESP_PWR_LVL_N3);
   NimBLEDevice::init(DEVICE_NAME);
 
   Log.infoln("Starting ESP32 Proxy");
