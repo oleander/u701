@@ -86,11 +86,13 @@ extern "C" void init_arduino() {
 
   for (auto &chr: *pChrs) {
     if (!chr->canNotify()) {
-      return Log.traceln("Characteristic cannot notify, skipping");
+      Log.traceln("Characteristic cannot notify, skipping");
+      continue;
     }
 
     if (!chr->getUUID().equals(charUUID)) {
-      return Log.traceln("Characteristic UUID does not match, skipping");
+      Log.traceln("Characteristic UUID does not match, skipping");
+      continue;
     }
 
     if (!chr->subscribe(true, onEvent, false)) {
