@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <NimBLEClient.h>
+#include <NimBLEDevice.h>
 
 extern SemaphoreHandle_t incommingClientSemaphore;
 
@@ -41,7 +42,8 @@ bool onConfirmPIN(uint32_t pass_key) {
 
 void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc) {
   if (desc->sec_state.encrypted) {
-    return xSemaphoreGive(incommingClientSemaphore);
+    xSemaphoreGive(incommingClientSemaphore);
+    return;
   }
 
   Log.fatalln("Encrypt connection failed: %s", desc);
