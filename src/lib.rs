@@ -125,10 +125,10 @@ fn app_main() {
     info!("Done!");
 
     let mut state = machine::State::default();
-    let timeout = Duration::from_millis(100);
+    let timeout = std::time::Duration::from_millis(50);
 
     unsafe {
-      esp_idf_sys::esp_task_wdt_init(timeout * 2, true);
+      esp_idf_sys::esp_task_wdt_init(50 * 2, true);
       esp_idf_sys::esp_task_wdt_add(esp_idf_sys::xTaskGetCurrentTaskHandle());
     }
 
