@@ -5,6 +5,7 @@ use log::info;
 use log::warn;
 use esp32_nimble::enums::*;
 use esp32_nimble::hid::*;
+use embassy_time::{Duration, Timer};
 use esp32_nimble::utilities::mutex::Mutex;
 use esp32_nimble::{
   BLECharacteristic, BLEConnDesc, BLEDevice, BLEHIDDevice, BLEServer
@@ -13,6 +14,7 @@ use std::sync::Arc;
 
 const KEYBOARD_ID: u8 = 0x01;
 const MEDIA_KEYS_ID: u8 = 0x02;
+const LETTER_A: u8 = 0x04;
 
 const HID_REPORT_DISCRIPTOR: &[u8] = hid!(
   (USAGE_PAGE, 0x01), // USAGE_PAGE (Generic Desktop Ctrls)
@@ -313,5 +315,27 @@ impl Keyboard {
   pub fn send_report(&self, keys: &KeyReport) {
     self.input_keyboard.lock().set_from(keys).notify();
     esp_idf_hal::delay::Ets::delay_ms(7);
+  }
+
+  pub async fn send_media_key(&self, keys: [u8; 2]) {
+    let mut input = self.input_media_keys.lock();
+    input.set_value(&keys).notify();
+    Self::wait().await;
+    input.set_value(&[0, 0]).notify();
+    Self::wait().await;
+  }
+
+  pub async fn send_shortcut(&self, offset: u8) {
+    let keys = [0, 0, LETTER_A + offset, 0, 0, 0, 0, 0];
+    let mut input = self.input_keyboard.lock();
+
+    input.set_value(&keys).notify();
+    Self::wait().await;
+    input.set_value(&[0; 8]).notify();
+    Self::wait().await;
+  }
+
+  async fn wait() {
+    Timer::after(Duration::from_millis(12)).await;
   }
 }
