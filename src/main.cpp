@@ -57,24 +57,24 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     restart("Disconnected from Terrain Command");
   };
 
-  bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
-    Log.traceln("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
-                params->itvl_min,
-                params->latency,
-                params->supervision_timeout);
+  // bool onConnParamsUpdateRequest(NimBLEClient *pClient, const ble_gap_upd_params *params) {
+  //   Log.traceln("Requested connection params: interval: %d, latency: %d, supervision timeout: %d\n",
+  //               params->itvl_min,
+  //               params->latency,
+  //               params->supervision_timeout);
 
-    if (params->itvl_min < 24) { /** 1.25ms units */
-      return false;
-    } else if (params->itvl_max > 40) { /** 1.25ms units */
-      return false;
-    } else if (params->latency > 2) { /** Number of intervals allowed to skip */
-      return false;
-    } else if (params->supervision_timeout > 100) { /** 10ms units */
-      return false;
-    }
+  //   if (params->itvl_min < 24) { /** 1.25ms units */
+  //     return false;
+  //   } else if (params->itvl_max > 40) { /** 1.25ms units */
+  //     return false;
+  //   } else if (params->latency > 2) { /** Number of intervals allowed to skip */
+  //     return false;
+  //   } else if (params->supervision_timeout > 100) { /** 10ms units */
+  //     return false;
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
 
   /** Pairing proces\s complete, we can check the results in ble_gap_conn_desc */
   void onAuthenticationComplete(ble_gap_conn_desc *desc) {
