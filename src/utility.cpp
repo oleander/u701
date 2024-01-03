@@ -39,3 +39,7 @@ void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
   esp_task_wdt_init(newTimeoutInSeconds, true);
   esp_task_wdt_add(NULL);
 }
+
+void onClientDisconnect(BLEServer *_server) {
+  restart("Client disconnected from the keyboard");
+}
