@@ -206,15 +206,3 @@ extern "C" void init_arduino() {
 
   restart("Failed to find our characteristic UUID");
 }
-
-extern "C" void ble_keyboard_write(uint8_t c[2]) {
-  keyboard.write(c);
-}
-
-extern "C" void ble_keyboard_print(const uint8_t *format) {
-  keyboard.print(reinterpret_cast<const char *>(format));
-}
-
-extern "C" bool ble_keyboard_is_connected() {
-  return keyboard.isConnected();
-}
