@@ -127,7 +127,7 @@ extern "C" void init_arduino() {
   auto pScan = NimBLEDevice::getScan();
   pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
   pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
-  pScan->setActiveScan(false);
+  pScan->setActiveScan(true);
   pScan->setMaxResults(1);
 
   auto results = pScan->start(0);
