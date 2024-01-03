@@ -28,7 +28,7 @@ ClientCallbacks clientCallbacks;
 
 extern "C" void setup_ble() {
   NimBLEDevice::init(DEVICE_NAME);
-  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC);
 }
 
 extern "C" void setup_arduino() {
