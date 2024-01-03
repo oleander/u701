@@ -9,7 +9,7 @@ extern SemaphoreHandle_t incommingClientSemaphore;
 
 void ClientCallbacks::onConnect(NimBLEClient *pClient) {
   Log.traceln("Connected to Terrain Command");
-  // pClient->updateConnParams(120, 120, 0, 60);
+  pClient->updateConnParams(120, 120, 0, 60);
 }
 
 void ClientCallbacks::onDisconnect(NimBLEClient *pClient) {
