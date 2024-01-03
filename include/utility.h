@@ -3,4 +3,4 @@
 void restart(const char *format, ...);
 void removeWatchdog();
 void updateWatchdogTimeout(uint32_t newTimeoutInSeconds);
-void onClientDisconnect(BLEServer *_server);
+void onClientDisconnect(NimBLEServer *_server);

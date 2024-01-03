@@ -1,3 +1,4 @@
+#include "utility.h"
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <esp_task_wdt.h>
@@ -40,6 +41,6 @@ void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
   esp_task_wdt_add(NULL);
 }
 
-void onClientDisconnect(BLEServer *_server) {
+void onClientDisconnect(NimBLEServer *_server) {
   restart("Client disconnected from the keyboard");
 }
