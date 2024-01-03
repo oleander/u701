@@ -19,15 +19,15 @@ anyhow = { version = "1.0.79", default-features = false }
 log = { version = "0.4.20", default-features = false }
 machine = { path = "machine" }
 
-# [profile.release]
-# codegen-units = 1
-# opt-level = 3
-# lto = "fat"
+[profile.release]
+codegen-units = 1
+opt-level = 3
+lto = "fat"
 
-# [profile.release.package."*"]
-# codegen-units = 1
-# opt-level = 3
+[profile.release.package."*"]
+codegen-units = 1
+opt-level = 3
 
-# [profile.dev]
-# debug = true
-# opt-level = "z"
+[profile.dev]
+debug = true
+opt-level = "z"
