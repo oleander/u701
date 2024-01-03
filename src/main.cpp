@@ -56,7 +56,7 @@ void restart(const char *format, ...) {
 SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
 SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
 BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-static NimBLEClient *pClient;
+// static NimBLEClient *pClient;
 
 /* Event received from the Terrain Command */
 static void onEvent(BLERemoteCharacteristic *_, uint8_t *data, size_t length, bool isNotify) {
@@ -151,9 +151,10 @@ bool isValidAdvertisement(NimBLEAdvertisedDevice *advertisedDevice) {
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
     if (isValidAdvertisement(advertisedDevice)) {
-      auto addr = advertisedDevice->getAddress();
-      pClient   = NimBLEDevice::createClient(addr);
       advertisedDevice->getScan()->stop();
+    } else {
+      auto address = advertisedDevice->getAddress();
+      advertisedDevice->getScan()->erase(address);
     }
   };
 };
@@ -161,59 +162,8 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
 AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
 ClientCallbacks clientCallbacks;
 
-extern "C" void init_arduino() {
-  esp_task_wdt_init(60, true);
-  esp_task_wdt_add(NULL);
-
-  initArduino();
-
-  Serial.begin(SERIAL_BAUD_RATE);
-  // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  Serial.println("Starting ESP32 BLE Proxy (1)");
-  Serial.println("Starting ESP32 BLE Proxy (2)");
-
-  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::setPower(ESP_PWR_LVL_N0);
-  NimBLEDevice::init(DEVICE_NAME);
-
-  // Setup HID keyboard and wait for the client to connect
-  keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
-    Serial.println("Client connected to the keyboard");
-    Serial.println("Release keyboard semaphore (output) (semaphore)");
-    xSemaphoreGive(outgoingClientSemaphore);
-  });
-
-  // Restart the ESP if the client disconnects
-  keyboard.whenClientDisconnects(
-      [](BLEServer *_server) { restart("Client disconnected from the keyboard, will restart"); });
-
-  Serial.println("Broadcasting BLE keyboard");
-  keyboard.begin();
-
-  Serial.println("Wait for the keyboard to connect (output) (semaphore)");
-  xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
-
-  Serial.println("Disble watchdog");
-  // TODO: Is this needed?
-  esp_task_wdt_delete(NULL);
-
-  Serial.println("Starting BLE scan for the Terrain Command");
-  auto pScan = NimBLEDevice::getScan();
-  pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
-  pScan->setInterval(SCAN_INTERVAL);
-  pScan->setWindow(SCAN_WINDOW);
-  pScan->setLimitedOnly(true);
-  pScan->setActiveScan(true);
-  pScan->setMaxResults(0);
-  pScan->start(SCAN_DURATION, false);
-
-  Serial.println("Enable watch dog");
-  esp_task_wdt_init(60, true);
-  esp_task_wdt_add(NULL);
-
-  if (!pClient) {
-    restart("The Terrain Command was not found");
-  }
+void connectToClient(void *client) {
+  auto pClient = static_cast<NimBLEClient *>(client);
 
   pClient->setClientCallbacks(&clientCallbacks, false);
   pClient->setConnectionParams(12, 12, 0, 51);
@@ -267,13 +217,71 @@ extern "C" void init_arduino() {
     }
 
     Serial.println("Successfully subscribed to characteristic");
-    break;
+    return;
   }
 
-  Serial.println("Setup complete");
+  restart("Failed to find our characteristic UUID");
+}
 
-  Serial.println("Disable watch dog");
-  esp_task_wdt_delete(NULL);
+void onCompletedScan(NimBLEScanResults results) {
+  Serial.println("Scan completed (onCompletedScan)");
+  // print current cpu
+  Serial.print("CPU: ");
+  Serial.println(uxTaskGetStackHighWaterMark(NULL));
+
+  auto pAdvertisedDevice = results.getDevice(0);
+  auto addr              = pAdvertisedDevice.getAddress();
+
+  auto pClient = NimBLEDevice::createClient(addr);
+  if (!pClient) {
+    restart("The Terrain Command was not found");
+  }
+
+  // Run pClient connect in background task
+  xTaskCreate(connectToClient, "connect", 8192, pClient, 5, NULL);
+}
+
+extern "C" void init_arduino() {
+  initArduino();
+
+  Serial.begin(SERIAL_BAUD_RATE);
+  // Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Serial.println("Starting ESP32 BLE Proxy (1)");
+  Serial.println("Starting ESP32 BLE Proxy (2)");
+
+  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+  NimBLEDevice::setPower(ESP_PWR_LVL_N0);
+  NimBLEDevice::init(DEVICE_NAME);
+
+  Serial.print("CPU: ");
+  Serial.println(uxTaskGetStackHighWaterMark(NULL));
+
+  // Setup HID keyboard and wait for the client to connect
+  keyboard.whenClientConnects([](ble_gap_conn_desc *_desc) {
+    Serial.println("Client connected to the keyboard");
+    Serial.println("Release keyboard semaphore (output) (semaphore)");
+    xSemaphoreGive(outgoingClientSemaphore);
+  });
+
+  // Restart the ESP if the client disconnects
+  keyboard.whenClientDisconnects(
+      [](BLEServer *_server) { restart("Client disconnected from the keyboard, will restart"); });
+
+  Serial.println("Broadcasting BLE keyboard");
+  keyboard.begin();
+
+  Serial.println("Wait for the keyboard to connect (output) (semaphore)");
+  xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
+
+  Serial.println("Starting BLE scan for the Terrain Command");
+  auto pScan = NimBLEDevice::getScan();
+  pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
+  pScan->setInterval(SCAN_INTERVAL);
+  pScan->setWindow(SCAN_WINDOW);
+  pScan->setLimitedOnly(false);
+  pScan->setActiveScan(true);
+  pScan->setMaxResults(1);
+  pScan->start(SCAN_DURATION, onCompletedScan, false);
 }
 
 extern "C" void ble_keyboard_write(uint8_t c[2]) {
