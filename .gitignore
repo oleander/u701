@@ -10,3 +10,4 @@ src/CMakeLists.txt
 sdkconfig.*.old
 sdkconfig.old
 managed_components
+.espup.sh
