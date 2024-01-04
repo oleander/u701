@@ -44,6 +44,7 @@ bool subscribeToCharacteristic(NimBLEClient *pClient, NimBLERemoteCharacteristic
     return false;
   }
 }
+
 extern "C" void init_arduino() {
   initArduino();
 
@@ -87,7 +88,6 @@ extern "C" void init_arduino() {
   pClient->setConnectionParams(12, 12, 0, 51);
 
   updateWatchdogTimeout(60);
-
   if (!pClient->connect()) {
     restart("Could not connect to the Terrain Command");
   }
@@ -95,6 +95,7 @@ extern "C" void init_arduino() {
   Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
   xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
 
+  updateWatchdogTimeout(20);
   Log.noticeln("Fetching services & characteristics");
 
   for (auto pService: *pClient->getServices(true)) {
