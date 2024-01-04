@@ -4,10 +4,10 @@
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
 
-#include "AdvertisedDeviceCallbacks.h"
-#include "ClientCallbacks.h"
-#include "ffi.h"
-#include "utility.h"
+#include "AdvertisedDeviceCallbacks.hh"
+#include "ClientCallbacks.hh"
+#include "ffi.hh"
+#include "utility.hh"
 
 #define SERIAL_BAUD_RATE       115200
 #define DEVICE_NAME            "u701"

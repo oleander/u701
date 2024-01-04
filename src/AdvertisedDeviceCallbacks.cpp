@@ -1,4 +1,4 @@
-#include "AdvertisedDeviceCallbacks.h"
+#include "AdvertisedDeviceCallbacks.hh"
 #include <NimBLEAdvertisedDevice.h>
 
 void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDevice) {

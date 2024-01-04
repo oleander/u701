@@ -1,5 +1,5 @@
-#include "ClientCallbacks.h"
-#include "utility.h"
+#include "ClientCallbacks.hh"
+#include "utility.hh"
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <NimBLEClient.h>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "utility.h"
-#include "ffi.h"
+#include "utility.hh"
+#include "ffi.hh"
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <esp_task_wdt.h>
