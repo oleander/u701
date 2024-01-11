@@ -18,10 +18,10 @@ jobs:
           toolchain: nightly
 
       - name: Install cargo-pio
-        run: cargo install cargo-pio
+        run: cargo +nightly install cargo-pio
 
       - name: Install PlatformIO
-        run: cargo pio installpio
+        run: cargo +nightly pio installpio
 
       - name: Build PlatformIO examples
-        run: cargo pio exec -- check
+        run: cargo +nightly pio exec -- check
