@@ -158,7 +158,7 @@ namespace llvm_libc {
 
       auto static callback = ClientCallbacks();
 
-      pClient->setClientCallbacks(&callback, true);
+      pClient->setClientCallbacks(&callback, false);
       pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
       pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
 
