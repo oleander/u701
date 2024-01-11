@@ -104,6 +104,18 @@ namespace llvm_libc {
     return false;
   }
 
+  bool subscribe(NimBLEClient *pClient, bool cache) {
+    for (auto pService: *pClient->getServices(cache)) {
+      for (auto pChar: *pService->getCharacteristics(cache)) {
+        if (subscribeToCharacteristic(pClient, pChar)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   void setup() {
     initArduino();
 
@@ -159,17 +171,19 @@ namespace llvm_libc {
       xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
 
       updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
-      Log.noticeln("Fetching services & characteristics");
-
-      for (auto pService: *pClient->getServices(true)) {
-        for (auto pChar: *pService->getCharacteristics(true)) {
-          if (subscribeToCharacteristic(pClient, pChar)) {
-            return removeWatchdog();
-          }
+      Log.noticeln("Try subscribing to existing services & characteristics");
+      if (subscribe(pClient, false)) {
+        Log.noticeln("\tSuccess!");
+        return removeWatchdog();
+      } else {
+        Log.warningln("\tFailed, will try to discover");
+        if (subscribe(pClient, true)) {
+          Log.noticeln("\t\tSuccess!");
+          return removeWatchdog();
+        } else {
+          disconnect(pClient, "\t\tFailed, could not subscribe to any characteristic");
         }
       }
-
-      disconnect(pClient, "Failed to subscribe to characteristic");
     }
   }
 } // namespace llvm_libc
