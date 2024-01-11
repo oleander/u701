@@ -1,7 +1,8 @@
-# BasedOnStyle: LLVM
+BasedOnStyle: LLVM
 # BreakBeforeBraces: Attach
 AllowShortIfStatementsOnASingleLine: true
 IndentWidth: 2
+NamespaceIndentation: All
 AlignConsecutiveAssignments: true
 SortIncludes: true
 AlignTrailingComments: true

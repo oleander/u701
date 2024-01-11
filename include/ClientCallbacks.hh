@@ -1,11 +1,17 @@
+#ifndef CLIENTCALLBACKS_HH
+#define CLIENTCALLBACKS_HH
+
 #include <NimBLEClient.h>
 
-class ClientCallbacks : public NimBLEClientCallbacks {
-public:
-  bool onConnParamsUpdateRequest(NimBLEClient *_pClient, const ble_gap_upd_params *params);
-  void onAuthenticationComplete(ble_gap_conn_desc *desc);
-  uint32_t onPassKeyRequest();
-  bool onConfirmPIN(uint32_t pass_key);
-  void onDisconnect(NimBLEClient *pClient);
-  void onConnect(NimBLEClient *pClient);
-};
+namespace llvm_libc {
+  class ClientCallbacks : public NimBLEClientCallbacks {
+  public:
+    void onConnect(NimBLEClient *pClient) override;
+    void onDisconnect(NimBLEClient *pClient) override;
+    bool onConnParamsUpdateRequest(NimBLEClient *_pClient, const ble_gap_upd_params *params) override;
+    void onAuthenticationComplete(ble_gap_conn_desc *desc) override;
+    uint32_t onPassKeyRequest() override;
+    bool onConfirmPIN(uint32_t pass_key) override;
+  };
+} // namespace __llvm_libc
+#endif // CLIENTCALLBACKS_HH

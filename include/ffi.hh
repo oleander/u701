@@ -1,7 +1,15 @@
-#include <stddef.h>
-#include <stdint.h>
+#ifndef FFI_HH
+#define FFI_HH
 
-extern "C" void c_on_event(const uint8_t *event, size_t length);
-extern "C" void ble_keyboard_print(const uint8_t *format);
-extern "C" void ble_keyboard_write(uint8_t c[2]);
-extern "C" void setupBLEConnections();
+#include <cstddef>
+#include <cstdint>
+
+namespace llvm_libc {
+  extern "C" {
+  void c_on_event(const uint8_t *event, size_t length);
+  void ble_keyboard_print(const uint8_t *format);
+  void ble_keyboard_write(uint8_t character[2]);
+  }
+} // namespace __llvm_libc
+
+#endif // FFI_HH

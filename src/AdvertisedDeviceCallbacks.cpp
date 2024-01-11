@@ -1,6 +1,8 @@
 #include "AdvertisedDeviceCallbacks.hh"
 #include <NimBLEAdvertisedDevice.h>
 
-void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-  advertisedDevice->getScan()->stop();
-}
+namespace llvm_libc {
+  void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDevice) {
+    advertisedDevice->getScan()->stop();
+  }
+} // namespace __llvm_libc

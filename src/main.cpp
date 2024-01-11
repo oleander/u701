@@ -3,108 +3,176 @@
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
+#include <esp_task_wdt.h>
+
+#include <array>
+#include <string>
+#include <vector>
 
 #include "AdvertisedDeviceCallbacks.hh"
 #include "ClientCallbacks.hh"
 #include "ffi.hh"
-#include "utility.hh"
+#include "utility.h"
 
-#define SERIAL_BAUD_RATE       115200
-#define DEVICE_NAME            "u701"
-#define DEVICE_MANUFACTURER    "HVA"
-#define DEVICE_BATTERY         100
-#define CLIENT_CONNECT_TIMEOUT 30
+namespace llvm_libc {
+  constexpr int SERIAL_BAUD_RATE           = 115200;
+  constexpr int CLIENT_CONNECT_TIMEOUT     = 30;
+  constexpr uint64_t TEST_SERVER_ADDRESS   = 0x083A8D9A444A;
+  constexpr uint64_t REAL_SERVER_ADDRESS   = 0xF797AC1FF8C0;
+  constexpr uint64_t IPHONE_CLIENT_ADDRESS = 0xC02C5C83709A;
+  constexpr int CONNECTION_INTERVAL_MIN    = 12;
+  constexpr int CONNECTION_INTERVAL_MAX    = 12;
+  constexpr int SUPERVISION_TIMEOUT        = 51;
+  constexpr int WATCHDOG_TIMEOUT_1         = 120;
+  constexpr int WATCHDOG_TIMEOUT_2         = 5 * 60;
+  constexpr int WATCHDOG_TIMEOUT_3         = 60;
+  constexpr int WATCHDOG_TIMEOUT_4         = 20;
 
-static NimBLEAddress testServerAddress(0x083A8D9A444A, BLE_ADDR_PUBLIC); // TEST
-static NimBLEAddress realServerAddress(0xF797AC1FF8C0, BLE_ADDR_RANDOM); // REAL
-static NimBLEUUID serviceUUID("1812");
-static NimBLEUUID charUUID("2a4d");
+  const std::array<char, 5> SERVICE_UUID = {"1812"};
+  const std::array<char, 5> CHAR_UUID    = {"2a4d"};
 
-BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
-SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
-SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
-AdvertisedDeviceCallbacks advertisedDeviceCallbacks;
-ClientCallbacks clientCallbacks;
+  const NimBLEAddress testServerAddress(TEST_SERVER_ADDRESS, BLE_ADDR_PUBLIC); // TEST
+  const NimBLEAddress realServerAddress(REAL_SERVER_ADDRESS, BLE_ADDR_RANDOM); // REAL
+  const NimBLEUUID serviceUUID(SERVICE_UUID.data());
+  const NimBLEUUID charUUID(CHAR_UUID.data());
 
-bool subscribeToCharacteristic(NimBLEClient *pClient, NimBLERemoteCharacteristic *chr) {
-  if (!chr->getRemoteService()->getUUID().equals(serviceUUID)) {
-    Log.traceln("Service UUID does not match, skipping");
-    return false;
-  } else if (!chr->getUUID().equals(charUUID)) {
-    Log.traceln("Characteristic UUID does not match, skipping");
-    return false;
-  } else if (chr->canNotify() && chr->subscribe(true, onEvent)) {
-    Log.noticeln("Successfully subscribed to characteristic (notify)");
-    return true;
-  } else if (chr->canIndicate() && chr->subscribe(false, onEvent)) {
-    Log.noticeln("Successfully subscribed to characteristic (indicate))");
-    return true;
-  } else {
+  NimBLEClient *createBLEClient(const NimBLEAddress &addr) {
+    return NimBLEDevice::createClient(addr);
+  }
+
+  void onEvent(NimBLERemoteCharacteristic * /* pRemoteCharacteristic */, uint8_t *data, size_t length, bool isNotify) {
+    if (!isNotify) {
+      return;
+    }
+
+    c_on_event(data, length);
+  }
+
+  void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
+    Log.traceln("Update watchdog timeout to %d seconds", newTimeoutInSeconds);
+    esp_task_wdt_deinit();
+    esp_task_wdt_init(newTimeoutInSeconds, true);
+    esp_task_wdt_add(nullptr);
+  }
+
+  void removeWatchdog() {
+    Log.traceln("Remove watchdog");
+    esp_task_wdt_delete(nullptr);
+    esp_task_wdt_deinit();
+  }
+
+  void onClientDisconnect(NimBLEServer * /* _server */) {
+    utility::reboot("Client disconnected from the keyboard");
+  }
+
+  template <typename... Args> void disconnect(NimBLEClient *pClient, const char *format, Args &&...args) {
+    Log.traceln("Disconnect from Terrain Command");
+    pClient->disconnect();
+    utility::reboot(std::string(format), std::forward<Args>(args)...);
+  }
+
+  auto onClientConnect(ble_gap_conn_desc * /* _desc */) -> void {
+    Log.traceln("Connected to keyboard");
+    Log.traceln("Release keyboard semaphore (output) (semaphore)");
+    xSemaphoreGive(utility::outgoingClientSemaphore);
+  }
+
+  bool subscribeToCharacteristic(NimBLEClient * /* pClient */, NimBLERemoteCharacteristic *chr) {
+    if (!chr->getRemoteService()->getUUID().equals(serviceUUID)) {
+      Log.traceln("Service UUID does not match, skipping");
+      return false;
+    }
+
+    if (!chr->getUUID().equals(charUUID)) {
+      Log.traceln("Characteristic UUID does not match, skipping");
+      return false;
+    }
+
+    if (chr->canNotify() && chr->subscribe(true, onEvent)) {
+      Log.noticeln("Successfully subscribed to characteristic (notify)");
+      return true;
+    }
+
+    if (chr->canIndicate() && chr->subscribe(false, onEvent)) {
+      Log.noticeln("Successfully subscribed to characteristic (indicate))");
+      return true;
+    }
+
     Log.warningln("Characteristic cannot notify or indicate, skipping");
     return false;
   }
-}
 
-extern "C" void init_arduino() {
-  initArduino();
+  void setup() {
+    initArduino();
 
-  Serial.begin(SERIAL_BAUD_RATE);
-  Log.begin(LOG_LEVEL_INFO, &Serial, true);
-  Log.infoln("Starting ESP32 Proxy");
+    Serial.begin(SERIAL_BAUD_RATE);
+    Log.begin(LOG_LEVEL_INFO, &Serial, true);
+    Log.infoln("Starting ESP32 Proxy");
 
-  updateWatchdogTimeout(120);
+    updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+    NimBLEDevice::init(utility::DEVICE_NAME);
 
-  NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-  NimBLEDevice::init(DEVICE_NAME);
+    Log.infoln("Broadcasting BLE keyboard");
+    auto static iPhoneAddr = NimBLEAddress(IPHONE_CLIENT_ADDRESS, BLE_ADDR_RANDOM);
+    utility::keyboard.whenClientConnects(onClientConnect);
+    utility::keyboard.whenClientDisconnects(onClientDisconnect);
+    utility::keyboard.begin(&iPhoneAddr);
 
-  Log.infoln("Broadcasting BLE keyboard");
-  keyboard.whenClientConnects(onClientConnect);
-  keyboard.whenClientDisconnects(onClientDisconnect);
-  keyboard.begin();
+    Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
+    xSemaphoreTake(utility::outgoingClientSemaphore, portMAX_DELAY);
 
-  Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
-  xSemaphoreTake(outgoingClientSemaphore, portMAX_DELAY);
+    NimBLEDevice::whiteListAdd(testServerAddress);
+    NimBLEDevice::whiteListAdd(realServerAddress);
 
-  NimBLEDevice::whiteListAdd(testServerAddress);
-  NimBLEDevice::whiteListAdd(realServerAddress);
+    updateWatchdogTimeout(WATCHDOG_TIMEOUT_2);
 
-  updateWatchdogTimeout(5 * 60);
+    Log.traceln("Starting BLE scan for the Terrain Command");
+    auto *pScan          = NimBLEDevice::getScan();
+    auto static callback = AdvertisedDeviceCallbacks();
+    pScan->setAdvertisedDeviceCallbacks(&callback, false);
+    pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
+    pScan->setActiveScan(true);
+    pScan->setMaxResults(1);
 
-  Log.traceln("Starting BLE scan for the Terrain Command");
+    auto results = pScan->start(0);
+    if (!results.getCount()) {
+      Log.warningln("No devices found during scan");
+    } else {
+      auto device  = results.getDevice(0);
+      auto addr    = device.getAddress();
+      auto pClient = llvm_libc::createBLEClient(addr);
 
-  auto pScan = NimBLEDevice::getScan();
-  pScan->setAdvertisedDeviceCallbacks(&advertisedDeviceCallbacks);
-  pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
-  pScan->setActiveScan(true);
-  pScan->setMaxResults(1);
+      auto static callback = ClientCallbacks();
 
-  auto results = pScan->start(0);
-  auto device  = results.getDevice(0);
-  auto addr    = device.getAddress();
-  auto pClient = NimBLEDevice::createClient(addr);
+      pClient->setClientCallbacks(&callback, true);
+      pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
+      pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
 
-  pClient->setClientCallbacks(&clientCallbacks, false);
-  pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
-  pClient->setConnectionParams(12, 12, 0, 51);
-
-  updateWatchdogTimeout(60);
-  if (!pClient->connect()) {
-    restart("Could not connect to the Terrain Command");
-  }
-
-  Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
-  xSemaphoreTake(incommingClientSemaphore, portMAX_DELAY);
-
-  updateWatchdogTimeout(20);
-  Log.noticeln("Fetching services & characteristics");
-
-  for (auto pService: *pClient->getServices(true)) {
-    for (auto pChar: *pService->getCharacteristics(true)) {
-      if (subscribeToCharacteristic(pClient, pChar)) {
-        return removeWatchdog();
+      updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
+      if (!pClient->connect()) {
+        utility::reboot("Could not connect to the Terrain Command");
       }
+
+      Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
+      xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
+
+      updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
+      Log.noticeln("Fetching services & characteristics");
+
+      for (auto pService: *pClient->getServices(true)) {
+        for (auto pChar: *pService->getCharacteristics(true)) {
+          if (subscribeToCharacteristic(pClient, pChar)) {
+            return removeWatchdog();
+          }
+        }
+      }
+
+      disconnect(pClient, "Failed to subscribe to characteristic");
     }
   }
+} // namespace __llvm_libc
 
-  disconnect(pClient, "Failed to subscribe to characteristic");
+extern "C" void init_arduino() {
+  llvm_libc::setup();
 }

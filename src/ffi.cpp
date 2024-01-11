@@ -1,11 +1,13 @@
+#include "utility.h"
 #include <BleKeyboard.h>
 
-extern BleKeyboard keyboard;
+namespace app {
+  extern "C" void ble_keyboard_write(uint8_t character[2]) {
+    utility::keyboard.write(character);
+  }
 
-extern "C" void ble_keyboard_write(uint8_t c[2]) {
-  keyboard.write(c);
-}
-
-extern "C" void ble_keyboard_print(const uint8_t *format) {
-  keyboard.print(reinterpret_cast<const char *>(format));
-}
+  extern "C" void ble_keyboard_print(const uint8_t *format) {
+    const char *formattedString = reinterpret_cast<const char *>(format);
+    utility::keyboard.print(formattedString);
+  }
+} // namespace app
