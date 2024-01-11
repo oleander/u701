@@ -16,6 +16,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+          override: true
+          default: true
+          components: rust-src,rust-std
       - run: rm rust-toolchain.toml
 
       - name: Install cargo-pio
