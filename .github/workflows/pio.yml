@@ -16,6 +16,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+      - run: rust-toolchain.toml
 
       - name: Install cargo-pio
         run: cargo +nightly install cargo-pio
