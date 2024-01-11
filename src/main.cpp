@@ -36,6 +36,8 @@ namespace llvm_libc {
   const NimBLEUUID serviceUUID(SERVICE_UUID.data());
   const NimBLEUUID charUUID(CHAR_UUID.data());
 
+  NimBLEAddress iPhoneClientAddress(IPHONE_CLIENT_ADDRESS, BLE_ADDR_RANDOM);
+
   NimBLEClient *createBLEClient(const NimBLEAddress &addr) {
     return NimBLEDevice::createClient(addr);
   }
@@ -114,10 +116,9 @@ namespace llvm_libc {
     NimBLEDevice::init(utility::DEVICE_NAME);
 
     Log.infoln("Broadcasting BLE keyboard");
-    auto static iPhoneAddr = NimBLEAddress(IPHONE_CLIENT_ADDRESS, BLE_ADDR_RANDOM);
     utility::keyboard.whenClientConnects(onClientConnect);
     utility::keyboard.whenClientDisconnects(onClientDisconnect);
-    utility::keyboard.begin(&iPhoneAddr);
+    utility::keyboard.begin(&iPhoneClientAddress);
 
     Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
     xSemaphoreTake(utility::outgoingClientSemaphore, portMAX_DELAY);
@@ -171,7 +172,7 @@ namespace llvm_libc {
       disconnect(pClient, "Failed to subscribe to characteristic");
     }
   }
-} // namespace __llvm_libc
+} // namespace llvm_libc
 
 extern "C" void init_arduino() {
   llvm_libc::setup();
