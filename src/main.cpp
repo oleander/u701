@@ -122,7 +122,7 @@ namespace llvm_libc {
 
     Serial.begin(SERIAL_BAUD_RATE);
     Log.begin(LOG_LEVEL_INFO, &Serial, true);
-    Log.warningln("Starting ESP32 Proxy @ %s", GIT_COMMIT);
+    Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
