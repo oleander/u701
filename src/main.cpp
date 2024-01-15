@@ -118,8 +118,6 @@ namespace llvm_libc {
   }
 
   void setup() {
-    auto [x, y] = std::pair<int, int>(1, 2);
-
     initArduino();
 
     Serial.begin(SERIAL_BAUD_RATE);
