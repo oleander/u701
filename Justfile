@@ -2,6 +2,8 @@
 set shell := ["zsh", "-cu"]
 set dotenv-load := true
 
+UPLOAD_PORT := `ls /dev/tty.usb* | head -n 1`
+
 clean:
     rm -rf .pio .embuild target
     cargo clean
