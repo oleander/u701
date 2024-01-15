@@ -63,4 +63,5 @@ RUN rustup default nightly
 # Activate ESP environment
 RUN echo "source /home/${CONTAINER_USER}/export-esp.sh" >> ~/.bashrc
 
+SHELL ["/bin/bash", "-c"]
 CMD [ "/bin/bash" ]
