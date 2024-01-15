@@ -62,6 +62,8 @@ RUN rustup default nightly
 
 # Activate ESP environment
 RUN echo "source /home/${CONTAINER_USER}/export-esp.sh" >> ~/.bashrc
+RUN espup install --targets "${ESP_BOARD}" --log-level debug
+RUN espup update --targets "${ESP_BOARD}" --log-level debug
 
 SHELL ["/bin/bash", "-c"]
 CMD [ "/bin/bash" ]
