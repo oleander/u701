@@ -26,7 +26,7 @@ pub extern "C" fn app_main() -> i32 {
     return 1;
   }
 
-  return 0;
+  0
 }
 
 pub fn send_media_key(keys: [u8; 2]) {

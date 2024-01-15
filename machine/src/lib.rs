@@ -27,7 +27,7 @@ impl State {
     use State::*;
     use Action::*;
 
-    *self = match (self.clone(), next) {
+    *self = match (*self, next) {
       // Meta -> Meta: ignore new
       (state @ Meta(_), M1 | M2) => {
         state
@@ -52,12 +52,12 @@ impl State {
     match self {
       // Meta -> Regular: run shortcut
       Combo(meta_id, event_id) => {
-        META.get(&meta_id).and_then(|m| m.get(&event_id)).map(|&a| Short(a))
+        META.get(meta_id).and_then(|m| m.get(event_id)).map(|&a| Short(a))
       }
 
       // Regular: run key
       Key(event_id) => {
-        EVENT.get(&event_id).map(|&a| Media(a))
+        EVENT.get(event_id).map(|&a| Media(a))
       }
 
       // Meta: wait for next press
