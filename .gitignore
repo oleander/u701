@@ -12,3 +12,4 @@ sdkconfig.release*
 sdkconfig.old
 managed_components
 .espup.sh
+tmp/espup.sh
