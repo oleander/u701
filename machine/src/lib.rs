@@ -77,7 +77,6 @@ impl Default for State {
 #[cfg(test)]
 mod tests {
   use super::constants::buttons::*;
-  use super::constants::*;
   use super::*;
 
   macro_rules! test_transitions {
