@@ -1,6 +1,4 @@
 
-UPLOAD_PORT := `ls /dev/* | grep "tty.usb" | head -n 1`
-
 set shell := ["zsh", "-cu"]
 set dotenv-load := true
 
