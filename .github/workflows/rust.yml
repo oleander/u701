@@ -30,7 +30,6 @@ jobs:
         with:
           toolchain: nightly
           override: true
-          default: true
           components: rust-src
       - name: Run tests (main)
         uses: actions-rs/cargo@v1
