@@ -1,0 +1,1 @@
+CONFIG_SDK_TOOLPREFIX="xtensa-esp32-espidf-"
