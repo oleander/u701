@@ -20,14 +20,10 @@ log = { version = "0.4.20", default-features = false }
 machine = { path = "machine" }
 
 [profile.release]
-codegen-units = 1
 opt-level = 3
-lto = "fat"
-
-[profile.release.package."*"]
-codegen-units = 1
-opt-level = 3
+debug = true
+lto = true
 
 [profile.dev]
-debug = true
 opt-level = "z"
+debug = true
