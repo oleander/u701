@@ -19,13 +19,17 @@ jobs:
       - name: Setup rust nightly
         uses: actions-rs/toolchain@v1
         with:
+          components: rust-src,rust-std
           toolchain: nightly
           override: true
-          components: rust-src,rust-std
-      - run: rm rust-toolchain.toml
+
+      - name: Remove rust-toolchain.toml
+        run: rm rust-toolchain.toml
 
       - name: Install cargo-pio
-        run: cargo +nightly install cargo-pio
+        run: |
+          cargo +nightly install cargo-binstall
+          cargo +nightly binstall cargo-pio espup -y
 
       - name: Install PlatformIO
         run: cargo +nightly pio installpio
@@ -33,10 +37,7 @@ jobs:
       - name: Build PlatformIO examples
         run: cargo +nightly pio exec -- check
 
-      - name: Install espup
-        run: cargo +nightly install espup
-
-      - name: Build
+      - name: Build using PlatformIO
         run: |
           source .env
           espup install -t $MCU -f .espup.sh
