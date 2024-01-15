@@ -55,6 +55,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
+          toolchain: esp
           args: --workspace --all-targets --all-features -- -D warnings
 
       # - name: Clippy (machine)
