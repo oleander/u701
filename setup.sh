@@ -8,4 +8,5 @@ cargo +nightly binstall cargo-pio espup just -y
 cargo +nightly pio installpio
 
 # just clean build
+source  ~/.bashrc
 cargo +esp build
