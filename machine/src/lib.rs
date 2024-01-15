@@ -128,17 +128,17 @@ mod tests {
   fn meta_1_with_regular() {
     test_transitions!(State::default();
       M1 => None::<Action>,
-      A2 => Some(Action::Short(48)),
+      A2 => Some(Action::Short(0)),
       M1 => None::<Action>,
-      A3 => Some(Action::Short(49)),
+      A3 => Some(Action::Short(1)),
       M1 => None::<Action>,
-      A4 => Some(Action::Short(50)),
+      A4 => Some(Action::Short(2)),
       M1 => None::<Action>,
-      B2 => Some(Action::Short(51)),
+      B2 => Some(Action::Short(3)),
       M1 => None::<Action>,
-      B3 => Some(Action::Short(52)),
+      B3 => Some(Action::Short(4)),
       M1 => None::<Action>,
-      B4 => Some(Action::Short(53))
+      B4 => Some(Action::Short(5))
     );
   }
 
@@ -237,22 +237,22 @@ mod tests {
     test_transitions!(State::default();
       M2 => None::<Action>,
       M2 => None::<Action>,
-      A2 => Some(Action::Short(0)),
+      A2 => Some(Action::Short(6)),
       M2 => None::<Action>,
       M2 => None::<Action>,
-      A3 => Some(Action::Short(1)),
+      A3 => Some(Action::Short(7)),
       M2 => None::<Action>,
       M2 => None::<Action>,
-      A4 => Some(Action::Short(2)),
+      A4 => Some(Action::Short(8)),
       M2 => None::<Action>,
       M2 => None::<Action>,
-      B2 => Some(Action::Short(3)),
+      B2 => Some(Action::Short(9)),
       M2 => None::<Action>,
       M2 => None::<Action>,
-      B3 => Some(Action::Short(4)),
+      B3 => Some(Action::Short(10)),
       M2 => None::<Action>,
       M2 => None::<Action>,
-      B4 => Some(Action::Short(5))
+      B4 => Some(Action::Short(11))
     );
   }
 
