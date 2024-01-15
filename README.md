@@ -4,9 +4,8 @@
 
 ## Setup
 
-* `rustup target add riscv32imc-esp-espidf`
-* `cargo install cargo-pio`
-* `cargo install just`
+* `cargo install cargo-pio espup just`
+* `just setup build`
 
 ## Hardware Support
 
