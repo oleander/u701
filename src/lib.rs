@@ -25,7 +25,7 @@ fn main() -> Result<()> {
   info!("[main] Entering loop, waiting for events");
   while let Ok(event_id) = receiver.recv() {
     match state.transition(event_id) {
-      Some(Action::Media(keys)) => send_media_key(keys),
+      Some(Action::Media(media_key)) => send_media_key(media_key.into()),
       Some(Action::Short(index)) => send_shortcut(index),
       None => debug!("[main] No action {}", event_id)
     }

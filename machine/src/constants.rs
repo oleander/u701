@@ -1,15 +1,28 @@
 use std::collections::HashMap;
 use lazy_static::*;
 use buttons::*;
-use media::*;
 
-pub mod media {
-  pub const VOLUME_DOWN: [u8; 2] = [64, 0];
-  pub const NEXT_TRACK: [u8; 2] = [1, 0];
-  pub const PREV_TRACK: [u8; 2] = [2, 0];
-  pub const PLAY_PAUSE: [u8; 2] = [8, 0];
-  pub const VOLUME_UP: [u8; 2] = [32, 0];
-  pub const EJECT: [u8; 2] = [16, 0];
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MediaControl {
+  VolumeDown,
+  NextTrack,
+  PrevTrack,
+  PlayPause,
+  VolumeUp,
+  Eject,
+}
+
+impl From<MediaControl> for [u8; 2] {
+  fn from(control: MediaControl) -> [u8; 2] {
+    match control {
+      MediaControl::VolumeDown => [64, 0],
+      MediaControl::NextTrack => [1, 0],
+      MediaControl::PrevTrack => [2, 0],
+      MediaControl::PlayPause => [8, 0],
+      MediaControl::VolumeUp => [32, 0],
+      MediaControl::Eject => [16, 0],
+    }
+  }
 }
 
 pub mod buttons {
@@ -24,17 +37,16 @@ pub mod buttons {
 }
 
 lazy_static! {
-  pub static ref EVENT: HashMap<u8, [u8; 2]> = {
+  pub static ref EVENT: HashMap<u8, MediaControl> = {
     let mut table = HashMap::new();
-    table.insert(A2, VOLUME_DOWN);
-    table.insert(A3, PREV_TRACK);
-    table.insert(A4, PLAY_PAUSE);
-    table.insert(B2, VOLUME_UP);
-    table.insert(B3, NEXT_TRACK);
-    table.insert(B4, EJECT);
+    table.insert(A2, MediaControl::VolumeDown);
+    table.insert(A3, MediaControl::PrevTrack);
+    table.insert(A4, MediaControl::PlayPause);
+    table.insert(B2, MediaControl::VolumeUp);
+    table.insert(B3, MediaControl::NextTrack);
+    table.insert(B4, MediaControl::Eject);
     table
   };
-
   pub static ref META: HashMap<u8, HashMap<u8, u8>> = {
     let mut meta1 = HashMap::new();
     meta1.insert(A2, 0);

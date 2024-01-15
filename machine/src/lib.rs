@@ -5,7 +5,7 @@
 pub mod constants;
 
 use constants::buttons::{M1, M2};
-use constants::{EVENT, META};
+use constants::*;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum State {
@@ -16,7 +16,7 @@ pub enum State {
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Action {
-  Media([u8; 2]),
+  Media(MediaControl),
   Short(u8)
 }
 
@@ -77,7 +77,7 @@ impl Default for State {
 #[cfg(test)]
 mod tests {
   use super::constants::buttons::*;
-  use super::constants::media::*;
+  use super::constants::*;
   use super::*;
 
   macro_rules! test_transitions {
@@ -115,12 +115,12 @@ mod tests {
   #[test]
   fn test_regular() {
     test_transitions!(State::default();
-      A2 => Some(Action::Media(VOLUME_DOWN)),
-      A3 => Some(Action::Media(PREV_TRACK)),
-      A4 => Some(Action::Media(PLAY_PAUSE)),
-      B2 => Some(Action::Media(VOLUME_UP)),
-      B3 => Some(Action::Media(NEXT_TRACK)),
-      B4 => Some(Action::Media(EJECT))
+      A2 => Some(Action::Media(MediaControl::VolumeDown)),
+      A3 => Some(Action::Media(MediaControl::PrevTrack)),
+      A4 => Some(Action::Media(MediaControl::PlayPause)),
+      B2 => Some(Action::Media(MediaControl::VolumeUp)),
+      B3 => Some(Action::Media(MediaControl::NextTrack)),
+      B4 => Some(Action::Media(MediaControl::Eject))
     );
   }
 
@@ -300,8 +300,8 @@ mod tests {
 
     assert_eq!(state.transition(M2), None);
     assert_eq!(state.transition(A2), Some(Action::Short(6)));
-    assert_eq!(state.transition(A3), Some(Action::Media(PREV_TRACK)));
-    assert_eq!(state.transition(A4), Some(Action::Media(PLAY_PAUSE)));
+    assert_eq!(state.transition(A3), Some(Action::Media(MediaControl::PrevTrack)));
+    assert_eq!(state.transition(A4), Some(Action::Media(MediaControl::PlayPause)));
 
     assert_eq!(state.transition(M2), None);
     assert_eq!(state.transition(B2), Some(Action::Short(9)));
