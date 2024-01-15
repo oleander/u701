@@ -146,17 +146,17 @@ mod tests {
   fn meta_2_with_regular() {
     test_transitions!(State::default();
       M2 => None::<Action>,
-      A2 => Some(Action::Short(0)),
+      A2 => Some(Action::Short(6)),
       M2 => None::<Action>,
-      A3 => Some(Action::Short(1)),
+      A3 => Some(Action::Short(7)),
       M2 => None::<Action>,
-      A4 => Some(Action::Short(2)),
+      A4 => Some(Action::Short(8)),
       M2 => None::<Action>,
-      B2 => Some(Action::Short(3)),
+      B2 => Some(Action::Short(9)),
       M2 => None::<Action>,
-      B3 => Some(Action::Short(4)),
+      B3 => Some(Action::Short(10)),
       M2 => None::<Action>,
-      B4 => Some(Action::Short(5))
+      B4 => Some(Action::Short(11))
     );
   }
 
@@ -282,34 +282,35 @@ mod tests {
     assert_eq!(state.transition(B4), Some(Action::Short(5)));
   }
 
+  #[test]
   fn meta_2_with_meta_2_with_regular() {
     let mut state = State::default();
 
     assert_eq!(state.transition(M2), None);
     assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(0)));
+    assert_eq!(state.transition(A2), Some(Action::Short(6)));
 
     assert_eq!(state.transition(M2), None);
     assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A3), Some(Action::Short(1)));
+    assert_eq!(state.transition(A3), Some(Action::Short(7)));
 
     assert_eq!(state.transition(M2), None);
     assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A4), Some(Action::Short(2)));
+    assert_eq!(state.transition(A4), Some(Action::Short(8)));
 
     assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(0)));
+    assert_eq!(state.transition(A2), Some(Action::Short(6)));
     assert_eq!(state.transition(A3), Some(Action::Media(PREV_TRACK)));
     assert_eq!(state.transition(A4), Some(Action::Media(PLAY_PAUSE)));
 
     assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B2), Some(Action::Short(3)));
+    assert_eq!(state.transition(B2), Some(Action::Short(9)));
 
     assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B3), Some(Action::Short(4)));
+    assert_eq!(state.transition(B3), Some(Action::Short(10)));
 
     assert_eq!(state.transition(M2), None);
-    assert_eq!(state.transition(B4), Some(Action::Short(5)));
+    assert_eq!(state.transition(B4), Some(Action::Short(11)));
   }
 
   #[test]
@@ -317,31 +318,31 @@ mod tests {
     let mut state = State::default();
 
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(48)));
+    assert_eq!(state.transition(A2), Some(Action::Short(0)));
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A3), Some(Action::Short(49)));
+    assert_eq!(state.transition(A3), Some(Action::Short(1)));
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A4), Some(Action::Short(50)));
+    assert_eq!(state.transition(A4), Some(Action::Short(2)));
 
     assert_eq!(state.transition(M1), None);
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(48)));
+    assert_eq!(state.transition(A2), Some(Action::Short(0)));
 
     assert_eq!(state.transition(M1), None);
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A3), Some(Action::Short(49)));
+    assert_eq!(state.transition(A3), Some(Action::Short(1)));
 
     assert_eq!(state.transition(M1), None);
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A4), Some(Action::Short(50)));
+    assert_eq!(state.transition(A4), Some(Action::Short(2)));
 
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B2), Some(Action::Short(51)));
+    assert_eq!(state.transition(B2), Some(Action::Short(3)));
 
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B3), Some(Action::Short(52)));
+    assert_eq!(state.transition(B3), Some(Action::Short(4)));
 
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B4), Some(Action::Short(53)));
+    assert_eq!(state.transition(B4), Some(Action::Short(5)));
   }
 }
