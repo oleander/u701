@@ -14,7 +14,7 @@ jobs:
             ~/.cargo
             target
             .pio
-          key: ${{ hashFiles('platformio.ini') }}
+          key: ${{ hashFiles('platformio.ini') }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup rust nightly
         uses: actions-rs/toolchain@v1
