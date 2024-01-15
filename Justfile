@@ -14,7 +14,7 @@ ota:
 erase:
     esptool.py erase_region 0x9000 0x5000 # nvs
 monitor:
-    tools/monitor.sh --port {{UPLOAD_PORT}} --baud $MONITOR_SPEED
+    tools/monitor.sh --baud $MONITOR_SPEED
 update:
     cargo pio exec -- pkg update
 setup:
@@ -35,7 +35,7 @@ menuconfig mod = "release":
 
 # upload release | debug
 upload $ENVIRONMENT = "release":
-    . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
+    . ./.espup.sh && cargo pio exec -- run -t upload -e $ENVIRONMENT
 
 # build release | debug
 build mod = "release": setup
