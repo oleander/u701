@@ -6,5 +6,8 @@ target = "riscv32imc-esp-espidf"
 [target.riscv32imc-esp-espidf]
 linker = "ldproxy"
 
+[target.xtensa-esp32-espidf]
+linker = "ldproxy"
+
 [unstable]
 build-std = ["std", "panic_abort"]
