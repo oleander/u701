@@ -1,6 +1,15 @@
 {
   "name": "u701",
-  "image": "docker.io/espressif/idf-rust:esp32c3_latest",
+  // "image": "docker.io/espressif/idf-rust:esp32c3_latest",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "CONTAINER_USER": "esp",
+      "CONTAINER_GROUP": "esp",
+      "ESP_BOARD": "esp32c3",
+      "GITHUB_TOKEN": "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"
+    }
+  },
   "settings": {
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
@@ -31,7 +40,5 @@
     8000
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/esp/u701,type=bind,consistency=cached",
-  "workspaceFolder": "/home/esp/u701",
-  "build.args": {
-    "GITHUB_TOKEN": "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"
+  "workspaceFolder": "/home/esp/u701"
 }
