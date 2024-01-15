@@ -47,6 +47,7 @@ update_deps:
     cargo update
     cargo udeps
 reload-docker:
+    devcontainer down --workspace-folder .
     devcontainer build --workspace-folder .
     devcontainer up --workspace-folder .
     devcontainer exec --workspace-folder . ./setup.sh
