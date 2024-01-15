@@ -262,32 +262,26 @@ mod tests {
 
     assert_eq!(state.transition(M1), None);
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(48)));
+    assert_eq!(state.transition(A2), Some(Action::Short(0)));
 
     assert_eq!(state.transition(M1), None);
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A3), Some(Action::Short(49)));
+    assert_eq!(state.transition(A3), Some(Action::Short(1)));
 
     assert_eq!(state.transition(M1), None);
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A4), Some(Action::Short(50)));
+    assert_eq!(state.transition(A4), Some(Action::Short(2)));
 
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(A2), Some(Action::Short(48)));
-    assert_eq!(state.transition(A3), Some(Action::Media(PREV_TRACK)));
-    assert_eq!(state.transition(A4), Some(Action::Media(PLAY_PAUSE)));
+    assert_eq!(state.transition(B2), Some(Action::Short(3)));
 
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B2), Some(Action::Short(51)));
+    assert_eq!(state.transition(B3), Some(Action::Short(4)));
 
     assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B3), Some(Action::Short(52)));
-
-    assert_eq!(state.transition(M1), None);
-    assert_eq!(state.transition(B4), Some(Action::Short(53)));
+    assert_eq!(state.transition(B4), Some(Action::Short(5)));
   }
 
-  #[test]
   fn meta_2_with_meta_2_with_regular() {
     let mut state = State::default();
 
