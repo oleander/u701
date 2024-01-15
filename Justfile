@@ -19,7 +19,6 @@ update:
 setup:
     espup install -t $MCU -f {{ESPUP_PATH}}
     espup update -t $MCU -f {{ESPUP_PATH}}
-install: upload monitor
 
 test: setup
     . {{ESPUP_PATH}} && cargo test
@@ -35,3 +34,5 @@ upload $ENVIRONMENT = "release": setup
 # build release | debug
 build mod = "release": setup
     . {{ESPUP_PATH}} && cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
+
+install: upload monitor
