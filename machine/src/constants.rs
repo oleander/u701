@@ -9,7 +9,7 @@ pub enum MediaControl {
   PrevTrack,
   PlayPause,
   VolumeUp,
-  Eject,
+  Eject
 }
 
 impl From<MediaControl> for [u8; 2] {
@@ -20,7 +20,7 @@ impl From<MediaControl> for [u8; 2] {
       MediaControl::PrevTrack => [2, 0],
       MediaControl::PlayPause => [8, 0],
       MediaControl::VolumeUp => [32, 0],
-      MediaControl::Eject => [16, 0],
+      MediaControl::Eject => [16, 0]
     }
   }
 }
@@ -47,6 +47,7 @@ lazy_static! {
     table.insert(B4, MediaControl::Eject);
     table
   };
+
   pub static ref META: HashMap<u8, HashMap<u8, u8>> = {
     let mut meta1 = HashMap::new();
     meta1.insert(A2, 0);
