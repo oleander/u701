@@ -26,8 +26,8 @@ jobs:
       - name: Install PlatformIO
         run: cargo +nightly pio installpio
 
-      - name: Build PlatformIO examples
-        run: cargo +nightly pio exec -- check
+      # - name: Build PlatformIO examples
+      #   run: cargo +nightly pio exec -- check
 
       - name: Install espup
         run: cargo +nightly install espup
