@@ -26,7 +26,7 @@ jobs:
       - name: Remove rust-toolchain.toml
         run: rm rust-toolchain.toml
 
-      - name: Install cargo-pio
+      - name: Install cargo-pio and espup
         run: |
           cargo +nightly install cargo-binstall
           cargo +nightly binstall cargo-pio espup -y
