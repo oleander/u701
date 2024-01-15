@@ -51,11 +51,6 @@ namespace llvm_libc {
     c_on_event(data, length);
   }
 
-  void testCPPVersion() {
-    if (true) [[likely]] { /* ... */
-    }
-  }
-
   void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
     Log.traceln("Update watchdog timeout to %d seconds", newTimeoutInSeconds);
     esp_task_wdt_deinit();
@@ -123,8 +118,9 @@ namespace llvm_libc {
   }
 
   void setup() {
+    auto [x, y] = std::pair<int, int>(1, 2);
+
     initArduino();
-    testCPPVersion();
 
     Serial.begin(SERIAL_BAUD_RATE);
     Log.begin(LOG_LEVEL_INFO, &Serial, true);
