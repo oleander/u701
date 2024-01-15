@@ -213,22 +213,22 @@ mod tests {
     test_transitions!(State::default();
       M1 => None::<Action>,
       M1 => None::<Action>,
-      A2 => Some(Action::Short(48)),
+      A2 => Some(Action::Short(0)),
       M1 => None::<Action>,
       M1 => None::<Action>,
-      A3 => Some(Action::Short(49)),
+      A3 => Some(Action::Short(1)),
       M1 => None::<Action>,
       M1 => None::<Action>,
-      A4 => Some(Action::Short(50)),
+      A4 => Some(Action::Short(2)),
       M1 => None::<Action>,
       M1 => None::<Action>,
-      B2 => Some(Action::Short(51)),
+      B2 => Some(Action::Short(3)),
       M1 => None::<Action>,
       M1 => None::<Action>,
-      B3 => Some(Action::Short(52)),
+      B3 => Some(Action::Short(4)),
       M1 => None::<Action>,
       M1 => None::<Action>,
-      B4 => Some(Action::Short(53))
+      B4 => Some(Action::Short(5))
     );
   }
 
