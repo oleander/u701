@@ -43,7 +43,7 @@ namespace llvm_libc {
   void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc) {
     if (desc->sec_state.encrypted) {
       Log.traceln("Connection encrypted");
-      xSemaphoreGive(utility::incommingClientSemaphore);
+      // xSemaphoreGive(utility::incommingClientSemaphore);
     } else {
       Log.fatalln("Encrypt connection failed: %s", desc);
       auto client = NimBLEDevice::getClientByID(desc->conn_handle);
@@ -54,4 +54,4 @@ namespace llvm_libc {
     }
   }
 
-} // namespace __llvm_libc
+} // namespace llvm_libc

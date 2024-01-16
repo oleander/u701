@@ -78,20 +78,10 @@ namespace llvm_libc {
     esp_task_wdt_reset();
   }
 
-  void onClientDisconnect(NimBLEServer * /* _server */) {
-    utility::reboot("Client disconnected from the keyboard");
-  }
-
   template <typename... Args> void disconnect(NimBLEClient *pClient, const char *format, Args &&...args) {
     Log.traceln("Disconnect from Terrain Command");
     pClient->disconnect();
     utility::reboot(std::string(format), std::forward<Args>(args)...);
-  }
-
-  auto onClientConnect(ble_gap_conn_desc * /* _desc */) -> void {
-    Log.traceln("Connected to keyboard");
-    Log.traceln("Release keyboard semaphore (output) (semaphore)");
-    xSemaphoreGive(utility::outgoingClientSemaphore);
   }
 
   bool subscribeToCharacteristic(NimBLEClient * /* pClient */, NimBLERemoteCharacteristic *chr) {
@@ -131,6 +121,22 @@ namespace llvm_libc {
     return false;
   }
 
+  int gapHandler(ble_gap_event *event, void * /* arg */) {
+    switch (event->type) {
+    case BLE_GAP_EVENT_DISCONNECT:
+      utility::reboot("[BLE_GAP_EVENT_DISCONNECT] Disconnect from TC");
+    case BLE_GAP_EVENT_MTU:
+      Log.info("[BLE_GAP_EVENT_MTU] Release TC semaphore");
+      xSemaphoreGive(utility::incommingClientSemaphore);
+      break;
+    default:
+      Log.traceln("Unknown GAP event: %d", event->type);
+      break;
+    }
+
+    return event->type;
+  }
+
   void setup() {
     initArduino();
 
@@ -140,23 +146,22 @@ namespace llvm_libc {
     removeWatchdog();
 
     NimBLEDevice::init(utility::DEVICE_NAME);
-    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
 
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
 
     Log.infoln("Broadcasting BLE keyboard");
-    utility::keyboard.whenClientConnects(onClientConnect);
-    utility::keyboard.whenClientDisconnects(onClientDisconnect);
     utility::keyboard.begin(&iPhoneClientAddress);
 
     NimBLEDevice::setPower(ESP_PWR_LVL_N12);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
+    NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
     xSemaphoreTake(utility::outgoingClientSemaphore, portMAX_DELAY);
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
-    NimBLEDevice::setMTU(23);
+    // NimBLEDevice::setMTU(44);
 
     removeWatchdog();
 
