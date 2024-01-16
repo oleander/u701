@@ -23,6 +23,10 @@ machine = { path = "machine" }
 opt-level = "s"
 lto = false
 
+
+[profile.release.package."*"]
+opt-level = "s"
+
 [profile.dev]
 opt-level = "z"
 debug = true
