@@ -11,7 +11,6 @@
 #include <vector>
 
 #include <ArduinoOTA.h>
-#include <FS.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
 
@@ -130,20 +129,19 @@ namespace llvm_libc {
   const int watchdogTimeoutSeconds = 3;
 
   void setupArduinoOTA(void * /* parameter */) {
-
-    Log.noticeln("Starting OTA");
-    Log.noticeln("Connecting to %s, hold on ...", SSID);
+    removeWatchdog();
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(SSID, PASS);
 
     unsigned long startTime = millis();
     while (WiFi.status() != WL_CONNECTED) {
-      if (millis() - startTime > wifiConnectDelayMs) {
-        delay(wifiConnectDelayMs);
-        startTime = millis();
-      }
+      vTaskDelay(200);
     }
+
+    Log.noticeln("Core %u", xPortGetCoreID());
+    Log.noticeln("Starting OTA");
+    Log.noticeln("Connecting to %s, hold on ...", SSID);
 
     ArduinoOTA.setHostname(OTA_WIFI_SSID);
     ArduinoOTA.setRebootOnSuccess(true);
@@ -160,14 +158,15 @@ namespace llvm_libc {
 
     Log.noticeln("OTA ready with IP address %s", WiFi.localIP().toString().c_str());
 
-    updateWatchdogTimeout(watchdogTimeoutSeconds);
+    // updateWatchdogTimeout(watchdogTimeoutSeconds);
 
     while (true) {
       ArduinoOTA.handle();
-      esp_task_wdt_reset();
-      delay(10);
+      vTaskDelay(10);
     }
   }
+
+  TaskHandle_t Task1;
 
   void setup() {
     initArduino();
@@ -176,7 +175,8 @@ namespace llvm_libc {
     Log.begin(LOG_LEVEL_MAX, &Serial, true);
 
     Log.noticeln("Starting setupArduinoOTA (ok)");
-    xTaskCreatePinnedToCore(setupArduinoOTA, "setupArduinoOTA", 10000, nullptr, 1, nullptr, 1);
+    // core 1
+    xTaskCreatePinnedToCore(setupArduinoOTA, "setupArduinoOTA", 10000, NULL, 0, &Task1, 0);
 
     removeWatchdog();
 
