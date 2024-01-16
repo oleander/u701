@@ -23,7 +23,6 @@ machine = { path = "machine" }
 opt-level = "s"
 lto = false
 
-
 [profile.release.package."*"]
 opt-level = "s"
 
