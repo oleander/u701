@@ -129,10 +129,6 @@ namespace llvm_libc {
     return false;
   }
 
-  const int wifiConnectDelayMs     = 500;
-  const int watchdogTimeoutSeconds = 3;
-  TaskHandle_t Task1;
-
   void setup() {
     initArduino();
 
