@@ -24,6 +24,9 @@ opt-level = 3
 debug = false
 lto = true
 
+[profile.release.package.*]
+opt-level = 3
+
 [profile.dev]
 opt-level = "z"
 debug = true

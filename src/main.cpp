@@ -124,9 +124,7 @@ namespace llvm_libc {
     WiFi.begin("u701");
 
     while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-      Serial.println("Connection Failed! Rebooting...");
-      delay(5000);
-      ESP.restart();
+      utility::reboot("WiFi connection Failed! Rebooting...");
     }
 
     ArduinoOTA.setHostname("u701.local");
