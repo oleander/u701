@@ -126,27 +126,16 @@ namespace llvm_libc {
   }
 
   void setupArduinoOTA(void * /* parameter */) {
-    Log.noticeln("Setting up OTA");
-    // if (WiFi.status() == WL_NO_SHIELD) {
-    //   Log.errorln("WiFi shield not present");
-    //   return;
-    // }
-
     Log.noticeln("Connecting to %s", SSID);
-    while (WiFi.begin(SSID, PASS) != WL_CONNECTED) {
-      Log.noticeln("Connecting to %s", SSID);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(SSID, PASS);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
     }
 
     ArduinoOTA.setHostname("u701");
     ArduinoOTA.setRebootOnSuccess(true);
-
-    ArduinoOTA.onStart([]() {
-      if (ArduinoOTA.getCommand() != U_FLASH) {
-        Log.errorln("OTA not supported");
-        return;
-      }
-    });
-
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     });
