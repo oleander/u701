@@ -5,12 +5,10 @@
 #include <NimBLEScan.h>
 #include <esp_task_wdt.h>
 
-#include <AsyncTCP.h>
+#include <Arduino.h>
+
+#include "BasicOTA.hpp"
 #include <WiFi.h>
-
-#include <ESPAsyncWebServer.h>
-#include <ElegantOTA.h>
-
 #include <array>
 #include <iostream>
 #include <string>
@@ -126,26 +124,20 @@ namespace llvm_libc {
   AsyncWebServer server(80);
 
   void handleOTA(void * /* parameter */) {
-    Log.traceln("Start OTA");
     WiFi.mode(WIFI_STA);
     WiFi.begin("boat", "0304673428");
-
-    while (WiFi.status() != WL_CONNECTED) {
-      Serial.print(".");
+    while (WiFi.waitForConnectResult() != WL_CONNECTED) {
       vTaskDelay(pdMS_TO_TICKS(500));
     }
 
+    OTA.begin();
+
+    Serial.println("Ready");
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
 
-    ElegantOTA.setAutoReboot(false);
-
-    ElegantOTA.begin(&server); // Start ElegantOTA
-    server.begin();
-    Serial.println("HTTP server started");
-
     while (true) {
-      ElegantOTA.loop();
+      OTA.handle();
     }
   }
 
