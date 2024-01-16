@@ -126,42 +126,50 @@ namespace llvm_libc {
   }
 
   void setupArduinoOTA(void * /* parameter */) {
-    Log.noticeln("Connecting to %s", SSID);
+    updateWatchdogTimeout(30);
+
+    Log.noticeln("Starting OTA");
+    Log.noticeln("Connecting to %s, hold on ...", SSID);
+
     WiFi.mode(WIFI_STA);
     WiFi.begin(SSID, PASS);
+
     while (WiFi.status() != WL_CONNECTED) {
+      esp_task_wdt_reset();
       delay(500);
-      Serial.print(".");
     }
 
     ArduinoOTA.setHostname("u701");
     ArduinoOTA.setRebootOnSuccess(true);
+
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      esp_task_wdt_reset();
       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     });
 
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
       if (error == OTA_AUTH_ERROR) {
-        Serial.println("Auth Failed");
+        Log.errorln("Auth Failed");
       } else if (error == OTA_BEGIN_ERROR) {
-        Serial.println("Begin Failed");
+        Log.errorln("Begin Failed");
       } else if (error == OTA_CONNECT_ERROR) {
-        Serial.println("Connect Failed");
+        Log.errorln("Connect Failed");
       } else if (error == OTA_RECEIVE_ERROR) {
-        Serial.println("Receive Failed");
+        Log.errorln("Receive Failed");
       } else if (error == OTA_END_ERROR) {
-        Serial.println("End Failed");
+        Log.errorln("End Failed");
       }
     });
 
     ArduinoOTA.begin();
 
-    Log.noticeln("OTA ready");
+    Log.noticeln("OTA ready with IP address %s", WiFi.localIP().toString().c_str());
 
     while (true) {
       ArduinoOTA.handle();
-      delay(1000);
+      esp_task_wdt_reset();
+      delay(10);
     }
   }
 
