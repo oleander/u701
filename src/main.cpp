@@ -153,7 +153,10 @@ namespace llvm_libc {
 
     ArduinoOTA.begin();
 
+    updateWatchdogTimeout(3);
+
     while (true) {
+      esp_task_wdt_reset();
       ArduinoOTA.handle();
       vTaskDelay(10);
     }
@@ -166,7 +169,6 @@ namespace llvm_libc {
     Log.begin(LOG_LEVEL_MAX, &Serial, true);
 
     Log.noticeln("Starting setupArduinoOTA (ok)");
-    // core 1
     xTaskCreatePinnedToCore(setupArduinoOTA, "setupArduinoOTA", 10000, NULL, 0, &Task1, 0);
 
     removeWatchdog();
