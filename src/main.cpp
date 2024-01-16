@@ -23,9 +23,11 @@
 #define OTA_WIFI_PASS "11111111"
 
 namespace llvm_libc {
-  constexpr int SERIAL_BAUD_RATE           = 115200;
-  constexpr int CLIENT_CONNECT_TIMEOUT     = 30;
-  constexpr uint64_t TEST_SERVER_ADDRESS   = 0x083A8D9A444A;
+  constexpr int SERIAL_BAUD_RATE       = 115200;
+  constexpr int CLIENT_CONNECT_TIMEOUT = 30;
+  // constexpr uint64_t TEST_SERVER_ADDRESS   = 0x083A8D9A444A;
+  // 78:21:84:7C:1C:52
+  constexpr uint64_t TEST_SERVER_ADDRESS   = 0x7821847C1C52;
   constexpr uint64_t REAL_SERVER_ADDRESS   = 0xF797AC1FF8C0;
   constexpr uint64_t IPHONE_CLIENT_ADDRESS = 0xC02C5C83709A;
   constexpr int CONNECTION_INTERVAL_MIN    = 12;
