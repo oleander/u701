@@ -60,20 +60,20 @@ namespace llvm_libc {
 
   void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
     Log.traceln("Update watchdog timeout to %d seconds", newTimeoutInSeconds);
-    // esp_task_wdt_deinit();
-    // esp_task_wdt_init(newTimeoutInSeconds, true);
-    // esp_task_wdt_add(nullptr);
+    esp_task_wdt_deinit();
+    esp_task_wdt_init(newTimeoutInSeconds, true);
+    esp_task_wdt_add(nullptr);
   }
 
   void removeWatchdog() {
     Log.traceln("Remove watchdog");
-    // esp_task_wdt_delete(nullptr);
-    // esp_task_wdt_deinit();
+    esp_task_wdt_delete(nullptr);
+    esp_task_wdt_deinit();
   }
 
   void resetWatchdog() {
     Log.traceln("Reset watchdog");
-    // esp_task_wdt_reset();
+    esp_task_wdt_reset();
   }
 
   void onClientDisconnect(NimBLEServer * /* _server */) {
@@ -137,8 +137,8 @@ namespace llvm_libc {
 
     removeWatchdog();
 
-    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
     NimBLEDevice::init(utility::DEVICE_NAME);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
 
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
 
@@ -146,6 +146,8 @@ namespace llvm_libc {
     utility::keyboard.whenClientConnects(onClientConnect);
     utility::keyboard.whenClientDisconnects(onClientDisconnect);
     utility::keyboard.begin(&iPhoneClientAddress);
+
+    NimBLEDevice::setPower(ESP_PWR_LVL_N12);
 
     Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
     xSemaphoreTake(utility::outgoingClientSemaphore, portMAX_DELAY);
