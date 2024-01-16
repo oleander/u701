@@ -121,7 +121,7 @@ namespace llvm_libc {
     initArduino();
 
     Serial.begin(SERIAL_BAUD_RATE);
-    Log.begin(LOG_LEVEL_INFO, &Serial, true);
+    Log.begin(LOG_LEVEL_MAX, &Serial, true);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
