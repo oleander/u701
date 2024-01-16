@@ -20,6 +20,9 @@
 #include "ffi.hh"
 #include "utility.h"
 
+#define SSID "boat"
+#define PASS "0304673428"
+
 namespace llvm_libc {
   constexpr int SERIAL_BAUD_RATE           = 115200;
   constexpr int CLIENT_CONNECT_TIMEOUT     = 30;
@@ -122,15 +125,12 @@ namespace llvm_libc {
     return false;
   }
 
-#define SSID "boat"
-#define PASS "0304673428"
-
   void setupArduinoOTA(void * /* parameter */) {
     Log.noticeln("Setting up OTA");
-    if (WiFi.status() == WL_NO_SHIELD) {
-      Log.errorln("WiFi shield not present");
-      return;
-    }
+    // if (WiFi.status() == WL_NO_SHIELD) {
+    //   Log.errorln("WiFi shield not present");
+    //   return;
+    // }
 
     Log.noticeln("Connecting to %s", SSID);
     while (WiFi.begin(SSID, PASS) != WL_CONNECTED) {
