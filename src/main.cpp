@@ -1,11 +1,14 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
-#include <ArduinoOTA.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
-#include <WiFi.h>
 #include <esp_task_wdt.h>
+
+#include <ElegantOTA.h>
+#include <WebServer.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
 
 #include <array>
 #include <iostream>
@@ -119,53 +122,29 @@ namespace llvm_libc {
     return false;
   }
 
+  WebServer server(80);
   void handleOTA(void * /* parameter */) {
     Log.traceln("Start OTA");
-    // Access point (no router)
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP("u701");
+    WiFi.mode(WIFI_STA);
+    WiFi.begin("boat", "0304673428");
 
-    while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-      vTaskDelay(pdMS_TO_TICKS(5000));
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.print(".");
+      vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    ArduinoOTA.setHostname("u701.local");
-    ArduinoOTA.setRebootOnSuccess(true);
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
 
-    ArduinoOTA
-        .onStart([]() {
-          String type;
-          if (ArduinoOTA.getCommand() == U_FLASH)
-            type = "sketch";
-          else // U_SPIFFS
-            type = "filesystem";
+    server.on("/", []() { server.send(200, "text/plain", "Hi! This is ElegantOTA Demo."); });
 
-          // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-          Serial.println("Start updating " + type);
-        })
-        .onEnd([]() { Serial.println("\nEnd"); })
-        .onProgress([](unsigned int progress, unsigned int total) {
-          Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-        })
-        .onError([](ota_error_t error) {
-          Serial.printf("Error[%u]: ", error);
-          if (error == OTA_AUTH_ERROR)
-            Serial.println("Auth Failed");
-          else if (error == OTA_BEGIN_ERROR)
-            Serial.println("Begin Failed");
-          else if (error == OTA_CONNECT_ERROR)
-            Serial.println("Connect Failed");
-          else if (error == OTA_RECEIVE_ERROR)
-            Serial.println("Receive Failed");
-          else if (error == OTA_END_ERROR)
-            Serial.println("End Failed");
-        });
-
-    ArduinoOTA.begin();
+    ElegantOTA.begin(&server); // Start ElegantOTA
+    server.begin();
+    Serial.println("HTTP server started");
 
     while (true) {
-      ArduinoOTA.handle();
-      // vTaskDelay(pdMS_TO_TICKS(10));
+      server.handleClient();
+      ElegantOTA.loop();
     }
   }
 
