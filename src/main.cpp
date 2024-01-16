@@ -156,6 +156,7 @@ namespace llvm_libc {
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
+    NimBLEDevice::setMTU(23);
 
     removeWatchdog();
 
@@ -181,7 +182,6 @@ namespace llvm_libc {
     pClient->setClientCallbacks(clientCb, true);
     pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
     pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
-
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
     if (!pClient->connect()) {
       utility::reboot("Could not connect to the Terrain Command");
