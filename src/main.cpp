@@ -153,7 +153,7 @@ namespace llvm_libc {
     utility::keyboard.begin(&iPhoneClientAddress);
 
     NimBLEDevice::setPower(ESP_PWR_LVL_N12);
-    // NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
     NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.traceln("[SEM] Wait for iPhone to complete MTU exchange");
