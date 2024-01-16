@@ -10,6 +10,11 @@
 #include <string>
 #include <vector>
 
+#include <ArduinoOTA.h>
+#include <FS.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+
 #include "AdvertisedDeviceCallbacks.hh"
 #include "ClientCallbacks.hh"
 #include "ffi.hh"
