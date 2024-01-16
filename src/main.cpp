@@ -127,6 +127,7 @@ namespace llvm_libc {
 
   const int wifiConnectDelayMs     = 500;
   const int watchdogTimeoutSeconds = 3;
+  TaskHandle_t Task1;
 
   void setupArduinoOTA(void * /* parameter */) {
     removeWatchdog();
@@ -138,10 +139,6 @@ namespace llvm_libc {
     while (WiFi.status() != WL_CONNECTED) {
       vTaskDelay(200);
     }
-
-    Log.noticeln("Core %u", xPortGetCoreID());
-    Log.noticeln("Starting OTA");
-    Log.noticeln("Connecting to %s, hold on ...", SSID);
 
     ArduinoOTA.setHostname(OTA_WIFI_SSID);
     ArduinoOTA.setRebootOnSuccess(true);
@@ -156,17 +153,11 @@ namespace llvm_libc {
 
     ArduinoOTA.begin();
 
-    Log.noticeln("OTA ready with IP address %s", WiFi.localIP().toString().c_str());
-
-    // updateWatchdogTimeout(watchdogTimeoutSeconds);
-
     while (true) {
       ArduinoOTA.handle();
       vTaskDelay(10);
     }
   }
-
-  TaskHandle_t Task1;
 
   void setup() {
     initArduino();
