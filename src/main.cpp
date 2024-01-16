@@ -127,6 +127,7 @@ namespace llvm_libc {
       utility::reboot("[BLE_GAP_EVENT_DISCONNECT] Disconnect from TC");
     case BLE_GAP_EVENT_MTU:
       Log.info("[BLE_GAP_EVENT_MTU] Release TC semaphore");
+      xSemaphoreGive(utility::outgoingClientSemaphore);
       xSemaphoreGive(utility::incommingClientSemaphore);
       break;
     default:
@@ -188,13 +189,13 @@ namespace llvm_libc {
     pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
     pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
+
     if (!pClient->connect()) {
       utility::reboot("Could not connect to the Terrain Command");
     }
 
     Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
     xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
-    // delay(1000);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
     Log.noticeln("Try subscribing to existing services & characteristics");
