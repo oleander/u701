@@ -133,44 +133,11 @@ namespace llvm_libc {
   const int watchdogTimeoutSeconds = 3;
   TaskHandle_t Task1;
 
-  void setupArduinoOTA(void * /* parameter */) {
-    removeWatchdog();
-
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(OTA_WIFI_SSID, OTA_WIFI_PASS);
-
-    // unsigned long startTime = millis();
-    // while (WiFi.status() != WL_CONNECTED) {
-    //   vTaskDelay(200);
-    // }
-
-    ArduinoOTA.setHostname(OTA_WIFI_SSID);
-    ArduinoOTA.setRebootOnSuccess(true);
-    ArduinoOTA.onError([](ota_error_t error) { utility::reboot("Error[%u]: ", error); });
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      static unsigned int lastProgress = 0;
-      if (progress != lastProgress) {
-        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-        lastProgress = progress;
-      }
-    });
-
-    ArduinoOTA.begin();
-
-    while (true) {
-      ArduinoOTA.handle();
-      vTaskDelay(10);
-    }
-  }
-
   void setup() {
     initArduino();
 
     Serial.begin(SERIAL_BAUD_RATE);
     Log.begin(LOG_LEVEL_MAX, &Serial, true);
-
-    Log.noticeln("Starting setupArduinoOTA (ok)");
-    xTaskCreatePinnedToCore(setupArduinoOTA, "setupArduinoOTA", 10000, NULL, 0, &Task1, 0);
 
     removeWatchdog();
 
@@ -195,6 +162,7 @@ namespace llvm_libc {
     Log.traceln("Starting BLE scan for the Terrain Command");
     auto *pScan                      = NimBLEDevice::getScan();
     auto *pAdvertisedDeviceCallbacks = new AdvertisedDeviceCallbacks();
+
     pScan->setAdvertisedDeviceCallbacks(pAdvertisedDeviceCallbacks, true);
     pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
     pScan->setActiveScan(true);
