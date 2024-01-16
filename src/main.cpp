@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
+#include <ArduinoOTA.h>
 #include <BleKeyboard.h>
 #include <NimBLEDevice.h>
 #include <NimBLEScan.h>
+#include <WiFi.h>
 #include <esp_task_wdt.h>
 
 #include <array>
@@ -117,11 +119,38 @@ namespace llvm_libc {
     return false;
   }
 
+  void ota(void * /* parameter */) {
+    WiFi.mode(WIFI_STA);
+    WiFi.begin("u701");
+
+    while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+      Serial.println("Connection Failed! Rebooting...");
+      delay(5000);
+      ESP.restart();
+    }
+
+    ArduinoOTA.setHostname("u701.local");
+
+    ArduinoOTA.begin();
+
+    Serial.println("Ready");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+
+    while (true) {
+      ArduinoOTA.handle();
+    }
+  }
+
   void setup() {
     initArduino();
 
     Serial.begin(SERIAL_BAUD_RATE);
     Log.begin(LOG_LEVEL_MAX, &Serial, true);
+
+    // Start on second CPU: ota
+    Log.traceln("Starting on CPU %d", xPortGetCoreID());
+    xTaskCreatePinnedToCore(ota, "ota", 8192, nullptr, 1, nullptr, 1);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);

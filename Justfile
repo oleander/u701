@@ -36,3 +36,15 @@ build mod = "release": setup
     . {{ESPUP_PATH}} && cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
 
 install: upload monitor
+merge:
+    esptool.py --chip esp32 merge_bin \
+        -o merged-firmware.bin \
+        --flash_mode dio \
+        --flash_freq 40m \
+        --flash_size 4MB \
+        0x1000 .pio/build/release/bootloader.bin \
+        0x10000 .pio/build/release/partitions.bin \
+        0x160000 .pio/build/release/firmware.bin \
+image:
+    rm -rf firmware.bin
+    esptool.py --chip ESP32 elf2image ./.pio/build/release/firmware.elf -o firmware.bin --flash_freq 40m --flash_mode dio --flash_size 4MB

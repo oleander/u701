@@ -21,7 +21,7 @@ machine = { path = "machine" }
 
 [profile.release]
 opt-level = 3
-debug = true
+debug = false
 lto = true
 
 [profile.dev]
