@@ -187,8 +187,9 @@ namespace llvm_libc {
       utility::reboot("Could not connect to the Terrain Command");
     }
 
-    Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
-    xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
+    // Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
+    // xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
+    delay(1000);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
     Log.noticeln("Try subscribing to existing services & characteristics");
