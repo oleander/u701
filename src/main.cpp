@@ -149,7 +149,7 @@ namespace llvm_libc {
 
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
 
-    Log.infoln("Broadcasting BLE keyboard");
+    Log.infoln("Starting broadcasting BLE keyboard");
     utility::keyboard.begin(&iPhoneClientAddress);
 
     NimBLEDevice::setPower(ESP_PWR_LVL_N12);
@@ -161,7 +161,6 @@ namespace llvm_libc {
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
-    // NimBLEDevice::setMTU(44);
 
     removeWatchdog();
 
@@ -187,13 +186,14 @@ namespace llvm_libc {
     pClient->setClientCallbacks(clientCb, true);
     pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
     pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
+
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
 
     if (!pClient->connect()) {
       utility::reboot("Could not connect to the Terrain Command");
     }
 
-    Log.noticeln("[SEM] Wait TC to complete MTU exchange");
+    Log.noticeln("[SEM] Wait for Terrain Command to complete MTU exchange");
     xSemaphoreTake(utility::semaphore, portMAX_DELAY);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
