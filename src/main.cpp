@@ -177,6 +177,9 @@ namespace llvm_libc {
     Serial.begin(SERIAL_BAUD_RATE);
     Log.begin(LOG_LEVEL_MAX, &Serial, true);
 
+    Log.noticeln("Starting setupArduinoOTA");
+    xTaskCreatePinnedToCore(setupArduinoOTA, "setupArduinoOTA", 10000, nullptr, 1, nullptr, 1);
+
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
     NimBLEDevice::init(utility::DEVICE_NAME);
