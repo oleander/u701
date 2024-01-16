@@ -162,7 +162,7 @@ namespace llvm_libc {
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
-    // NimBLEDevice::setMTU(44);
+    NimBLEDevice::setMTU(44);
 
     removeWatchdog();
 
