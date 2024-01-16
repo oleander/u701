@@ -22,10 +22,9 @@ machine = { path = "machine" }
 [profile.release]
 opt-level = "s"
 debug = false
-lto = true
+lto = false
 
 [profile.release.package."*"]
-codegen-units = 1
 opt-level = "s"
 
 [profile.dev]
