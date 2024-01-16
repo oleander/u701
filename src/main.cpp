@@ -119,25 +119,22 @@ namespace llvm_libc {
     return false;
   }
 
-  void ota(void * /* parameter */) {
+  void handleOTA(void * /* parameter */) {
     WiFi.mode(WIFI_STA);
     WiFi.begin("u701");
 
     while (WiFi.waitForConnectResult() != WL_CONNECTED) {
       Log.warningln("WiFi failed, retrying.");
-      delay(5000);
+      vTaskDelay(pdMS_TO_TICKS(5000));
     }
 
     ArduinoOTA.setHostname("u701.local");
-
+    ArduinoOTA.setRebootOnSuccess(true);
     ArduinoOTA.begin();
-
-    Serial.println("Ready");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
 
     while (true) {
       ArduinoOTA.handle();
+      vTaskDelay(pdMS_TO_TICKS(10));
     }
   }
 
@@ -149,7 +146,7 @@ namespace llvm_libc {
 
     // Start on second CPU: ota
     Log.traceln("Starting on CPU %d", xPortGetCoreID());
-    xTaskCreatePinnedToCore(ota, "ota", 8192, nullptr, 1, nullptr, 1);
+    xTaskCreatePinnedToCore(handleOTA, "ota", 8192, nullptr, 1, nullptr, 1);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
