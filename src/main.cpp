@@ -19,9 +19,8 @@
 #include "ffi.hh"
 #include "utility.h"
 
-#define SSID          "boat"
-#define PASS          "0304673428"
 #define OTA_WIFI_SSID "u701"
+#define OTA_WIFI_PASS "11111111"
 
 namespace llvm_libc {
   constexpr int SERIAL_BAUD_RATE           = 115200;
@@ -61,15 +60,20 @@ namespace llvm_libc {
 
   void updateWatchdogTimeout(uint32_t newTimeoutInSeconds) {
     Log.traceln("Update watchdog timeout to %d seconds", newTimeoutInSeconds);
-    esp_task_wdt_deinit();
-    esp_task_wdt_init(newTimeoutInSeconds, true);
-    esp_task_wdt_add(nullptr);
+    // esp_task_wdt_deinit();
+    // esp_task_wdt_init(newTimeoutInSeconds, true);
+    // esp_task_wdt_add(nullptr);
   }
 
   void removeWatchdog() {
     Log.traceln("Remove watchdog");
-    esp_task_wdt_delete(nullptr);
-    esp_task_wdt_deinit();
+    // esp_task_wdt_delete(nullptr);
+    // esp_task_wdt_deinit();
+  }
+
+  void resetWatchdog() {
+    Log.traceln("Reset watchdog");
+    // esp_task_wdt_reset();
   }
 
   void onClientDisconnect(NimBLEServer * /* _server */) {
@@ -132,13 +136,13 @@ namespace llvm_libc {
   void setupArduinoOTA(void * /* parameter */) {
     removeWatchdog();
 
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(SSID, PASS);
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(OTA_WIFI_SSID, OTA_WIFI_PASS);
 
-    unsigned long startTime = millis();
-    while (WiFi.status() != WL_CONNECTED) {
-      vTaskDelay(200);
-    }
+    // unsigned long startTime = millis();
+    // while (WiFi.status() != WL_CONNECTED) {
+    //   vTaskDelay(200);
+    // }
 
     ArduinoOTA.setHostname(OTA_WIFI_SSID);
     ArduinoOTA.setRebootOnSuccess(true);
@@ -153,10 +157,7 @@ namespace llvm_libc {
 
     ArduinoOTA.begin();
 
-    updateWatchdogTimeout(3);
-
     while (true) {
-      esp_task_wdt_reset();
       ArduinoOTA.handle();
       vTaskDelay(10);
     }
