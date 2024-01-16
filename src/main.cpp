@@ -20,8 +20,9 @@
 #include "ffi.hh"
 #include "utility.h"
 
-#define SSID "boat"
-#define PASS "0304673428"
+#define SSID          "boat"
+#define PASS          "0304673428"
+#define OTA_WIFI_SSID "u701"
 
 namespace llvm_libc {
   constexpr int SERIAL_BAUD_RATE           = 115200;
@@ -125,8 +126,10 @@ namespace llvm_libc {
     return false;
   }
 
+  const int wifiConnectDelayMs     = 500;
+  const int watchdogTimeoutSeconds = 3;
+
   void setupArduinoOTA(void * /* parameter */) {
-    updateWatchdogTimeout(120);
 
     Log.noticeln("Starting OTA");
     Log.noticeln("Connecting to %s, hold on ...", SSID);
@@ -134,37 +137,30 @@ namespace llvm_libc {
     WiFi.mode(WIFI_STA);
     WiFi.begin(SSID, PASS);
 
+    unsigned long startTime = millis();
     while (WiFi.status() != WL_CONNECTED) {
-      esp_task_wdt_reset();
-      delay(500);
+      if (millis() - startTime > wifiConnectDelayMs) {
+        delay(wifiConnectDelayMs);
+        startTime = millis();
+      }
     }
 
-    ArduinoOTA.setHostname("u701");
+    ArduinoOTA.setHostname(OTA_WIFI_SSID);
     ArduinoOTA.setRebootOnSuccess(true);
-
+    ArduinoOTA.onError([](ota_error_t error) { utility::reboot("Error[%u]: ", error); });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      esp_task_wdt_reset();
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    });
-
-    ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) {
-        Log.errorln("Auth Failed");
-      } else if (error == OTA_BEGIN_ERROR) {
-        Log.errorln("Begin Failed");
-      } else if (error == OTA_CONNECT_ERROR) {
-        Log.errorln("Connect Failed");
-      } else if (error == OTA_RECEIVE_ERROR) {
-        Log.errorln("Receive Failed");
-      } else if (error == OTA_END_ERROR) {
-        Log.errorln("End Failed");
+      static unsigned int lastProgress = 0;
+      if (progress != lastProgress) {
+        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+        lastProgress = progress;
       }
     });
 
     ArduinoOTA.begin();
 
     Log.noticeln("OTA ready with IP address %s", WiFi.localIP().toString().c_str());
+
+    updateWatchdogTimeout(watchdogTimeoutSeconds);
 
     while (true) {
       ArduinoOTA.handle();
@@ -182,7 +178,8 @@ namespace llvm_libc {
     Log.noticeln("Starting setupArduinoOTA (ok)");
     xTaskCreatePinnedToCore(setupArduinoOTA, "setupArduinoOTA", 10000, nullptr, 1, nullptr, 1);
 
-    updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
+    removeWatchdog();
+
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
     NimBLEDevice::init(utility::DEVICE_NAME);
 
