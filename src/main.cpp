@@ -199,51 +199,50 @@ namespace llvm_libc {
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
 
-    updateWatchdogTimeout(WATCHDOG_TIMEOUT_2);
+    removeWatchdog();
 
     Log.traceln("Starting BLE scan for the Terrain Command");
-    auto *pScan          = NimBLEDevice::getScan();
-    auto static callback = AdvertisedDeviceCallbacks();
-    pScan->setAdvertisedDeviceCallbacks(&callback, false);
+    auto *pScan                      = NimBLEDevice::getScan();
+    auto *pAdvertisedDeviceCallbacks = new AdvertisedDeviceCallbacks();
+    pScan->setAdvertisedDeviceCallbacks(pAdvertisedDeviceCallbacks, true);
     pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
     pScan->setActiveScan(true);
     pScan->setMaxResults(1);
 
     auto results = pScan->start(0);
     if (!results.getCount()) {
-      Log.warningln("No devices found during scan");
+      utility::reboot("Could not find the Terrain Command");
+    }
+
+    auto device   = results.getDevice(0);
+    auto addr     = device.getAddress();
+    auto pClient  = llvm_libc::createBLEClient(addr);
+    auto clientCb = new ClientCallbacks();
+
+    pClient->setClientCallbacks(clientCb, true);
+    pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
+    pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
+
+    updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
+    if (!pClient->connect()) {
+      utility::reboot("Could not connect to the Terrain Command");
+    }
+
+    Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
+    xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
+
+    updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
+    Log.noticeln("Try subscribing to existing services & characteristics");
+    if (subscribe(pClient, false)) {
+      Log.noticeln("\tSuccess!");
+      return removeWatchdog();
     } else {
-      auto device  = results.getDevice(0);
-      auto addr    = device.getAddress();
-      auto pClient = llvm_libc::createBLEClient(addr);
-
-      auto static callback = ClientCallbacks();
-
-      pClient->setClientCallbacks(&callback, false);
-      pClient->setConnectTimeout(CLIENT_CONNECT_TIMEOUT);
-      pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
-
-      updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
-      if (!pClient->connect()) {
-        utility::reboot("Could not connect to the Terrain Command");
-      }
-
-      Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
-      xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
-
-      updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
-      Log.noticeln("Try subscribing to existing services & characteristics");
-      if (subscribe(pClient, false)) {
-        Log.noticeln("\tSuccess!");
+      Log.warningln("\tFailed, will try to discover");
+      if (subscribe(pClient, true)) {
+        Log.noticeln("\t\tSuccess!");
         return removeWatchdog();
       } else {
-        Log.warningln("\tFailed, will try to discover");
-        if (subscribe(pClient, true)) {
-          Log.noticeln("\t\tSuccess!");
-          return removeWatchdog();
-        } else {
-          disconnect(pClient, "\t\tFailed, could not subscribe to any characteristic");
-        }
+        disconnect(pClient, "\t\tFailed, could not subscribe to any characteristic");
       }
     }
   }
