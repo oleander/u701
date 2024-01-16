@@ -125,25 +125,25 @@ namespace llvm_libc {
 #define SSID "boat"
 #define PASS "0304673428"
 
-  void setupArduinoOTA() {
+  void setupArduinoOTA(void * /* parameter */) {
     Log.noticeln("Setting up OTA");
     if (WiFi.status() == WL_NO_SHIELD) {
       Log.errorln("WiFi shield not present");
       return;
     }
 
-    while (status != WL_CONNECTED) {
-      Serial.print("Attempting to connect to SSID: ");
-      Serial.println(SSID);
-      status = WiFi.begin(SSID, PASS);
+    Log.noticeln("Connecting to %s", SSID);
+    while (WiFi.begin(SSID, PASS) != WL_CONNECTED) {
+      Log.noticeln("Connecting to %s", SSID);
     }
 
     ArduinoOTA.setHostname("u701");
     ArduinoOTA.setRebootOnSuccess(true);
 
     ArduinoOTA.onStart([]() {
-      if (ArduinoOTA.getCommand() == U_SPIFFS) {
-        SPIFFS.end();
+      if (ArduinoOTA.getCommand() != U_FLASH) {
+        Log.errorln("OTA not supported");
+        return;
       }
     });
 
