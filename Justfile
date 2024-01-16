@@ -35,4 +35,7 @@ upload $ENVIRONMENT = "release": setup
 build mod = "release": setup
     . {{ESPUP_PATH}} && cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
 
+ota mod = "release": setup
+    . {{ESPUP_PATH}} && cargo pio exec -- run -t upload -e ota
+
 install: upload monitor
