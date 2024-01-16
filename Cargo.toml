@@ -20,13 +20,13 @@ log = { version = "0.4.20", default-features = false }
 machine = { path = "machine" }
 
 [profile.release]
-opt-level = 3
+opt-level = "s"
 debug = false
 lto = true
 
 [profile.release.package."*"]
 codegen-units = 1
-opt-level = 3
+opt-level = "s"
 
 [profile.dev]
 opt-level = "z"
