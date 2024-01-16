@@ -24,7 +24,8 @@ opt-level = 3
 debug = false
 lto = true
 
-[profile.release.package.*]
+[profile.release.package."*"]
+codegen-units = 1
 opt-level = 3
 
 [profile.dev]
