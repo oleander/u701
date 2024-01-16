@@ -124,11 +124,10 @@ namespace llvm_libc {
   int gapHandler(ble_gap_event *event, void * /* arg */) {
     switch (event->type) {
     case BLE_GAP_EVENT_DISCONNECT:
-      utility::reboot("[BLE_GAP_EVENT_DISCONNECT] Disconnect from TC");
+      utility::reboot("[BLE_GAP_EVENT_DISCONNECT] Someone disconnected");
     case BLE_GAP_EVENT_MTU:
-      Log.info("[BLE_GAP_EVENT_MTU] Release TC semaphore");
-      xSemaphoreGive(utility::outgoingClientSemaphore);
-      xSemaphoreGive(utility::incomingClientSemaphore);
+      Log.info("[BLE_GAP_EVENT_MTU] Release semaphore");
+      xSemaphoreGive(utility::semaphore);
       break;
     default:
       Log.traceln("Unknown GAP event: %d", event->type);
@@ -157,8 +156,8 @@ namespace llvm_libc {
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
     NimBLEDevice::setCustomGapHandler(gapHandler);
 
-    Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
-    xSemaphoreTake(utility::outgoingClientSemaphore, portMAX_DELAY);
+    Log.traceln("[SEM] Wait for iPhone to complete MTU exchange");
+    xSemaphoreTake(utility::semaphore, portMAX_DELAY);
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
@@ -194,8 +193,8 @@ namespace llvm_libc {
       utility::reboot("Could not connect to the Terrain Command");
     }
 
-    Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
-    xSemaphoreTake(utility::incomingClientSemaphore, portMAX_DELAY);
+    Log.noticeln("[SEM] Wait TC to complete MTU exchange");
+    xSemaphoreTake(utility::semaphore, portMAX_DELAY);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
     Log.noticeln("Try subscribing to existing services & characteristics");

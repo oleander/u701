@@ -6,7 +6,6 @@
 
 // how to make it const
 namespace utility {
-  extern SemaphoreHandle_t outgoingClientSemaphore;
   constexpr auto RESTART_INTERVAL = 300;
   std::string stringFormat(const std::string &fmt, ...);
   template <typename... Args> void reboot(const std::string &msgFormat, Args &&...args);
