@@ -128,7 +128,7 @@ namespace llvm_libc {
     case BLE_GAP_EVENT_MTU:
       Log.info("[BLE_GAP_EVENT_MTU] Release TC semaphore");
       xSemaphoreGive(utility::outgoingClientSemaphore);
-      xSemaphoreGive(utility::incommingClientSemaphore);
+      xSemaphoreGive(utility::incomingClientSemaphore);
       break;
     default:
       Log.traceln("Unknown GAP event: %d", event->type);
@@ -162,7 +162,7 @@ namespace llvm_libc {
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
-    NimBLEDevice::setMTU(44);
+    // NimBLEDevice::setMTU(44);
 
     removeWatchdog();
 
@@ -195,7 +195,7 @@ namespace llvm_libc {
     }
 
     Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
-    xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
+    xSemaphoreTake(utility::incomingClientSemaphore, portMAX_DELAY);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
     Log.noticeln("Try subscribing to existing services & characteristics");
