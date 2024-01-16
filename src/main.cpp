@@ -126,7 +126,7 @@ namespace llvm_libc {
   }
 
   void setupArduinoOTA(void * /* parameter */) {
-    updateWatchdogTimeout(30);
+    updateWatchdogTimeout(120);
 
     Log.noticeln("Starting OTA");
     Log.noticeln("Connecting to %s, hold on ...", SSID);
@@ -179,7 +179,7 @@ namespace llvm_libc {
     Serial.begin(SERIAL_BAUD_RATE);
     Log.begin(LOG_LEVEL_MAX, &Serial, true);
 
-    Log.noticeln("Starting setupArduinoOTA");
+    Log.noticeln("Starting setupArduinoOTA (ok)");
     xTaskCreatePinnedToCore(setupArduinoOTA, "setupArduinoOTA", 10000, nullptr, 1, nullptr, 1);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
@@ -234,15 +234,15 @@ namespace llvm_libc {
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
     Log.noticeln("Try subscribing to existing services & characteristics");
     if (subscribe(pClient, false)) {
-      Log.noticeln("\tSuccess!");
+      Log.noticeln("Subscribed to existing services & characteristics");
       return removeWatchdog();
     } else {
-      Log.warningln("\tFailed, will try to discover");
+      Log.warningln("Could not subscribe to existing services & characteristics");
       if (subscribe(pClient, true)) {
-        Log.noticeln("\t\tSuccess!");
+        Log.noticeln("Subscribed to discovered services & characteristics");
         return removeWatchdog();
       } else {
-        disconnect(pClient, "\t\tFailed, could not subscribe to any characteristic");
+        disconnect(pClient, "Could not subscribe to discovered services & characteristics");
       }
     }
   }
