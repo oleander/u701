@@ -120,11 +120,11 @@ namespace llvm_libc {
   }
 
   void handleOTA(void * /* parameter */) {
+    Log.traceln("Start OTA");
     WiFi.mode(WIFI_STA);
     WiFi.begin("u701");
 
     while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-      Log.warningln("WiFi failed, retrying.");
       vTaskDelay(pdMS_TO_TICKS(5000));
     }
 
@@ -144,8 +144,7 @@ namespace llvm_libc {
     Serial.begin(SERIAL_BAUD_RATE);
     Log.begin(LOG_LEVEL_MAX, &Serial, true);
 
-    // Start on second CPU: ota
-    Log.traceln("Starting on CPU %d", xPortGetCoreID());
+    Log.traceln("Start OTA task");
     xTaskCreatePinnedToCore(handleOTA, "ota", 8192, nullptr, 1, nullptr, 1);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_1);
