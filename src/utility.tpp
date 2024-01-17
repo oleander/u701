@@ -13,7 +13,8 @@ namespace utility {
   constexpr int DEVICE_BATTERY         = 42;
   constexpr int LED_BUILTIN            = 22;
 
-  SemaphoreHandle_t semaphore = xSemaphoreCreateBinary();
+  SemaphoreHandle_t iphoneSemaphore  = xSemaphoreCreateBinary();
+  SemaphoreHandle_t terrainSemaphore = xSemaphoreCreateBinary();
   BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
   std::string stringFormat(const std::string &fmt, ...) {
