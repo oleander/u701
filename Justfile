@@ -28,8 +28,8 @@ menuconfig mod = "release": setup
     . {{ESPUP_PATH}} && cargo pio espidf menuconfig {{ if mod == "release" { "-r true" } else { "" } }}
 
 # upload release | debug
-upload $ENVIRONMENT = "release": setup
-    . {{ESPUP_PATH}} && cargo pio exec -- run -t upload -e $ENVIRONMENT --upload-port {{UPLOAD_PORT}} --monitor-port {{UPLOAD_PORT}}
+upload:
+    . {{ESPUP_PATH}} && cargo pio exec -- run -t upload
 
 # build release | debug
 build mod = "release": setup

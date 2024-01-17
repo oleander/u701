@@ -139,8 +139,8 @@ namespace llvm_libc {
       Log.warningln("[BLE_GAP_EVENT_DISCONNECT] Terrain Command disconnected");
       utility::reboot("Terrain Command disconnected");
       break;
-    case BLE_GAP_EVENT_CONN_PARAM_UPDATE:
-      Log.traceln("[BLE_GAP_EVENT_CONN_PARAM_UPDATE] Terrain Command Semaphore Give");
+    case BLE_GAP_EVENT_MTU:
+      Log.traceln("[BLE_GAP_EVENT_MTU] Terrain Command Semaphore Give");
       xSemaphoreGive(utility::terrainSemaphore);
       break;
     default:
