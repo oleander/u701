@@ -100,7 +100,7 @@ namespace llvm_libc {
       return true;
     }
 
-    Log.warningln("\t\t\tCharacteristic cannot notify or indicate, skipping");
+    Log.errorln("\t\t\tCharacteristic cannot notify or indicate");
     return false;
   }
 
@@ -191,7 +191,7 @@ namespace llvm_libc {
     initArduino();
 
     Serial.begin(SERIAL_BAUD_RATE);
-    Log.begin(LOG_LEVEL_NOTICE, &Serial, true);
+    Log.begin(LOG_LEVEL_MAX, &Serial, true);
 
     removeWatchdog();
 
