@@ -207,7 +207,7 @@ namespace llvm_libc {
 
     pScan->setAdvertisedDeviceCallbacks(pAdvertisedDeviceCallbacks, true);
     pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
-    pScan->setActiveScan(true);
+    pScan->setActiveScan(false);
     pScan->setMaxResults(1);
     pScan->setInterval(100);
     pScan->setWindow(99);

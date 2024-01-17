@@ -18,7 +18,7 @@ namespace llvm_libc {
 
   void ClientCallbacks::onConnect(NimBLEClient *pClient) {
     Log.traceln("Connected to Terrain Command");
-    pClient->updateConnParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, CONNECTION_TIMEOUT);
+    // pClient->updateConnParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, CONNECTION_TIMEOUT);
   }
 
   void ClientCallbacks::onDisconnect(NimBLEClient * /* pClient */) {
@@ -26,8 +26,9 @@ namespace llvm_libc {
   }
 
   bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient * /* _pClient */, const ble_gap_upd_params *params) {
-    return (params->itvl_min < MIN_INTERVAL || params->itvl_max > MAX_INTERVAL || params->latency > MAX_LATENCY ||
-            params->supervision_timeout > SUPERVISION_TIMEOUT);
+    // return (params->itvl_min < MIN_INTERVAL || params->itvl_max > MAX_INTERVAL || params->latency > MAX_LATENCY ||
+    // params->supervision_timeout > SUPERVISION_TIMEOUT);
+    return true;
   }
 
   uint32_t ClientCallbacks::onPassKeyRequest() {
