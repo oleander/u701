@@ -177,7 +177,7 @@ namespace llvm_libc {
     initArduino();
 
     Serial.begin(SERIAL_BAUD_RATE);
-    Log.begin(LOG_LEVEL_MAX, &Serial, true);
+    Log.begin(LOG_LEVEL_NOTICE, &Serial, true);
 
     removeWatchdog();
 
