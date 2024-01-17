@@ -119,32 +119,19 @@ namespace llvm_libc {
     return false;
   }
 
-  int gapiPhoneHandler(ble_gap_event *event, void * /* arg */) {
+  int gapHandler(ble_gap_event *event, void * /* arg */) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
     switch (event->type) {
     case BLE_GAP_EVENT_MTU:
-      Log.traceln("[BLE_GAP_EVENT_MTU] iPhone Semaphore Give");
-      xSemaphoreGive(utility::iphoneSemaphore);
+      Log.infoln("[BLE_GAP_EVENT_MTU]");
+      Log.infoln("iphone");
+      xSemaphoreGiveFromISR(utility::iphoneSemaphore, &xHigherPriorityTaskWoken);
+      Log.infoln("terrain");
+      xSemaphoreGiveFromISR(utility::terrainSemaphore, &xHigherPriorityTaskWoken);
       break;
     default:
-      Log.traceln("Unknown GAP event: %d", event->type);
-      break;
-    }
-
-    return 0;
-  }
-
-  int gapTerrainHandler(ble_gap_event *event, void * /* arg */) {
-    switch (event->type) {
-    case BLE_GAP_EVENT_DISCONNECT:
-      Log.warningln("[BLE_GAP_EVENT_DISCONNECT] Terrain Command disconnected");
-      utility::reboot("Terrain Command disconnected");
-      break;
-    case BLE_GAP_EVENT_MTU:
-      Log.traceln("[BLE_GAP_EVENT_MTU] Terrain Command Semaphore Give");
-      xSemaphoreGive(utility::terrainSemaphore);
-      break;
-    default:
-      Log.traceln("Unknown GAP event: %d", event->type);
+      Log.infoln("[BLE_GAP_EVENT] %d", event->type);
       break;
     }
 
@@ -164,13 +151,14 @@ namespace llvm_libc {
     NimBLEDevice::init(utility::DEVICE_NAME);
     // NimBLEDevice::setPower(ESP_PWR_LVL_P9);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
-    NimBLEDevice::setCustomGapHandler(gapiPhoneHandler);
+    NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.infoln("Starting broadcasting BLE keyboard");
     utility::keyboard.begin(&iPhoneClientAddress);
 
     Log.traceln("[SEM] Wait for iPhone to complete MTU exchange");
     xSemaphoreTake(utility::iphoneSemaphore, portMAX_DELAY);
+    utility::terrainSemaphore = xSemaphoreCreateBinary();
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
@@ -203,8 +191,6 @@ namespace llvm_libc {
     pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
-
-    NimBLEDevice::setCustomGapHandler(gapTerrainHandler);
 
     if (!pClient->connect()) {
       utility::reboot("Could not connect to the Terrain Command");
