@@ -124,11 +124,7 @@ namespace llvm_libc {
 
     switch (event->type) {
     case BLE_GAP_EVENT_MTU:
-      Log.infoln("[BLE_GAP_EVENT_MTU]");
-      Log.infoln("iphone");
-      xSemaphoreGiveFromISR(utility::iphoneSemaphore, &xHigherPriorityTaskWoken);
-      Log.infoln("terrain");
-      xSemaphoreGiveFromISR(utility::terrainSemaphore, &xHigherPriorityTaskWoken);
+      xSemaphoreGiveFromISR(utility::semaphore, &xHigherPriorityTaskWoken);
       break;
     default:
       Log.infoln("[BLE_GAP_EVENT] %d", event->type);
@@ -158,9 +154,8 @@ namespace llvm_libc {
 
     Log.infoln("[SEM] Wait for iPhone to complete MTU exchange");
     auto currTime = millis();
-    xSemaphoreTake(utility::iphoneSemaphore, portMAX_DELAY);
+    xSemaphoreTake(utility::semaphore, portMAX_DELAY);
     Log.infoln("[SEM] Waited %d ms for iPhone to complete MTU exchange", millis() - currTime);
-    utility::terrainSemaphore = xSemaphoreCreateBinary();
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
@@ -201,7 +196,7 @@ namespace llvm_libc {
     }
 
     Log.noticeln("[SEM2] Wait for Terrain Command to complete MTU exchange");
-    xSemaphoreTake(utility::terrainSemaphore, portMAX_DELAY);
+    xSemaphoreTake(utility::semaphore, portMAX_DELAY);
     Log.noticeln("[SEM2] Waited %d ms for Terrain Command to complete MTU exchange", millis() - currTime2);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
