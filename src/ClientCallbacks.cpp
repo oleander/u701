@@ -39,19 +39,4 @@ namespace llvm_libc {
     Log.traceln("Confirm PIN %d", pass_key);
     return pass_key == PASS_KEY;
   }
-
-  void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc) {
-    if (desc->sec_state.encrypted) {
-      Log.traceln("Connection encrypted");
-      xSemaphoreGive(utility::incommingClientSemaphore);
-    } else {
-      Log.fatalln("Encrypt connection failed: %s", desc);
-      auto client = NimBLEDevice::getClientByID(desc->conn_handle);
-      if (client) {
-        client->disconnect();
-      }
-      utility::reboot("Encrypt connection failed: %s", desc);
-    }
-  }
-
-} // namespace __llvm_libc
+} // namespace llvm_libc

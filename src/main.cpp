@@ -23,9 +23,11 @@
 #define OTA_WIFI_PASS "11111111"
 
 namespace llvm_libc {
-  constexpr int SERIAL_BAUD_RATE           = 115200;
-  constexpr int CLIENT_CONNECT_TIMEOUT     = 30;
-  constexpr uint64_t TEST_SERVER_ADDRESS   = 0x083A8D9A444A;
+  constexpr int SERIAL_BAUD_RATE       = 115200;
+  constexpr int CLIENT_CONNECT_TIMEOUT = 30;
+  // constexpr uint64_t TEST_SERVER_ADDRESS   = 0x083A8D9A444A;
+  // 78:21:84:7C:1C:52
+  constexpr uint64_t TEST_SERVER_ADDRESS   = 0x7821847C1C52;
   constexpr uint64_t REAL_SERVER_ADDRESS   = 0xF797AC1FF8C0;
   constexpr uint64_t IPHONE_CLIENT_ADDRESS = 0xC02C5C83709A;
   constexpr int CONNECTION_INTERVAL_MIN    = 12;
@@ -76,20 +78,10 @@ namespace llvm_libc {
     esp_task_wdt_reset();
   }
 
-  void onClientDisconnect(NimBLEServer * /* _server */) {
-    utility::reboot("Client disconnected from the keyboard");
-  }
-
   template <typename... Args> void disconnect(NimBLEClient *pClient, const char *format, Args &&...args) {
     Log.traceln("Disconnect from Terrain Command");
     pClient->disconnect();
     utility::reboot(std::string(format), std::forward<Args>(args)...);
-  }
-
-  auto onClientConnect(ble_gap_conn_desc * /* _desc */) -> void {
-    Log.traceln("Connected to keyboard");
-    Log.traceln("Release keyboard semaphore (output) (semaphore)");
-    xSemaphoreGive(utility::outgoingClientSemaphore);
   }
 
   bool subscribeToCharacteristic(NimBLEClient * /* pClient */, NimBLERemoteCharacteristic *chr) {
@@ -129,28 +121,43 @@ namespace llvm_libc {
     return false;
   }
 
+  int gapHandler(ble_gap_event *event, void * /* arg */) {
+    switch (event->type) {
+    case BLE_GAP_EVENT_DISCONNECT:
+      utility::reboot("[BLE_GAP_EVENT_DISCONNECT] Someone disconnected");
+    case BLE_GAP_EVENT_MTU:
+      Log.info("[BLE_GAP_EVENT_MTU] Release semaphore");
+      xSemaphoreGive(utility::semaphore);
+      break;
+    default:
+      Log.traceln("Unknown GAP event: %d", event->type);
+      break;
+    }
+
+    return event->type;
+  }
+
   void setup() {
     initArduino();
 
     Serial.begin(SERIAL_BAUD_RATE);
-    Log.begin(LOG_LEVEL_MAX, &Serial, true);
+    Log.begin(LOG_LEVEL_NOTICE, &Serial, true);
 
     removeWatchdog();
 
     NimBLEDevice::init(utility::DEVICE_NAME);
-    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
 
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
 
-    Log.infoln("Broadcasting BLE keyboard");
-    utility::keyboard.whenClientConnects(onClientConnect);
-    utility::keyboard.whenClientDisconnects(onClientDisconnect);
+    Log.infoln("Starting broadcasting BLE keyboard");
     utility::keyboard.begin(&iPhoneClientAddress);
 
     NimBLEDevice::setPower(ESP_PWR_LVL_N12);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
+    NimBLEDevice::setCustomGapHandler(gapHandler);
 
-    Log.traceln("Wait for the keyboard to connect (output) (semaphore)");
-    xSemaphoreTake(utility::outgoingClientSemaphore, portMAX_DELAY);
+    Log.traceln("[SEM] Wait for iPhone to complete MTU exchange");
+    xSemaphoreTake(utility::semaphore, portMAX_DELAY);
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
@@ -181,12 +188,13 @@ namespace llvm_libc {
     pClient->setConnectionParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, SUPERVISION_TIMEOUT);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
+
     if (!pClient->connect()) {
       utility::reboot("Could not connect to the Terrain Command");
     }
 
-    Log.noticeln("Wait for the Terrain Command to authenticate (input) (semaphore)");
-    xSemaphoreTake(utility::incommingClientSemaphore, portMAX_DELAY);
+    Log.noticeln("[SEM] Wait for Terrain Command to complete MTU exchange");
+    xSemaphoreTake(utility::semaphore, portMAX_DELAY);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
     Log.noticeln("Try subscribing to existing services & characteristics");

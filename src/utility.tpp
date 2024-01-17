@@ -11,8 +11,7 @@ namespace utility {
   constexpr char DEVICE_MANUFACTURER[] = "HVA";
   constexpr int DEVICE_BATTERY         = 42;
 
-  SemaphoreHandle_t incommingClientSemaphore = xSemaphoreCreateBinary();
-  SemaphoreHandle_t outgoingClientSemaphore  = xSemaphoreCreateBinary();
+  SemaphoreHandle_t semaphore = xSemaphoreCreateBinary();
   BleKeyboard keyboard(DEVICE_NAME, DEVICE_MANUFACTURER, DEVICE_BATTERY);
 
   std::string stringFormat(const std::string &fmt, ...) {
