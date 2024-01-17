@@ -241,10 +241,11 @@ namespace llvm_libc {
     vSemaphoreDelete(utility::semaphore);
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
 
+    auto currTime3 = millis();
     if (!subscribeToClient(pClient)) {
       disconnect(pClient, "Could not subscribe to Terrain Command");
     } else {
-      Log.noticeln("Successfully subscribed to Terrain Command");
+      Log.noticeln("Successfully subscribed to Terrain Command in %d ms", millis() - currTime3);
     }
 
     removeWatchdog();
