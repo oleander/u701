@@ -26,7 +26,6 @@ namespace utility {
   }
 
   template <typename... Args> void reboot(const std::string &msgFormat, Args &&...args) {
-    ledoff();
     std::string formattedMessage = stringFormat(msgFormat, std::forward<Args>(args)...);
     Log.fatalln(formattedMessage.c_str());
     Log.fatalln("Will restart the ESP in %d ms", RESTART_INTERVAL);
