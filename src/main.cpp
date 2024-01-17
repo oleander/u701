@@ -121,18 +121,16 @@ namespace llvm_libc {
 
   int gapHandler(ble_gap_event *event, void * /* arg */) {
     switch (event->type) {
-    case BLE_GAP_EVENT_DISCONNECT:
-      utility::reboot("[BLE_GAP_EVENT_DISCONNECT] Someone disconnected");
     case BLE_GAP_EVENT_MTU:
-      Log.info("[BLE_GAP_EVENT_MTU] Release semaphore");
+      Log.traceln("[BLE_GAP_EVENT_MTU] Release semaphore");
       xSemaphoreGive(utility::semaphore);
       break;
     default:
-      Log.infoln("Unknown GAP event: %d", event->type);
+      Log.traceln("Unknown GAP event: %d", event->type);
       break;
     }
 
-    return event->type;
+    return 0;
   }
 
   void setup() {
