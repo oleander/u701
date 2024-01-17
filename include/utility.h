@@ -8,6 +8,9 @@
 namespace utility {
   constexpr auto RESTART_INTERVAL = 300;
   std::string stringFormat(const std::string &fmt, ...);
+  void enableLED();
+  void ledon();
+  void ledoff();
   template <typename... Args> void reboot(const std::string &msgFormat, Args &&...args);
 } // namespace utility
 

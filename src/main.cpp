@@ -14,8 +14,6 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 
-#define LED_BUILTIN 22
-
 #include "AdvertisedDeviceCallbacks.hh"
 #include "ClientCallbacks.hh"
 #include "ffi.hh"
@@ -109,9 +107,9 @@ namespace llvm_libc {
     return false;
   }
 
-  bool subscribe(NimBLEClient *pClient, bool cache) {
-    for (auto pService: *pClient->getServices(cache)) {
-      for (auto pChar: *pService->getCharacteristics(cache)) {
+  bool subscribe(NimBLEClient *pClient, bool refresh) {
+    for (auto pService: *pClient->getServices(refresh)) {
+      for (auto pChar: *pService->getCharacteristics(refresh)) {
         if (subscribeToCharacteristic(pClient, pChar)) {
           return true;
         }
@@ -160,7 +158,7 @@ namespace llvm_libc {
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
-    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
 
     removeWatchdog();
 
@@ -172,6 +170,8 @@ namespace llvm_libc {
     pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
     pScan->setActiveScan(true);
     pScan->setMaxResults(1);
+    pScan->setInterval(100);
+    pScan->setWindow(99);
 
     auto results = pScan->start(0);
     if (!results.getCount()) {
@@ -214,8 +214,8 @@ namespace llvm_libc {
 } // namespace llvm_libc
 
 extern "C" void init_arduino() {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
+  utility::enableLED();
+  utility::ledon();
   llvm_libc::setup();
-  digitalWrite(LED_BUILTIN, HIGH);
+  utility::ledoff();
 }
