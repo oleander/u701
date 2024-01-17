@@ -144,7 +144,7 @@ namespace llvm_libc {
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
 
     NimBLEDevice::init(utility::DEVICE_NAME);
-    NimBLEDevice::setPower(ESP_PWR_LVL_N12);
+    // NimBLEDevice::setPower(ESP_PWR_LVL_P9);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
     NimBLEDevice::setCustomGapHandler(gapHandler);
 
