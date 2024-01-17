@@ -128,7 +128,7 @@ namespace llvm_libc {
       xSemaphoreGive(utility::semaphore);
       break;
     default:
-      Log.traceln("Unknown GAP event: %d", event->type);
+      Log.infoln("Unknown GAP event: %d", event->type);
       break;
     }
 
@@ -143,22 +143,21 @@ namespace llvm_libc {
 
     removeWatchdog();
 
-    NimBLEDevice::init(utility::DEVICE_NAME);
-
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
+
+    NimBLEDevice::init(utility::DEVICE_NAME);
+    NimBLEDevice::setPower(ESP_PWR_LVL_N12);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+    NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.infoln("Starting broadcasting BLE keyboard");
     utility::keyboard.begin(&iPhoneClientAddress);
-
-    NimBLEDevice::setPower(ESP_PWR_LVL_N12);
-    NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.traceln("[SEM] Wait for iPhone to complete MTU exchange");
     xSemaphoreTake(utility::semaphore, portMAX_DELAY);
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
-    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
 
     removeWatchdog();
 
