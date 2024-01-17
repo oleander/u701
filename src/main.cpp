@@ -200,7 +200,26 @@ namespace llvm_libc {
     Log.noticeln("[SEM2] Waited %d ms for Terrain Command to complete MTU exchange", millis() - currTime2);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
+
     Log.noticeln("Try subscribing to existing services & characteristics");
+    Log.noticeln("[FIND] Try subscribing to existing services & characteristics");
+    auto service = pClient->getService(serviceUUID);
+    if (service) {
+      auto characteristic = service->getCharacteristic(charUUID);
+      if (characteristic) {
+        if (subscribeToCharacteristic(pClient, characteristic)) {
+          Log.noticeln("[FIND] Subscribed to existing service & characteristic");
+          return removeWatchdog();
+        } else {
+          Log.warningln("[FIND] Could not subscribe to existing service & characteristic");
+        }
+      } else {
+        Log.warningln("[FIND] Could not find characteristic using the characteristic UUID");
+      }
+    } else {
+      Log.warningln("[FIND] Could not find service using the service UUID");
+    }
+
     if (subscribe(pClient, false)) {
       Log.noticeln("Subscribed to existing services & characteristics");
       return removeWatchdog();
