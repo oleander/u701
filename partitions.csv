@@ -1,7 +1,7 @@
 # https://github.com/espressif/arduino-esp32/tree/master/tools/partitions
 # Name,   Type, SubType, Offset,  Size, Flags
-nvs,      data, nvs,     0x9000,  20K,
+nvs,      data, nvs,           ,  20K,
 otadata,  data, ota,           ,  8K,
-app0,     app,  ota_0,         ,  1984K,
-app1,     app,  ota_1,         ,  1984K,
+app0,     app,  ota_0,         ,  1854K
+app1,     app,  ota_1,         ,  1854K
 coredump, data, coredump,      ,  64K,
