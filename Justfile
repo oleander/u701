@@ -17,8 +17,8 @@ monitor:
 update:
     cargo pio exec -- pkg update
 setup:
-    espup install -t $MCU -f {{ESPUP_PATH}}
-    espup update -t $MCU -f {{ESPUP_PATH}}
+    espup install -f {{ESPUP_PATH}}
+    espup update -f {{ESPUP_PATH}}
 
 test: setup
     . {{ESPUP_PATH}} && cargo test
