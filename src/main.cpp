@@ -145,6 +145,18 @@ namespace llvm_libc {
 
     removeWatchdog();
 
+    // Enable the LED LED_BUILTIN and turn it on for 1 second, then off for 1 second, repeatedly.
+    pinMode(LED_BUILTIN, OUTPUT);
+
+    for (int i = 0; i < 5; i++) {
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(500);
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(500);
+    }
+
+    digitalWrite(LED_BUILTIN, HIGH);
+
     NimBLEDevice::init(utility::DEVICE_NAME);
 
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
