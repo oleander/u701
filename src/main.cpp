@@ -14,6 +14,8 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 
+#define LED_BUILTIN 22
+
 #include "AdvertisedDeviceCallbacks.hh"
 #include "ClientCallbacks.hh"
 #include "ffi.hh"
@@ -23,10 +25,8 @@
 #define OTA_WIFI_PASS "11111111"
 
 namespace llvm_libc {
-  constexpr int SERIAL_BAUD_RATE       = 115200;
-  constexpr int CLIENT_CONNECT_TIMEOUT = 30;
-  // constexpr uint64_t TEST_SERVER_ADDRESS   = 0x083A8D9A444A;
-  // 78:21:84:7C:1C:52
+  constexpr int SERIAL_BAUD_RATE           = 115200;
+  constexpr int CLIENT_CONNECT_TIMEOUT     = 30;
   constexpr uint64_t TEST_SERVER_ADDRESS   = 0x7821847C1C52;
   constexpr uint64_t REAL_SERVER_ADDRESS   = 0xF797AC1FF8C0;
   constexpr uint64_t IPHONE_CLIENT_ADDRESS = 0xC02C5C83709A;
@@ -145,18 +145,6 @@ namespace llvm_libc {
 
     removeWatchdog();
 
-    // Enable the LED LED_BUILTIN and turn it on for 1 second, then off for 1 second, repeatedly.
-    pinMode(LED_BUILTIN, OUTPUT);
-
-    for (int i = 0; i < 5; i++) {
-      digitalWrite(LED_BUILTIN, LOW);
-      delay(500);
-      digitalWrite(LED_BUILTIN, HIGH);
-      delay(500);
-    }
-
-    digitalWrite(LED_BUILTIN, HIGH);
-
     NimBLEDevice::init(utility::DEVICE_NAME);
 
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
@@ -226,5 +214,8 @@ namespace llvm_libc {
 } // namespace llvm_libc
 
 extern "C" void init_arduino() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   llvm_libc::setup();
+  digitalWrite(LED_BUILTIN, HIGH);
 }
