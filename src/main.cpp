@@ -156,8 +156,10 @@ namespace llvm_libc {
     Log.infoln("Starting broadcasting BLE keyboard");
     utility::keyboard.begin(&iPhoneClientAddress);
 
-    Log.traceln("[SEM] Wait for iPhone to complete MTU exchange");
+    Log.infoln("[SEM] Wait for iPhone to complete MTU exchange");
+    auto currTime = millis();
     xSemaphoreTake(utility::iphoneSemaphore, portMAX_DELAY);
+    Log.infoln("[SEM] Waited %d ms for iPhone to complete MTU exchange", millis() - currTime);
     utility::terrainSemaphore = xSemaphoreCreateBinary();
 
     NimBLEDevice::whiteListAdd(testServerAddress);
@@ -192,12 +194,15 @@ namespace llvm_libc {
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_3);
 
+    auto currTime2 = millis();
+    Log.noticeln("[SEM2] Wait for Terrain Command to complete MTU exchange");
     if (!pClient->connect()) {
       utility::reboot("Could not connect to the Terrain Command");
     }
 
-    Log.noticeln("[SEM] Wait for Terrain Command to complete MTU exchange");
+    Log.noticeln("[SEM2] Wait for Terrain Command to complete MTU exchange");
     xSemaphoreTake(utility::terrainSemaphore, portMAX_DELAY);
+    Log.noticeln("[SEM2] Waited %d ms for Terrain Command to complete MTU exchange", millis() - currTime2);
 
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
     Log.noticeln("Try subscribing to existing services & characteristics");
