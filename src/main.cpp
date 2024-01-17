@@ -30,9 +30,9 @@ namespace llvm_libc {
   constexpr uint64_t TEST_SERVER_ADDRESS   = 0x7821847C1C52;
   constexpr uint64_t REAL_SERVER_ADDRESS   = 0xF797AC1FF8C0;
   constexpr uint64_t IPHONE_CLIENT_ADDRESS = 0xC02C5C83709A;
-  constexpr int CONNECTION_INTERVAL_MIN    = 12;
-  constexpr int CONNECTION_INTERVAL_MAX    = 12;
-  constexpr int SUPERVISION_TIMEOUT        = 51;
+  constexpr int CONNECTION_INTERVAL_MIN    = 78;
+  constexpr int CONNECTION_INTERVAL_MAX    = 78;
+  constexpr int SUPERVISION_TIMEOUT        = 72;
   constexpr int WATCHDOG_TIMEOUT_1         = 120;
   constexpr int WATCHDOG_TIMEOUT_2         = 5 * 60;
   constexpr int WATCHDOG_TIMEOUT_3         = 60;
@@ -153,7 +153,6 @@ namespace llvm_libc {
     utility::keyboard.begin(&iPhoneClientAddress);
 
     NimBLEDevice::setPower(ESP_PWR_LVL_N12);
-    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_MITM);
     NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.traceln("[SEM] Wait for iPhone to complete MTU exchange");
@@ -161,6 +160,7 @@ namespace llvm_libc {
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC);
 
     removeWatchdog();
 
