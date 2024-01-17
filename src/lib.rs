@@ -29,6 +29,8 @@ fn main() -> Result<()> {
       Some(Action::Short(index)) => send_shortcut(index),
       None => debug!("[main] No action {}", event_id)
     }
+
+    unsafe { blinkled(); }
   }
 
   bail!("[main] Event loop ended");

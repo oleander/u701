@@ -45,6 +45,13 @@ namespace utility {
   void ledoff() {
     digitalWrite(LED_BUILTIN, HIGH);
   }
+
+  extern "C" void blinkled() {
+    auto currentLEDState = digitalRead(LED_BUILTIN);
+    digitalWrite(LED_BUILTIN, !currentLEDState);
+    delay(300);
+    digitalWrite(LED_BUILTIN, currentLEDState);
+  }
 } // namespace utility
 
 #endif // app_UTILITY_TPP

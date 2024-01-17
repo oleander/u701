@@ -11,6 +11,7 @@ namespace utility {
   void enableLED();
   void ledon();
   void ledoff();
+  extern "C" void blinkled();
   template <typename... Args> void reboot(const std::string &msgFormat, Args &&...args);
 } // namespace utility
 

@@ -4,4 +4,4 @@ nvs,      data, nvs,           ,  20K,
 otadata,  data, ota,           ,  8K,
 app0,     app,  ota_0,         ,  1854K
 app1,     app,  ota_1,         ,  1854K
-coredump, data, coredump,      ,  64K,
+coredump, data, coredump,      ,  60K,
