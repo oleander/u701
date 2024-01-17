@@ -82,28 +82,6 @@ namespace llvm_libc {
     utility::reboot(std::string(format), std::forward<Args>(args)...);
   }
 
-  bool subscribeToCharacteristic(NimBLEClient * /* pClient */, NimBLERemoteCharacteristic *chr) {
-    if (!chr->getUUID().equals(charUUID)) {
-      Log.warningln("\t\t\tCharacteristic UUID does not match, skipping");
-      return false;
-    }
-
-    Log.traceln("\t\t\tFound correct characteristic UUID (%s)", charUUID);
-    Log.traceln("\t\t\tWill try to subscribe to characteristic");
-    if (chr->canNotify() && chr->subscribe(true, onEvent)) {
-      Log.noticeln("\t\t\tSuccessfully subscribed to characteristic (notify)");
-      return true;
-    }
-
-    if (chr->canIndicate() && chr->subscribe(false, onEvent)) {
-      Log.noticeln("\t\t\tSuccessfully subscribed to characteristic (indicate))");
-      return true;
-    }
-
-    Log.errorln("\t\t\tCharacteristic cannot notify or indicate");
-    return false;
-  }
-
   int gapHandler(ble_gap_event *event, void * /* arg */) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
@@ -119,6 +97,27 @@ namespace llvm_libc {
     return 0;
   }
 
+  bool subscribeToCharacteristic(NimBLEClient * /* pClient */, NimBLERemoteCharacteristic *chr) {
+    if (!chr->getUUID().equals(charUUID)) {
+      Log.warningln("\t\t\tCharacteristic UUID does not match, skipping");
+      return false;
+    }
+
+    Log.traceln("\t\t\tWill try to subscribe to characteristic");
+    if (chr->canNotify() && chr->subscribe(true, onEvent)) {
+      Log.noticeln("\t\t\tSuccessfully subscribed to characteristic using notify");
+      return true;
+    }
+
+    if (chr->canIndicate() && chr->subscribe(false, onEvent)) {
+      Log.noticeln("\t\t\tSuccessfully subscribed to characteristic using indicate");
+      return true;
+    }
+
+    Log.errorln("\t\t\tCharacteristic cannot notify or indicate");
+    return false;
+  }
+
   bool subscribeToService(NimBLEClient *pClient, NimBLERemoteService *pService) {
     if (!pService->getUUID().equals(serviceUUID)) {
       Log.warningln("\t\tInvalid service UUID (%s)", serviceUUID);
@@ -126,29 +125,21 @@ namespace llvm_libc {
     }
 
     Log.traceln("\t\tSearch for characteristic by UUID");
-    auto characteristic = pService->getCharacteristic(charUUID);
-    if (characteristic && subscribeToCharacteristic(pClient, characteristic)) {
-      Log.traceln("\t\tFound characteristic by UUID");
+    auto pChar = pService->getCharacteristic(charUUID);
+    if (pChar && subscribeToCharacteristic(pClient, pChar)) {
       return true;
-    } else if (characteristic) {
-      Log.warningln("\t\tFound characteristic by UUID, but could not subscribe");
-    } else {
-      Log.warningln("\t\tCould not find characteristic by UUID");
     }
 
     Log.traceln("\t\tWill go tru all characteristics (no reload)");
     for (auto pChar: *pService->getCharacteristics(false)) {
       if (subscribeToCharacteristic(pClient, pChar)) {
-        Log.noticeln("\t\tSubscribed to existing characteristic");
         return true;
       }
     }
 
-    Log.warningln("\t\tCould not find characteristic by UUID (no reload)");
     Log.noticeln("\t\tWill go tru all characteristics (reload)");
     for (auto pChar: *pService->getCharacteristics(true)) {
       if (subscribeToCharacteristic(pClient, pChar)) {
-        Log.noticeln("\t\tSubscribed to existing characteristic");
         return true;
       }
     }
@@ -159,14 +150,9 @@ namespace llvm_libc {
 
   bool subscribeToClient(NimBLEClient *pClient) {
     Log.traceln("\tFind service by UUID (%s)", serviceUUID);
-
     auto service = pClient->getService(serviceUUID);
     if (service && subscribeToService(pClient, service)) {
       return true;
-    } else if (service) {
-      Log.warningln("\tCould not subscribe to service by UUID");
-    } else {
-      Log.warningln("\tCould not find service by UUID");
     }
 
     Log.traceln("\tWill go tru all services (no reload)");
