@@ -83,39 +83,24 @@ namespace llvm_libc {
   }
 
   bool subscribeToCharacteristic(NimBLEClient * /* pClient */, NimBLERemoteCharacteristic *chr) {
-    if (!chr->getRemoteService()->getUUID().equals(serviceUUID)) {
-      Log.traceln("Service UUID does not match, skipping");
-      return false;
-    }
-
     if (!chr->getUUID().equals(charUUID)) {
-      Log.traceln("Characteristic UUID does not match, skipping");
+      Log.warningln("\t\t\tCharacteristic UUID does not match, skipping");
       return false;
     }
 
+    Log.traceln("\t\t\tFound correct characteristic UUID (%s)", charUUID);
+    Log.traceln("\t\t\tWill try to subscribe to characteristic");
     if (chr->canNotify() && chr->subscribe(true, onEvent)) {
-      Log.noticeln("Successfully subscribed to characteristic (notify)");
+      Log.noticeln("\t\t\tSuccessfully subscribed to characteristic (notify)");
       return true;
     }
 
     if (chr->canIndicate() && chr->subscribe(false, onEvent)) {
-      Log.noticeln("Successfully subscribed to characteristic (indicate))");
+      Log.noticeln("\t\t\tSuccessfully subscribed to characteristic (indicate))");
       return true;
     }
 
-    Log.warningln("Characteristic cannot notify or indicate, skipping");
-    return false;
-  }
-
-  bool subscribe(NimBLEClient *pClient, bool refresh) {
-    for (auto pService: *pClient->getServices(refresh)) {
-      for (auto pChar: *pService->getCharacteristics(refresh)) {
-        if (subscribeToCharacteristic(pClient, pChar)) {
-          return true;
-        }
-      }
-    }
-
+    Log.warningln("\t\t\tCharacteristic cannot notify or indicate, skipping");
     return false;
   }
 
@@ -125,15 +110,83 @@ namespace llvm_libc {
     switch (event->type) {
     case BLE_GAP_EVENT_MTU:
       xSemaphoreGiveFromISR(utility::semaphore, &xHigherPriorityTaskWoken);
-      break;
-    default:
-      Log.infoln("[BLE_GAP_EVENT] %d", event->type);
-      break;
+    }
+
+    if (xHigherPriorityTaskWoken == pdTRUE) {
+      portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
 
     return 0;
   }
 
+  bool subscribeToService(NimBLEClient *pClient, NimBLERemoteService *pService) {
+    if (!pService->getUUID().equals(serviceUUID)) {
+      Log.warningln("\t\tInvalid service UUID (%s)", serviceUUID);
+      return false;
+    }
+
+    Log.traceln("\t\tSearch for characteristic by UUID");
+    auto characteristic = pService->getCharacteristic(charUUID);
+    if (characteristic && subscribeToCharacteristic(pClient, characteristic)) {
+      Log.traceln("\t\tFound characteristic by UUID");
+      return true;
+    } else if (characteristic) {
+      Log.warningln("\t\tFound characteristic by UUID, but could not subscribe");
+    } else {
+      Log.warningln("\t\tCould not find characteristic by UUID");
+    }
+
+    Log.traceln("\t\tWill go tru all characteristics (no reload)");
+    for (auto pChar: *pService->getCharacteristics(false)) {
+      if (subscribeToCharacteristic(pClient, pChar)) {
+        Log.noticeln("\t\tSubscribed to existing characteristic");
+        return true;
+      }
+    }
+
+    Log.warningln("\t\tCould not find characteristic by UUID (no reload)");
+    Log.noticeln("\t\tWill go tru all characteristics (reload)");
+    for (auto pChar: *pService->getCharacteristics(true)) {
+      if (subscribeToCharacteristic(pClient, pChar)) {
+        Log.noticeln("\t\tSubscribed to existing characteristic");
+        return true;
+      }
+    }
+
+    Log.errorln("\t\tCould not find characteristic by UUID");
+    return false;
+  }
+
+  bool subscribeToClient(NimBLEClient *pClient) {
+    Log.traceln("\tFind service by UUID (%s)", serviceUUID);
+
+    auto service = pClient->getService(serviceUUID);
+    if (service && subscribeToService(pClient, service)) {
+      return true;
+    } else if (service) {
+      Log.warningln("\tCould not subscribe to service by UUID");
+    } else {
+      Log.warningln("\tCould not find service by UUID");
+    }
+
+    Log.traceln("\tWill go tru all services (no reload)");
+    for (auto pService: *pClient->getServices(false)) {
+      if (subscribeToService(pClient, pService)) {
+        return true;
+      }
+    }
+
+    Log.warningln("\tCould not find service by UUID (no reload)");
+    Log.noticeln("\tWill go tru all services (reload)");
+    for (auto pService: *pClient->getServices(true)) {
+      if (subscribeToService(pClient, pService)) {
+        return true;
+      }
+    }
+
+    Log.errorln("\tCould not find service by UUID");
+    return false;
+  }
   void setup() {
     initArduino();
 
@@ -145,7 +198,7 @@ namespace llvm_libc {
     Serial.println("Starting ESP32 Proxy @ " + String(GIT_COMMIT));
 
     NimBLEDevice::init(utility::DEVICE_NAME);
-    // NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+    NimBLEDevice::setPower(ESP_PWR_LVL_P9);
     NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
     NimBLEDevice::setCustomGapHandler(gapHandler);
 
@@ -199,39 +252,16 @@ namespace llvm_libc {
     xSemaphoreTake(utility::semaphore, portMAX_DELAY);
     Log.noticeln("[SEM2] Waited %d ms for Terrain Command to complete MTU exchange", millis() - currTime2);
 
+    vSemaphoreDelete(utility::semaphore);
     updateWatchdogTimeout(WATCHDOG_TIMEOUT_4);
 
-    Log.noticeln("Try subscribing to existing services & characteristics");
-    Log.noticeln("[FIND] Try subscribing to existing services & characteristics");
-    auto service = pClient->getService(serviceUUID);
-    if (service) {
-      auto characteristic = service->getCharacteristic(charUUID);
-      if (characteristic) {
-        if (subscribeToCharacteristic(pClient, characteristic)) {
-          Log.noticeln("[FIND] Subscribed to existing service & characteristic");
-          return removeWatchdog();
-        } else {
-          Log.warningln("[FIND] Could not subscribe to existing service & characteristic");
-        }
-      } else {
-        Log.warningln("[FIND] Could not find characteristic using the characteristic UUID");
-      }
+    if (!subscribeToClient(pClient)) {
+      disconnect(pClient, "Could not subscribe to Terrain Command");
     } else {
-      Log.warningln("[FIND] Could not find service using the service UUID");
+      Log.noticeln("Successfully subscribed to Terrain Command");
     }
 
-    if (subscribe(pClient, false)) {
-      Log.noticeln("Subscribed to existing services & characteristics");
-      return removeWatchdog();
-    } else {
-      Log.warningln("Could not subscribe to existing services & characteristics");
-      if (subscribe(pClient, true)) {
-        Log.noticeln("Subscribed to discovered services & characteristics");
-        return removeWatchdog();
-      } else {
-        disconnect(pClient, "Could not subscribe to discovered services & characteristics");
-      }
-    }
+    removeWatchdog();
   }
 } // namespace llvm_libc
 
