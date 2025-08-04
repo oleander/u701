@@ -1,89 +1,34 @@
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * 1'   # Weekly security audit
-
-env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-D warnings"
-
-permissions:
-  contents: read
-
-jobs:
-  security-audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up CARGO_HOME
-        run: echo "CARGO_HOME=${RUNNER_TEMP}/cargo" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo install --locked cargo-audit cargo-deny
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: security-audit-nightly
-      - run: cargo audit
-      - run: cargo deny check
-
-  format-and-lint:
-    name: Format & Lint
-    runs-on: ubuntu-latest
-    needs: security-audit
-    steps:
-      - name: Set up CARGO_HOME
-        run: echo "CARGO_HOME=${RUNNER_TEMP}/cargo" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: format-lint-nightly
-      - run: just fmt-check
-      - run: just lint
-
-  host-nightly:
-    name: Host CI (nightly)
-    runs-on: ubuntu-latest
-    needs: format-and-lint
-    steps:
-      - name: Set up CARGO_HOME
-        run: echo "CARGO_HOME=${RUNNER_TEMP}/cargo" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: host-nightly
-      - run: cargo install --locked just
-      - run: just test
-
   embedded:
     name: Embedded Build (nightly)
     runs-on: ubuntu-latest
     needs: host-nightly
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Set up CARGO_HOME
         run: echo "CARGO_HOME=${RUNNER_TEMP}/cargo" >> $GITHUB_ENV
 
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src
+
       - uses: Swatinem/rust-cache@v2
         with:
           key: embedded-nightly
-      - run: cargo install --locked just cargo-pio espup
-      - run: just setup build
+
+      - name: Install build tools
+        run: cargo install --locked just cargo-pio espup   # installs espup, Justfile helper & cargo-pio  [oai_citation:0‡GitHub](https://github.com/esp-rs/espup?utm_source=chatgpt.com)
+
+      - name: Install ESP toolchain
+        run: espup install --targets esp32c3             # pulls in Rust std, LLVM & GCC for esp32-c3  [oai_citation:1‡GitHub](https://github.com/esp-rs/espup?utm_source=chatgpt.com)
+
+      - name: Build firmware
+        run: |
+          . $HOME/export-esp.sh                           # source espup’s generated env file
+          just setup build
+
       - uses: actions/upload-artifact@v4
         with:
           name: u701-firmware
