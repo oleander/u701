@@ -24,7 +24,7 @@ jobs:
             target
           key: ${{ hashFiles('**/Cargo.lock') }}
 
-      - run: rm rust-toolchain.toml
+      - run: # rm rust-toolchain.toml
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
