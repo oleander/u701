@@ -6,8 +6,8 @@ jobs:
     steps:
       # self-hosted runner
       - run: |
-          ls -halt
-          git clone ./.git workspace
+          ls -halt ..
+          git clone ../.git workspace
           cd workspace
           git pull origin ${{ github.ref }}
           git checkout ${{ github.ref }}
