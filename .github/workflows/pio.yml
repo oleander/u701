@@ -6,10 +6,10 @@ jobs:
     steps:
       # self-hosted runner
       - run: |
-          ls /srv/ci/ws
-          git -C /srv/ci/ws remote set-url origin https://github.com/${{ github.repository }}.git
-          git -C /srv/ci/ws fetch --filter=blob:none origin ${{ github.sha }}
-          git -C /srv/ci/ws checkout --detach ${{ github.sha }}
+          ls /code
+          git -C /code remote set-url origin https://github.com/${{ github.repository }}.git
+          git -C /code fetch --filter=blob:none origin ${{ github.sha }}
+          git -C /code checkout --detach ${{ github.sha }}
           cd /srv/ci/ws
 
       # cache
