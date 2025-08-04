@@ -5,13 +5,7 @@ jobs:
     runs-on: self-hosted
     steps:
       # self-hosted runner
-      - run: |
-          ls /code
-          git -C /code remote set-url origin https://github.com/${{ github.repository }}.git
-          git -C /code fetch --filter=blob:none origin ${{ github.sha }}
-          git -C /code checkout --detach ${{ github.sha }}
-          cd /srv/ci/ws
-
+      - uses: actions/checkout@v3
       # cache
       - name: Cache PlatformIO dependencies
         uses: actions/cache@v3
