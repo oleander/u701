@@ -35,7 +35,6 @@ jobs:
       - name: Install PlatformIO
         run: cargo +nightly pio installpio
 
-
       - name: Build PlatformIO check
         run: cargo +nightly pio exec -- check
 
