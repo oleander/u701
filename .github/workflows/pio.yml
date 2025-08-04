@@ -4,8 +4,13 @@ jobs:
   build:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v3
+      # self-hosted runner
+      - run: |
+          git pull
+          git checkout ${{ github.ref }}
 
+
+      # cache
       - name: Cache PlatformIO dependencies
         uses: actions/cache@v3
         with:
