@@ -40,7 +40,4 @@ jobs:
 
       - name: Build using PlatformIO
         run: |
-          source .env
-          espup install -t $MCU -f .espup.sh
-          source .espup.sh
-          cargo +esp pio build
+          just test install
