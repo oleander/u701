@@ -40,4 +40,5 @@ jobs:
 
       - name: Build using PlatformIO
         run: |
+          . /Users/linus/Code/u701/actions-runner/_work/u701/u701/tmp/espup.sh
           just test install
