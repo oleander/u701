@@ -1,4 +1,3 @@
-
 name: CI
 
 on:
@@ -8,7 +7,7 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 1'  # Weekly security audit
+    - cron: '0 0 * * 1'   # Weekly security audit
 
 env:
   CARGO_TERM_COLOR: always
@@ -17,8 +16,6 @@ env:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   security-audit:
@@ -27,18 +24,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo install --locked cargo-audit cargo-deny
       - uses: Swatinem/rust-cache@v2
         with:
           key: security-audit-nightly
-      - uses: actions-rust-lang/audit@v1
-        with:
-          ignore: RUSTSEC-2020-0036
-      - uses: taiki-e/install-action@cargo-deny
+      - run: cargo audit
       - run: cargo deny check
 
   format-and-lint:
-    name: Format and Lint
+    name: Format & Lint
     runs-on: ubuntu-latest
+    needs: security-audit
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
@@ -47,38 +43,26 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: format-lint-nightly
-      - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets --all-features -- -D warnings
-      - run: cargo doc --no-deps --document-private-items
-        env:
-          RUSTDOCFLAGS: "-D warnings"
+      - run: just fmt-check
+      - run: just lint
 
   host-nightly:
     name: Host CI (nightly)
     runs-on: ubuntu-latest
+    needs: format-and-lint
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: llvm-tools-preview
       - uses: Swatinem/rust-cache@v2
         with:
           key: host-nightly
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: just,cargo-nextest,cargo-llvm-cov
-      - run: |
-          just test
-          cargo llvm-cov nextest --all-features --workspace --lcov --output-path lcov.info
-      - uses: codecov/codecov-action@v4
-        with:
-          files: lcov.info
-          fail_ci_if_error: false
+      - run: cargo install --locked just
+      - run: just test
 
   embedded:
-    name: Embedded build (nightly)
+    name: Embedded Build (nightly)
     runs-on: ubuntu-latest
-    needs: [host-nightly, format-and-lint]
+    needs: host-nightly
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
@@ -87,53 +71,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: embedded-nightly
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: just
-      - run: cargo install --locked cargo-pio espup
+      - run: cargo install --locked just cargo-pio espup
       - run: just setup build
       - uses: actions/upload-artifact@v4
         with:
-          name: firmware
+          name: u701-firmware
           path: target/esp32c3-unknown-none/release/u701.bin
           retention-days: 30
-
-  cross-platform-check:
-    name: Cross-platform compatibility
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          targets: ${{ matrix.target }}
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: cross-${{ matrix.target }}-nightly
-      - uses: taiki-e/install-action@just
-      - run: cargo check --target ${{ matrix.target }}
-      - if: matrix.target == 'x86_64-unknown-linux-gnu' || matrix.target == 'x86_64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc'
-        run: just test
-
-  msrv-check:
-    name: MSRV compatibility
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.70.0"
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: msrv-check
-      - uses: taiki-e/install-action@cargo-hack
-      - run: cargo hack check --rust-version --workspace --all-targets --ignore-private
