@@ -3,7 +3,7 @@ set shell := ["zsh", "-cu"]
 set dotenv-load := true
 
 UPLOAD_PORT := `ls /dev/tty.usb* | head -n 1`
-ESPUP_PATH := "tmp/espup.sh"
+ESPUP_PATH := " /Users/linus/Code/u701/actions-runner/_work/u701/u701/tmp/espup.sh"
 
 clean:
     rm -rf .pio .embuild target
