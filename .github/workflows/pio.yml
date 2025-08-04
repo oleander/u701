@@ -6,9 +6,9 @@ jobs:
     steps:
       # self-hosted runner
       - run: |
+          git clone ../.git .
           git pull
           git checkout ${{ github.ref }}
-
 
       # cache
       - name: Cache PlatformIO dependencies
