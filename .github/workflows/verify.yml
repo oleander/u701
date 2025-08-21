@@ -36,7 +36,8 @@ jobs:
       - name: Install espup
         run: |
           # Try specific working version first, with fallback to curl installation
-          cargo install espup --version 0.14.0 --locked || {
+          # Use explicit toolchain to avoid conflict with rust-toolchain.toml
+          RUSTUP_TOOLCHAIN=stable cargo install espup --version 0.14.0 --locked || {
             echo "Cargo install failed, trying curl installation..."
             curl -L https://github.com/esp-rs/espup/releases/latest/download/espup-x86_64-unknown-linux-gnu -o espup
             chmod +x espup
@@ -52,12 +53,12 @@ jobs:
       - name: Clippy
         run: |
           source .espup.sh
-          cargo clippy -- -D warnings
+          cargo clippy --workspace --all-targets --all-features --target xtensa-esp32-espidf -- -D warnings
 
       - name: Test
         run: |
           source .espup.sh
-          cargo test
+          cargo test --target x86_64-unknown-linux-gnu
 
   cpp-checks:
     name: C++ Verification

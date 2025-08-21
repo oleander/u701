@@ -34,6 +34,13 @@ just build debug
 just clean
 ```
 
+### Testing
+
+```bash
+# Run Rust tests
+just test
+```
+
 ### Flashing and Monitoring
 
 ```bash
@@ -58,6 +65,9 @@ just menuconfig
 
 # Erase the NVS region
 just erase
+
+# Update PlatformIO packages
+just update
 ```
 
 ## Project Architecture
@@ -74,6 +84,9 @@ The project is a mixed C++ and Rust codebase:
    - `machine/src/constants.rs`: Button mapping configuration
    - `include/ClientCallbacks.hh`: BLE client callback handlers
    - `include/AdvertisedDeviceCallbacks.hh`: BLE advertisement handlers
+   - `machine/src/lib.rs`: State machine for button event handling
+   - `src/lib.rs`: Rust core functionality that processes button events
+   - `src/ffi.rs`: FFI interface between C++ and Rust
 
 3. **Data Flow**:
    - ESP32 scans for the Terrain Command controller using whitelist filtering
@@ -86,9 +99,22 @@ The project is a mixed C++ and Rust codebase:
    - Meta key combinations: Red buttons (M1, M2) work as modifiers for other buttons
    - iOS shortcuts integration: Allows complex actions through iOS shortcut system
 
+5. **State Machine**:
+   - The project uses a simple state machine to track button press combinations
+   - Meta keys (M1, M2) change the state to allow for different actions when other buttons are pressed
+   - Actions can result in either direct media control events or shortcut activations
+
 ## Hardware Support
 
 - Terrain Command v2 controller
 - ESP32C3 microcontroller
 
 For Terrain Command V3 support, update event IDs in `machine/src/constants.rs`.
+
+## Modifying Button Mappings
+
+To customize button mappings:
+1. Edit `machine/src/constants.rs` to update button codes and mappings
+2. Modify the `EVENT` HashMap for direct button mappings
+3. Modify the `META` HashMap for meta key combinations
+4. Recompile and flash the ESP32
