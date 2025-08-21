@@ -190,7 +190,7 @@ namespace llvm_libc {
     NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.infoln("Starting broadcasting BLE keyboard");
-    utility::keyboard.begin(&iPhoneClientAddress);
+    utility::keyboard.begin();
 
     Log.infoln("[SEM] Wait for iPhone to complete MTU exchange");
     auto currTime = millis();
