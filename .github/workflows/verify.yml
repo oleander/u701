@@ -1,0 +1,99 @@
+name: Code Verification
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  rust-checks:
+    name: Rust Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install espup
+        run: |
+          cargo install espup
+          espup install
+
+      - name: Format check
+        run: |
+          source export-esp.sh
+          cargo fmt -- --check
+
+      - name: Clippy
+        run: |
+          source export-esp.sh
+          cargo clippy -- -D warnings
+
+      - name: Test
+        run: |
+          source export-esp.sh
+          cargo test
+
+  cpp-checks:
+    name: C++ Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+
+      - name: Install dependencies
+        run: |
+          cargo install cargo-pio espup just
+          espup install
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v3
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-platformio-${{ hashFiles('**/platformio.ini') }}
+          restore-keys: ${{ runner.os }}-platformio-
+
+      - name: Run static analysis
+        run: |
+          source export-esp.sh
+          pio check
+
+      - name: Build project
+        run: |
+          source export-esp.sh
+          just build
+
+  full-verification:
+    name: Full Project Verification
+    runs-on: ubuntu-latest
+    needs: [rust-checks, cpp-checks]
+    steps:
+      - name: All checks passed
+        run: echo "All verification checks passed successfully!"

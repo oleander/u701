@@ -13,3 +13,6 @@ sdkconfig.old
 managed_components
 .espup.sh
 tmp/espup.sh
+actions-runner/
+_PipelineMapping/
+_actions/
