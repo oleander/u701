@@ -27,7 +27,9 @@ jobs:
       - name: Install cargo-pio and espup
         run: |
           cargo install cargo-binstall
-          cargo binstall cargo-pio espup -y
+          cargo binstall cargo-pio -y
+          # Use a specific working version to avoid dependency conflicts
+          cargo install espup --version 0.14.0 --locked
 
       - name: Install PlatformIO
         run: cargo pio installpio

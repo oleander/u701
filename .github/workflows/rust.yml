@@ -36,7 +36,8 @@ jobs:
       - name: Install espup and ESP toolchain
         run: |
           cargo install cargo-binstall
-          cargo binstall espup -y
+          # Use a specific working version to avoid dependency conflicts
+          cargo install espup --version 0.14.0 --locked
           espup install -t esp32 -f .espup.sh
 
       - name: Run tests (main)

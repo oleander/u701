@@ -35,8 +35,13 @@ jobs:
 
       - name: Install espup
         run: |
-          cargo install cargo-binstall
-          cargo binstall espup -y
+          # Try specific working version first, with fallback to curl installation
+          cargo install espup --version 0.14.0 --locked || {
+            echo "Cargo install failed, trying curl installation..."
+            curl -L https://github.com/esp-rs/espup/releases/latest/download/espup-x86_64-unknown-linux-gnu -o espup
+            chmod +x espup
+            sudo mv espup /usr/local/bin/
+          }
           espup install -t esp32 -f .espup.sh
 
       - name: Format check
@@ -73,7 +78,9 @@ jobs:
       - name: Install dependencies
         run: |
           cargo install cargo-binstall
-          cargo binstall cargo-pio espup just -y
+          cargo binstall cargo-pio just -y
+          # Use a specific working version to avoid dependency conflicts
+          cargo install espup --version 0.14.0 --locked
           espup install -t esp32 -f .espup.sh
 
       - name: Cache PlatformIO
