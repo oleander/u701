@@ -68,6 +68,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install platformio
 
+      - name: Remove rust-toolchain.toml
+        run: rm rust-toolchain.toml
+
       - name: Install dependencies
         run: |
           cargo install cargo-pio espup just
