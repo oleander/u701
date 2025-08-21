@@ -37,7 +37,7 @@ jobs:
         run: |
           cargo install cargo-binstall
           cargo binstall espup -y
-          espup install -f .espup.sh
+          espup install -t esp32 -f .espup.sh
 
       - name: Format check
         run: |
@@ -74,7 +74,7 @@ jobs:
         run: |
           cargo install cargo-binstall
           cargo binstall cargo-pio espup just -y
-          espup install -f .espup.sh
+          espup install -t esp32 -f .espup.sh
 
       - name: Cache PlatformIO
         uses: actions/cache@v3

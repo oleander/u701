@@ -37,7 +37,7 @@ jobs:
         run: |
           cargo install cargo-binstall
           cargo binstall espup -y
-          espup install -f .espup.sh
+          espup install -t esp32 -f .espup.sh
 
       - name: Run tests (main)
         run: cargo test --verbose --target x86_64-unknown-linux-gnu
@@ -45,7 +45,7 @@ jobs:
       - name: Build (main)
         run: |
           source .espup.sh
-          cargo build --target riscv32imc-esp-espidf
+          cargo build --target xtensa-esp32-espidf
 
       - name: Run tests (machine)
         run: cargo test --verbose --package machine --target x86_64-unknown-linux-gnu
