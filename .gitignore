@@ -16,3 +16,4 @@ tmp/espup.sh
 actions-runner/
 _PipelineMapping/
 _actions/
+tmp/cache/bolt.db
