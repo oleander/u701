@@ -24,10 +24,8 @@ jobs:
             target
           key: ${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install espup and ESP toolchain
-        run: |
-          cargo install espup
-          espup install -f .espup.sh
+      - name: Remove rust-toolchain.toml temporarily
+        run: rm rust-toolchain.toml
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -35,6 +33,11 @@ jobs:
           toolchain: nightly
           override: true
           components: rust-src, rustfmt, clippy
+
+      - name: Install espup and ESP toolchain
+        run: |
+          cargo install espup
+          espup install -f .espup.sh
 
       - name: Run tests (main)
         uses: actions-rs/cargo@v1
