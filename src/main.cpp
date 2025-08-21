@@ -25,6 +25,7 @@
 namespace llvm_libc {
   constexpr int SERIAL_BAUD_RATE           = 115200;
   constexpr int CLIENT_CONNECT_TIMEOUT     = 30;
+  constexpr int SCAN_TIMEOUT_SECONDS       = 30;
   constexpr uint64_t TEST_SERVER_ADDRESS   = 0x7821847C1C52;
   constexpr uint64_t REAL_SERVER_ADDRESS   = 0xF797AC1FF8C0;
   constexpr uint64_t IPHONE_CLIENT_ADDRESS = 0xC02C5C83709A;
@@ -189,7 +190,7 @@ namespace llvm_libc {
     NimBLEDevice::setCustomGapHandler(gapHandler);
 
     Log.infoln("Starting broadcasting BLE keyboard");
-    utility::keyboard.begin();
+    utility::keyboard.begin(&iPhoneClientAddress);
 
     Log.infoln("[SEM] Wait for iPhone to complete MTU exchange");
     auto currTime = millis();
@@ -202,16 +203,17 @@ namespace llvm_libc {
     removeWatchdog();
 
     Log.traceln("Starting BLE scan for the Terrain Command");
-    auto *pScan = NimBLEDevice::getScan();
+    auto *pScan                      = NimBLEDevice::getScan();
+    auto *pAdvertisedDeviceCallbacks = new AdvertisedDeviceCallbacks();
 
-    pScan->setDuplicateFilter(false);
+    pScan->setAdvertisedDeviceCallbacks(pAdvertisedDeviceCallbacks, true);
     pScan->setFilterPolicy(BLE_HCI_SCAN_FILT_USE_WL);
     pScan->setActiveScan(false);
     pScan->setMaxResults(1);
     pScan->setInterval(100);
     pScan->setWindow(99);
 
-    auto results = pScan->start(30);
+    auto results = pScan->start(SCAN_TIMEOUT_SECONDS);
     if (results.getCount() == 0) {
       utility::reboot("Could not find the Terrain Command");
     }

@@ -4,9 +4,9 @@
 #include <NimBLEAdvertisedDevice.h>
 
 namespace llvm_libc {
-  class AdvertisedDeviceCallbacks {
+  class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   public:
-    void onResult(NimBLEAdvertisedDevice *advertisedDevice);
+    void onResult(NimBLEAdvertisedDevice *advertisedDevice) final;
   };
-} // namespace __llvm_libc
+} // namespace llvm_libc
 #endif // ADVERTISEDDEVICECALLBACKS_HH
