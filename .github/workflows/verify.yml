@@ -74,7 +74,7 @@ jobs:
       - name: Install dependencies
         run: |
           cargo install cargo-pio espup just
-          espup install
+          espup install -f .espup.sh
 
       - name: Cache PlatformIO
         uses: actions/cache@v3
@@ -85,12 +85,12 @@ jobs:
 
       - name: Run static analysis
         run: |
-          source export-esp.sh
+          source .espup.sh
           pio check
 
       - name: Build project
         run: |
-          source export-esp.sh
+          source .espup.sh
           just build
 
   full-verification:

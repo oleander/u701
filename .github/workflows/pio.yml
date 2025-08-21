@@ -39,7 +39,6 @@ jobs:
 
       - name: Build using PlatformIO
         run: |
-          source .env
-          espup install -t $MCU -f .espup.sh
+          espup install -t esp32c3 -f .espup.sh
           source .espup.sh
           cargo +esp pio build
