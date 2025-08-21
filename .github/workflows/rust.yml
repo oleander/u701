@@ -28,9 +28,6 @@ jobs:
             target
           key: ${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Remove rust-toolchain.toml temporarily
-        run: rm rust-toolchain.toml
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
         with:

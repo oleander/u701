@@ -19,9 +19,6 @@ jobs:
             .pio
           key: ${{ hashFiles('platformio.ini') }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Remove rust-toolchain.toml
-        run: rm rust-toolchain.toml
-
       - name: Setup rust nightly
         uses: dtolnay/rust-toolchain@nightly
         with:
