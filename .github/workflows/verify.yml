@@ -35,21 +35,21 @@ jobs:
       - name: Install espup
         run: |
           cargo install espup
-          espup install
+          espup install -f .espup.sh
 
       - name: Format check
         run: |
-          source export-esp.sh
+          source .espup.sh
           cargo fmt -- --check
 
       - name: Clippy
         run: |
-          source export-esp.sh
+          source .espup.sh
           cargo clippy -- -D warnings
 
       - name: Test
         run: |
-          source export-esp.sh
+          source .espup.sh
           cargo test
 
   cpp-checks:

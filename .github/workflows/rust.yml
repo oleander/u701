@@ -24,7 +24,10 @@ jobs:
             target
           key: ${{ hashFiles('**/Cargo.lock') }}
 
-      - run: rm rust-toolchain.toml
+      - name: Install espup and ESP toolchain
+        run: |
+          cargo install espup
+          espup install -f .espup.sh
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -40,10 +43,9 @@ jobs:
           args: --verbose  --target x86_64-unknown-linux-gnu
 
       - name: Build (main)
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --target riscv32imc-esp-espidf
+        run: |
+          source .espup.sh
+          cargo build --target riscv32imc-esp-espidf
 
       - name: Run tests (machine)
         uses: actions-rs/cargo@v1
@@ -52,11 +54,9 @@ jobs:
           args: --verbose --workspace machine --target x86_64-unknown-linux-gnu
 
       - name: Clippy (main)
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          toolchain: esp
-          args: --workspace --all-targets --all-features -- -D warnings
+        run: |
+          source .espup.sh
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
 
       # - name: Clippy (machine)
       #   uses: actions-rs/cargo@v1
