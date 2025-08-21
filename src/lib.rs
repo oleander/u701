@@ -30,7 +30,9 @@ fn main() -> Result<()> {
       None => debug!("[main] No action {}", event_id)
     }
 
-    unsafe { blinkled(); }
+    unsafe {
+      blinkled();
+    }
   }
 
   bail!("[main] Event loop ended");

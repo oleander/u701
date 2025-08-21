@@ -9,7 +9,7 @@ pub enum MediaControl {
   PrevTrack,
   PlayPause,
   VolumeUp,
-  Eject,
+  Eject
 }
 
 impl From<MediaControl> for [u8; 2] {
@@ -20,7 +20,7 @@ impl From<MediaControl> for [u8; 2] {
       MediaControl::PrevTrack => [2, 0],
       MediaControl::PlayPause => [8, 0],
       MediaControl::VolumeUp => [32, 0],
-      MediaControl::Eject => [16, 0],
+      MediaControl::Eject => [16, 0]
     }
   }
 }
