@@ -28,10 +28,8 @@ jobs:
         run: rm rust-toolchain.toml
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
           components: rust-src, rustfmt, clippy
 
       - name: Install espup and ESP toolchain
@@ -40,10 +38,7 @@ jobs:
           espup install -f .espup.sh
 
       - name: Run tests (main)
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --verbose  --target x86_64-unknown-linux-gnu
+        run: cargo test --verbose --target x86_64-unknown-linux-gnu
 
       - name: Build (main)
         run: |
@@ -51,10 +46,7 @@ jobs:
           cargo build --target riscv32imc-esp-espidf
 
       - name: Run tests (machine)
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --verbose --workspace machine --target x86_64-unknown-linux-gnu
+        run: cargo test --verbose --package machine --target x86_64-unknown-linux-gnu
 
       - name: Clippy (main)
         run: |

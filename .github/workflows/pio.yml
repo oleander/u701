@@ -16,26 +16,24 @@ jobs:
             .pio
           key: ${{ hashFiles('platformio.ini') }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Setup rust nightly
-        uses: actions-rs/toolchain@v1
-        with:
-          components: rust-src,rust-std
-          toolchain: nightly
-          override: true
-
       - name: Remove rust-toolchain.toml
         run: rm rust-toolchain.toml
 
+      - name: Setup rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+
       - name: Install cargo-pio and espup
         run: |
-          cargo +nightly install cargo-binstall
-          cargo +nightly binstall cargo-pio espup -y
+          cargo install cargo-binstall
+          cargo binstall cargo-pio espup -y
 
       - name: Install PlatformIO
-        run: cargo +nightly pio installpio
+        run: cargo pio installpio
 
       - name: Build PlatformIO check
-        run: cargo +nightly pio exec -- check
+        run: cargo pio exec -- check
 
       - name: Build using PlatformIO
         run: |

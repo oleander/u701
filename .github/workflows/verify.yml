@@ -18,11 +18,8 @@ jobs:
         run: rm rust-toolchain.toml
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
           components: rustfmt, clippy
 
       - name: Cache dependencies
