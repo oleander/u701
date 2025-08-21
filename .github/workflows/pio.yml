@@ -24,21 +24,29 @@ jobs:
         with:
           components: rust-src
 
-      - name: Install cargo-pio and espup
+      - name: Install espup and setup ESP toolchain
         run: |
+          # Install espup first without using custom toolchain
+          RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
+          espup install -t esp32 -f .espup.sh
+
+      - name: Install cargo tools
+        run: |
+          source .espup.sh
           cargo install cargo-binstall
           cargo binstall cargo-pio -y
-          # Use a specific working version to avoid dependency conflicts
-          cargo install espup --version 0.14.0 --locked
 
       - name: Install PlatformIO
-        run: cargo pio installpio
+        run: |
+          source .espup.sh
+          cargo pio installpio
 
       - name: Build PlatformIO check
-        run: cargo pio exec -- check
+        run: |
+          source .espup.sh
+          cargo pio exec -- check
 
       - name: Build using PlatformIO
         run: |
-          espup install -t esp32 -f .espup.sh
           source .espup.sh
           cargo +esp pio build
