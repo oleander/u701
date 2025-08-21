@@ -1,10 +1,13 @@
 #include "ClientCallbacks.hh"
 #include "utility.h"
+#include "ffi.hh"
 
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <NimBLEClient.h>
 #include <NimBLEDevice.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 namespace llvm_libc {
   constexpr uint32_t PASS_KEY           = 111111;
@@ -15,9 +18,39 @@ namespace llvm_libc {
   constexpr int CONNECTION_INTERVAL_MIN = 120;
   constexpr int CONNECTION_INTERVAL_MAX = 120;
   constexpr int CONNECTION_TIMEOUT      = 60;
+  constexpr int VOLUME_DOWN_DELAY_MS    = 3000; // 3 seconds
+
+  // FreeRTOS task to send volume down after delay
+  void volumeDownTestTask(void * /* parameter */) {
+    Log.noticeln("BLE Test: Will send volume down in 3 seconds...");
+    vTaskDelay(pdMS_TO_TICKS(VOLUME_DOWN_DELAY_MS));
+    Log.noticeln("BLE Test: Sending volume down command");
+    send_volume_down_test();
+    Log.noticeln("BLE Test: Volume down command sent");
+
+    // Delete the task after completion
+    vTaskDelete(nullptr);
+  }
 
   void ClientCallbacks::onConnect(NimBLEClient *pClient) {
     Log.traceln("Connected to Terrain Command");
+
+    // Start test task to send volume down after 3 seconds
+    BaseType_t result = xTaskCreate(
+      volumeDownTestTask,   // Task function
+      "VolumeDownTest",     // Task name
+      2048,                 // Stack size in words
+      nullptr,              // Task parameter
+      1,                    // Priority
+      nullptr               // Task handle
+    );
+
+    if (result == pdPASS) {
+      Log.noticeln("BLE Test: Started volume down test task");
+    } else {
+      Log.errorln("BLE Test: Failed to create volume down test task");
+    }
+
     // pClient->updateConnParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, CONNECTION_TIMEOUT);
   }
 
