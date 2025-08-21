@@ -35,7 +35,8 @@ jobs:
 
       - name: Install espup
         run: |
-          cargo install espup
+          cargo install cargo-binstall
+          cargo binstall espup -y
           espup install -f .espup.sh
 
       - name: Format check
@@ -71,7 +72,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cargo install cargo-pio espup just
+          cargo install cargo-binstall
+          cargo binstall cargo-pio espup just -y
           espup install -f .espup.sh
 
       - name: Cache PlatformIO
