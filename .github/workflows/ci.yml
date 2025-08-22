@@ -80,4 +80,4 @@ jobs:
           RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16" \
           CARGO_PROFILE_RELEASE_OPT_LEVEL=0 \
           CARGO_BUILD_JOBS=$(nproc) \
-          cargo pio build --no-debug-info --force-smart-build --build-cache
+          cargo pio build
