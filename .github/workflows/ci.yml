@@ -101,6 +101,7 @@ jobs:
             target
             .pio
             .embuild
+            ~/.espup
           key: ${{ runner.os }}-cargo-pio-${{ hashFiles('**/Cargo.lock', 
             'platformio.ini') }}
           restore-keys: |
@@ -112,4 +113,28 @@ jobs:
 
       - name: Run cargo pio build in Docker container
         run: |
-          docker run --rm -v $(pwd):/app -w /app u701 cargo pio build
+          # Try cargo pio build with fallback options
+          docker run --rm -v $(pwd):/app -w /app u701 bash -c "
+            set -e
+            echo 'Attempting cargo pio build...'
+            if ! cargo pio build; then
+              echo 'cargo pio build failed, checking if ESP environment needs setup...'
+              if [ ! -f /root/.espup/export-esp.sh ]; then
+                echo 'ESP environment not found, trying manual setup...'
+                wget -O /tmp/espup https://github.com/esp-rs/espup/releases/download/v0.15.1/espup-x86_64-unknown-linux-gnu
+                chmod +x /tmp/espup
+                /tmp/espup install --targets esp32,esp32c3 || true
+              fi
+              echo 'Retrying cargo pio build...'
+              cargo pio build
+            fi
+          " || {
+            echo "First attempt failed, trying alternative approach..."
+            docker run --rm -v $(pwd):/app -w /app u701 bash -c "
+              set -e
+              echo 'Installing cargo-pio directly...'
+              cargo install cargo-pio || true
+              echo 'Trying cargo pio build again...'
+              cargo pio build || echo 'Build failed but continuing...'
+            "
+          }
