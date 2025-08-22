@@ -21,24 +21,12 @@ _docker-run *args: _build-image
 _docker-run-hw *args: _build-image
     docker run --rm -v $(pwd):/app -w /app --privileged -v /dev:/dev {{DOCKER_IMAGE}} {{args}}
 
-# Install espup inside container and run a command
-_docker-esp *args: _build-image
-    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
-        if ! command -v espup &> /dev/null; then \
-            echo 'Installing espup via cargo...'; \
-            cargo install espup --version 0.15.1; \
-        fi && \
-        if [ ! -f /root/.espup/export-esp.sh ]; then \
-            echo 'Setting up ESP toolchain...'; \
-            espup install --targets esp32,esp32c3; \
-        fi && \
-        . /root/.espup/export-esp.sh && \
-        {{args}}"
+# Run cargo command in Docker container
+_docker-cargo *args: _build-image
+    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} cargo {{args}}
 
 clean: _build-image
-    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
-        rm -rf .pio .embuild target && \
-        cargo clean"
+    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} sh -c "rm -rf .pio .embuild target && cargo clean"
 
 erase:
     @echo "Hardware operations require local execution with proper device access"
@@ -49,51 +37,28 @@ monitor:
     tools/monitor.sh --port {{UPLOAD_PORT}}
 
 update:
-    @just _docker-esp "cargo pio exec -- pkg update"
+    @just _docker-cargo "pio exec -- pkg update"
 
 setup:
     @echo "Docker image setup complete. ESP toolchain will be installed on-demand."
 
 test: _build-image
-    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
-        if [ -f .cargo/config.toml ]; then mv .cargo/config.toml .cargo/config.toml.bak; fi && \
-        cargo test --workspace && \
-        if [ -f .cargo/config.toml.bak ]; then mv .cargo/config.toml.bak .cargo/config.toml; fi"
+    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} cargo test --workspace
 
 # menuconfig release | debug
 menuconfig mod = "release": _build-image
-    docker run --rm -it -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
-        if ! command -v espup &> /dev/null; then \
-            echo 'Installing espup via cargo...'; \
-            cargo install espup --version 0.15.1; \
-        fi && \
-        if [ ! -f /root/.espup/export-esp.sh ]; then \
-            echo 'Setting up ESP toolchain...'; \
-            espup install --targets esp32,esp32c3; \
-        fi && \
-        . /root/.espup/export-esp.sh && \
-        cargo pio espidf menuconfig {{ if mod == "release" { "-r true" } else { "" } }}"
+    docker run --rm -it -v $(pwd):/app -w /app {{DOCKER_IMAGE}} cargo pio espidf menuconfig {{ if mod == "release" { "-r true" } else { "" } }}
 
 # upload release | debug
 upload: _build-image
     @echo "Upload requires hardware access - using privileged Docker container"
-    docker run --rm -v $(pwd):/app -w /app --privileged -v /dev:/dev {{DOCKER_IMAGE}} bash -c "\
-        if ! command -v espup &> /dev/null; then \
-            echo 'Installing espup via cargo...'; \
-            cargo install espup --version 0.15.1; \
-        fi && \
-        if [ ! -f /root/.espup/export-esp.sh ]; then \
-            echo 'Setting up ESP toolchain...'; \
-            espup install --targets esp32,esp32c3; \
-        fi && \
-        . /root/.espup/export-esp.sh && \
-        cargo pio exec -- run -t upload"
+    docker run --rm -v $(pwd):/app -w /app --privileged -v /dev:/dev {{DOCKER_IMAGE}} cargo pio exec -- run -t upload
 
 # build release | debug
 build mod = "release":
-    @just _docker-esp "cargo pio build {{ if mod == "release" { "-r" } else { "" } }}"
+    @just _docker-cargo "pio build {{ if mod == "release" { "-r" } else { "" } }}"
 
 ota mod = "release":
-    @just _docker-esp "cargo pio exec -- run -t upload -e ota"
+    @just _docker-cargo "pio exec -- run -t upload -e ota"
 
 install: upload monitor
