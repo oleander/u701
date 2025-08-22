@@ -47,11 +47,19 @@ jobs:
           fi
 
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache dependencies
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Cache build artifacts
         uses: actions/cache@v4
         with:
           path: |
@@ -62,25 +70,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install Rust nightly toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rust-src
-
-      - name: Temporarily remove cargo config for test
+      - name: Build Docker image
         run: |
-          if [ -f .cargo/config.toml ]; then
-            mv .cargo/config.toml .cargo/config.toml.bak
-          fi
+          docker build -t u701 .
 
-      - name: Run tests
-        run: cargo test --workspace
-
-      - name: Restore cargo config
+      - name: Run tests in Docker container
         run: |
-          if [ -f .cargo/config.toml.bak ]; then
-            mv .cargo/config.toml.bak .cargo/config.toml
-          fi
+          docker run --rm -v $(pwd):/app -w /app u701 bash -c "
+            if [ -f .cargo/config.toml ]; then mv .cargo/config.toml .cargo/config.toml.bak; fi && \
+            cargo test --workspace && \
+            if [ -f .cargo/config.toml.bak ]; then mv .cargo/config.toml.bak .cargo/config.toml; fi"
 
   cargo-pio-build:
     runs-on: ubuntu-latest
@@ -113,10 +112,4 @@ jobs:
 
       - name: Run cargo pio build in Docker container
         run: |
-          docker run --rm -v $(pwd):/app -w /app u701 bash -c "
-            wget -O /tmp/espup https://github.com/esp-rs/espup/releases/download/v0.14.0/espup-x86_64-unknown-linux-gnu && \
-            chmod +x /tmp/espup && \
-            mv /tmp/espup /usr/local/bin/espup && \
-            espup install && \
-            . /root/.espup/export-esp.sh && \
-            cargo pio build"
+          docker run --rm -v $(pwd):/app -w /app u701 cargo pio build

@@ -26,6 +26,10 @@ WORKDIR /app
 # Copy source code
 COPY . .
 
+# Copy the ESP setup script that acts as a cargo wrapper
+COPY setup-esp.sh /usr/local/bin/cargo
+RUN chmod +x /usr/local/bin/cargo
+
 # Set nightly toolchain for this directory
 RUN rustup override set nightly
 
