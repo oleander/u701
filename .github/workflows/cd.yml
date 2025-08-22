@@ -1,0 +1,27 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOCKER_IMAGE: u701
+
+jobs:
+  docker-build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ${{ env.DOCKER_IMAGE }}:${{ github.sha }} .
+
+      - name: Run tests in Docker
+        run: docker run --rm ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+
+      - name: Tag image as latest (on main branch)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: docker tag ${{ env.DOCKER_IMAGE }}:${{ github.sha }} ${{ env.DOCKER_IMAGE }}:latest
