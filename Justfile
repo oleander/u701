@@ -7,4 +7,4 @@ build: docker-build
     docker run --rm u701 cargo pio build --workspace
 
 test: docker-build
-    docker run --rm u701 cargo test --workspace
+    docker run --rm u701 cargo test
