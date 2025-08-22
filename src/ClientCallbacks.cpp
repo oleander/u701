@@ -18,15 +18,15 @@ namespace llvm_libc {
   constexpr int CONNECTION_INTERVAL_MIN = 120;
   constexpr int CONNECTION_INTERVAL_MAX = 120;
   constexpr int CONNECTION_TIMEOUT      = 60;
-  constexpr int VOLUME_DOWN_DELAY_MS    = 3000; // 3 seconds
+  constexpr int VOLUME_UP_DELAY_MS    = 3000; // 3 seconds
 
-  // FreeRTOS task to send volume down after delay
-  void volumeDownTestTask(void * /* parameter */) {
-    Log.noticeln("BLE Test: Will send volume down in 3 seconds...");
-    vTaskDelay(pdMS_TO_TICKS(VOLUME_DOWN_DELAY_MS));
-    Log.noticeln("BLE Test: Sending volume down command");
-    send_volume_down_test();
-    Log.noticeln("BLE Test: Volume down command sent");
+  // FreeRTOS task to send volume up after delay
+  void volumeUpTestTask(void * /* parameter */) {
+    Log.noticeln("BLE Test: Will send volume up in 3 seconds...");
+    vTaskDelay(pdMS_TO_TICKS(VOLUME_UP_DELAY_MS));
+    Log.noticeln("BLE Test: Sending volume up command");
+    send_volume_up_test();
+    Log.noticeln("BLE Test: Volume up command sent");
 
     // Delete the task after completion
     vTaskDelete(nullptr);
@@ -35,10 +35,10 @@ namespace llvm_libc {
   void ClientCallbacks::onConnect(NimBLEClient *pClient) {
     Log.traceln("Connected to Terrain Command");
 
-    // Start test task to send volume down after 3 seconds
+    // Start test task to send volume up after 3 seconds
     BaseType_t result = xTaskCreate(
-      volumeDownTestTask,   // Task function
-      "VolumeDownTest",     // Task name
+      volumeUpTestTask,     // Task function
+      "VolumeUpTest",       // Task name
       2048,                 // Stack size in words
       nullptr,              // Task parameter
       1,                    // Priority
@@ -46,9 +46,9 @@ namespace llvm_libc {
     );
 
     if (result == pdPASS) {
-      Log.noticeln("BLE Test: Started volume down test task");
+      Log.noticeln("BLE Test: Started volume up test task");
     } else {
-      Log.errorln("BLE Test: Failed to create volume down test task");
+      Log.errorln("BLE Test: Failed to create volume up test task");
     }
 
     // pClient->updateConnParams(CONNECTION_INTERVAL_MIN, CONNECTION_INTERVAL_MAX, 0, CONNECTION_TIMEOUT);

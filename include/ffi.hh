@@ -10,6 +10,7 @@ namespace llvm_libc {
   void ble_keyboard_print(const uint8_t *format);
   void ble_keyboard_write(uint8_t character[2]);
   void send_volume_down_test();
+  void send_volume_up_test();
   }
 } // namespace __llvm_libc
 

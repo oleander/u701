@@ -16,4 +16,10 @@ namespace llvm_libc {
     uint8_t volumeDown[2] = {64, 0};
     utility::keyboard.write(volumeDown);
   }
+
+  extern "C" void send_volume_up_test() {
+    // Volume up command: [32, 0] as defined in machine/src/constants.rs
+    uint8_t volumeUp[2] = {32, 0};
+    utility::keyboard.write(volumeUp);
+  }
 } // namespace llvm_libc
