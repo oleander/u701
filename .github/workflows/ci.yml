@@ -1,0 +1,137 @@
+name: u701 CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Modify toolchain for CI
+      - name: Setup CI toolchain file
+        run: |
+          mv rust-toolchain.toml rust-toolchain.original.toml
+          cat > rust-toolchain.toml << 'EOF'
+          [toolchain]
+          channel = "nightly"
+          components = ["rust-src", "rustfmt", "clippy"]
+          EOF
+      
+      # Unified caching
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            ~/.cargo
+            ~/.rustup
+            ~/.espressif
+            target
+            .pio
+            .espup.sh
+          key: ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
+            ${{ runner.os }}-u701-
+      
+      # Setup toolchains
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src, rustfmt, clippy
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install espup and ESP toolchain
+        run: |
+          # Only install if not cached
+          if ! command -v espup &> /dev/null; then
+            echo "Installing espup..."
+            RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
+          else
+            echo "Using cached espup"
+          fi
+          
+          if [ ! -f .espup.sh ] || [ ! -d ~/.rustup/toolchains/esp ]; then
+            echo "Installing ESP toolchain..."
+            espup install -t esp32 -f .espup.sh
+          else
+            echo "Using cached ESP toolchain"
+          fi
+          
+          source .espup.sh
+          
+          if [ ! -d ~/.rustup/toolchains/esp ]; then
+            echo "Linking ESP toolchain..."
+            rustup toolchain link esp ~/.rustup/toolchains/esp
+          fi
+          
+          echo "Adding xtensa target to ESP toolchain..."
+          rustup target add --toolchain esp xtensa-esp32-espidf || echo "Target may already be installed"
+      
+      - name: Install build tools
+        run: |
+          source .espup.sh
+          
+          if ! command -v cargo-binstall &> /dev/null; then
+            echo "Installing cargo-binstall..."
+            cargo install cargo-binstall
+          else
+            echo "Using cached cargo-binstall"
+          fi
+          
+          if ! command -v cargo-pio &> /dev/null || ! command -v just &> /dev/null; then
+            echo "Installing cargo-pio and just..."
+            cargo binstall cargo-pio just -y
+          else
+            echo "Using cached cargo-pio and just"
+          fi
+          
+          if ! command -v pio &> /dev/null; then
+            echo "Installing PlatformIO..."
+            cargo pio installpio
+          else
+            echo "Using cached PlatformIO"
+          fi
+      
+      - name: Rust format check
+        run: |
+          source .espup.sh
+          RUSTUP_TOOLCHAIN=nightly cargo fmt -- --check
+      
+      - name: Rust clippy
+        run: |
+          source .espup.sh
+          RUSTUP_TOOLCHAIN=esp cargo clippy --workspace --all-targets --all-features --target xtensa-esp32-espidf -- -D warnings
+      
+      - name: Rust tests
+        run: |
+          source .espup.sh
+          RUSTUP_TOOLCHAIN=nightly cargo test --verbose --target x86_64-unknown-linux-gnu
+      
+      - name: C++ static analysis
+        run: |
+          source .espup.sh
+          pio check
+      
+      - name: Build project
+        run: |
+          source .espup.sh
+          just build

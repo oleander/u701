@@ -195,7 +195,7 @@ namespace llvm_libc {
     Log.infoln("[SEM] Wait for iPhone to complete MTU exchange");
     auto currTime = millis();
     xSemaphoreTake(utility::semaphore, portMAX_DELAY);
-    Log.infoln("[SEM] Waited %d ms for iPhone to complete MTU exchange", millis() - currTime);
+    Log.infoln("[SEM] Waited %d ms for iPhone to complete MTU exchange", millis() - currTime);
 
     NimBLEDevice::whiteListAdd(testServerAddress);
     NimBLEDevice::whiteListAdd(realServerAddress);
