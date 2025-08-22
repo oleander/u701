@@ -17,7 +17,7 @@ monitor:
 update:
     cargo +esp pio exec -- pkg update
 setup:
-    espup install -f {{ESPUP_PATH}}
+    espup install -t esp32 -f {{ESPUP_PATH}}
     espup update -f {{ESPUP_PATH}}
 
 test: setup

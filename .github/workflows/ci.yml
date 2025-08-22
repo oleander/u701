@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       # Modify toolchain for CI
       - name: Setup CI toolchain
         run: |
@@ -26,7 +26,7 @@ jobs:
           channel = "nightly"
           components = ["rust-src", "clippy"]
           EOF
-      
+
       # Cache dependencies
       - name: Cache
         uses: actions/cache@v4
@@ -40,44 +40,44 @@ jobs:
           key: ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
           restore-keys: |
             ${{ runner.os }}-u701-
-      
+
       # Setup toolchain
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src, clippy
-      
+
       - name: Setup ESP toolchain
         run: |
           # Install espup and ESP toolchain
           if ! command -v espup &> /dev/null; then
             RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
           fi
-          
+
           espup install -t esp32 -f .espup.sh
           source .espup.sh
-          
+
           if [ ! -d ~/.rustup/toolchains/esp ]; then
             rustup toolchain link esp ~/.rustup/toolchains/esp
           fi
-          
+
           rustup target add --toolchain esp xtensa-esp32-espidf || true
-      
+
       - name: Install build tools
         run: |
           source .espup.sh
           cargo install cargo-binstall
           cargo binstall -y cargo-pio just
-      
+
       - name: Clippy
         run: |
           source .espup.sh
           RUSTUP_TOOLCHAIN=esp cargo clippy --target xtensa-esp32-espidf -- -D warnings
-      
+
       - name: Build
         run: |
           source .espup.sh
           RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16" \
           CARGO_PROFILE_RELEASE_OPT_LEVEL=0 \
           CARGO_BUILD_JOBS=$(nproc) \
-          just build ci
+          cargo pio build --no-debug-info --force-smart-build --build-cache
