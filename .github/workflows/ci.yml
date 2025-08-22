@@ -96,7 +96,7 @@ jobs:
             target
             .pio
             .embuild
-          key: ${{ runner.os }}-cargo-pio-${{ hashFiles('**/Cargo.lock',
+          key: ${{ runner.os }}-cargo-pio-${{ hashFiles('**/Cargo.lock', 
             'platformio.ini') }}
           restore-keys: |
             ${{ runner.os }}-cargo-pio-
@@ -106,16 +106,30 @@ jobs:
         with:
           components: rust-src
 
+      - name: Cache tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-pio
+            ~/.cargo/bin/espup
+          key: ${{ runner.os }}-tools-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-tools-
+
       - name: Install cargo-pio and espup
         run: |
-          cargo install cargo-pio
-          # Install espup from git to get latest version with potential dependency fixes
-          cargo install --git https://github.com/esp-rs/espup espup
+          if ! command -v cargo-pio &> /dev/null; then
+            cargo install cargo-pio
+          fi
+          if ! command -v espup &> /dev/null; then
+            # Install espup from git to get latest version with potential 
+            # dependency fixes
+            cargo install --git https://github.com/esp-rs/espup espup
+          fi
 
       - name: Setup ESP development environment
         run: |
           mkdir -p tmp
-          espup install -f tmp/espup.sh
           espup update -f tmp/espup.sh
 
       - name: Build with cargo-pio (debug)
