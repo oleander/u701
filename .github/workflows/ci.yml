@@ -134,6 +134,9 @@ jobs:
       - name: Build project (fast CI mode)
         run: |
           source .espup.sh
+          # Use PlatformIO CI config
+          cp platformio.ci.ini platformio_extra.ini
+          
           # Use fastest possible build settings for CI
           RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16 -C lto=off -C embed-bitcode=no -C strip=none" \
           CARGO_PROFILE_RELEASE_LTO=false \
@@ -145,4 +148,5 @@ jobs:
           CARGO_NET_RETRY=10 \
           CARGO_BUILD_JOBS=$(nproc) \
           CARGO_TERM_PROGRESS_WHEN=never \
+          PIO_BUILD_FLAGS="-O0 -g0" \
           just build ci

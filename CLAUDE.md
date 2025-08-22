@@ -30,6 +30,9 @@ just setup build
 just build release
 just build debug
 
+# CI mode - optimized for build speed, not for performance or size
+just build ci
+
 # Clean the build artifacts
 just clean
 ```

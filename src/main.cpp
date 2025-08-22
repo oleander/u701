@@ -6,9 +6,6 @@
 #include <esp_task_wdt.h>
 
 #include <array>
-#include <iostream>
-#include <string>
-#include <vector>
 
 #include <ArduinoOTA.h>
 #include <WiFi.h>
