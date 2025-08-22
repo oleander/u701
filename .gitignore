@@ -10,6 +10,8 @@ src/CMakeLists.txt
 sdkconfig.debug*
 sdkconfig.release*
 sdkconfig.old
+sdkconfig.lolin32
+sdkconfig.ota
 managed_components
 .espup.sh
 tmp/espup.sh
