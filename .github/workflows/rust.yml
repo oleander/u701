@@ -30,18 +30,21 @@ jobs:
           components = ["rust-src"]
           EOF
 
-      - name: Cache Cargo dependencies
+      - name: Cache Cargo and ESP dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.platformio
             ~/.cargo
+            ~/.rustup
+            ~/.espressif
             target
             .pio
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}-${{ hashFiles('**/Cargo.toml') }}
+            .espup.sh
+          key: ${{ runner.os }}-cargo-esp-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-esp-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
+            ${{ runner.os }}-cargo-esp-
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -50,23 +53,47 @@ jobs:
 
       - name: Install espup and ESP toolchain
         run: |
-          # Install espup first without using custom toolchain
-          RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
-          # Install Xtensa toolchain for ESP32
-          espup install -t esp32 -f .espup.sh
+          # Check if we already have espup from cache
+          if ! command -v espup &> /dev/null; then
+            echo "Installing espup from scratch..."
+            # Install espup first without using custom toolchain
+            RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
+          else
+            echo "Using cached espup installation"
+          fi
+
+          # Check if ESP toolchain is already installed from cache
+          if [ ! -f .espup.sh ] || [ ! -d ~/.rustup/toolchains/esp ]; then
+            echo "Installing ESP toolchain from scratch..."
+            # Install Xtensa toolchain for ESP32
+            espup install -t esp32 -f .espup.sh
+          else
+            echo "Using cached ESP toolchain"
+          fi
+
           # Source the ESP environment setup file
           source .espup.sh
+          
           # Create a symbolic link for the 'esp' toolchain if needed
           if [ ! -d ~/.rustup/toolchains/esp ]; then
             rustup toolchain link esp ~/.rustup/toolchains/esp
           fi
-          # Install cargo-pio and other required tools
-          cargo install cargo-pio
+          
+          # Check if cargo-pio is already installed
+          if ! command -v cargo-pio &> /dev/null; then
+            echo "Installing cargo-pio..."
+            # Install cargo-pio and other required tools
+            cargo install cargo-pio
+          else
+            echo "Using cached cargo-pio installation"
+          fi
+          
           # Debug ESP toolchain setup
           echo "Listing Rust toolchains:"
           rustup toolchain list
           echo "Checking ESP toolchain:"
-          ls -la ~/.rustup/toolchains/esp/bin/
+          ls -la ~/.rustup/toolchains/esp/bin/ || echo "ESP toolchain bin directory not found"
+          
           # Add target explicitly to avoid ${CARGO_BUILD_TARGET} issue
           echo "Adding xtensa target to ESP toolchain"
           rustup target add --toolchain esp xtensa-esp32-espidf || echo "Target may already be installed"
