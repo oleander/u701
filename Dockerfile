@@ -61,17 +61,29 @@ RUN mkdir -p ${PLATFORMIO_INSTALLER_TMPDIR} && \
 USER ${USER_NAME}
 RUN cargo pio installpio ${PLATFORMIO_INSTALLER_TMPDIR}
 
-# Build using reusable caches for cargo, target, and PlatformIO
+# Install and setup ESP32 Rust environment early
+RUN espup install
+RUN echo ". /home/esp/export-esp.sh" > /home/esp/.bashrc && \
+    echo ". /home/esp/export-esp.sh" >> /home/esp/.profile
+
+# Source ESP environment and set target for subsequent layers
 ENV PATH=${PLATFORMIO_INSTALLER_TMPDIR}/penv/bin:$PATH
+RUN . /home/esp/export-esp.sh && \
+    echo "CARGO_BUILD_TARGET=${CARGO_BUILD_TARGET:-xtensa-esp32-espidf}" >> /home/esp/.env && \
+    echo "LIBCLANG_PATH=${LIBCLANG_PATH}" >> /home/esp/.env && \
+    echo "PIO_FRAMEWORK_ARDUINO_FRAMEWORK_DIR=${PIO_FRAMEWORK_ARDUINO_FRAMEWORK_DIR}" >> /home/esp/.env && \
+    echo "PIO_FRAMEWORK_ESPIDF_DIR=${PIO_FRAMEWORK_ESPIDF_DIR}" >> /home/esp/.env
+
+# Set ESP32 environment variables explicitly
+ENV CARGO_BUILD_TARGET=xtensa-esp32-espidf
+
+# Build using reusable caches for cargo, target, and PlatformIO
 RUN --mount=type=cache,id=cargo-reg,target=${CARGO_HOME}/registry,uid=${USER_UID},gid=${USER_GID} \
     --mount=type=cache,id=cargo-git,target=${CARGO_HOME}/git,uid=${USER_UID},gid=${USER_GID} \
     --mount=type=cache,id=target-cache,target=${APP_DIR}/target,uid=${USER_UID},gid=${USER_GID} \
     --mount=type=cache,id=pio-core,target=${PLATFORMIO_CORE_DIR},uid=${USER_UID},gid=${USER_GID} \
-    cargo pio build --pio-installation ${PLATFORMIO_INSTALLER_TMPDIR}
+    . /home/esp/export-esp.sh && cargo pio build --pio-installation ${PLATFORMIO_INSTALLER_TMPDIR}
 
 # Source last so edits don't invalidate deps
 COPY . .
-
-RUN espup install
-RUN echo ". /home/esp/export-esp.sh" > /home/esp/.bashrc
-ENTRYPOINT ["/bin/bash", "-l", "-c"]
+ENTRYPOINT ["/bin/bash", "-c", "source /home/esp/export-esp.sh && exec \"$@\"", "--"]
