@@ -24,10 +24,14 @@ _docker-run-hw *args: _build-image
 # Install espup inside container and run a command
 _docker-esp *args: _build-image
     docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
-        wget -O /tmp/espup https://github.com/esp-rs/espup/releases/download/v0.14.0/espup-x86_64-unknown-linux-gnu && \
-        chmod +x /tmp/espup && \
-        mv /tmp/espup /usr/local/bin/espup && \
-        espup install && \
+        if ! command -v espup &> /dev/null; then \
+            echo 'Installing espup via cargo...'; \
+            cargo install espup --version 0.15.1; \
+        fi && \
+        if [ ! -f /root/.espup/export-esp.sh ]; then \
+            echo 'Setting up ESP toolchain...'; \
+            espup install --targets esp32,esp32c3; \
+        fi && \
         . /root/.espup/export-esp.sh && \
         {{args}}"
 
@@ -44,10 +48,10 @@ monitor:
     @echo "Monitor requires direct hardware access"
     tools/monitor.sh --port {{UPLOAD_PORT}}
 
-update: 
+update:
     @just _docker-esp "cargo pio exec -- pkg update"
 
-setup: 
+setup:
     @echo "Docker image setup complete. ESP toolchain will be installed on-demand."
 
 test: _build-image
@@ -59,29 +63,37 @@ test: _build-image
 # menuconfig release | debug
 menuconfig mod = "release": _build-image
     docker run --rm -it -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
-        wget -O /tmp/espup https://github.com/esp-rs/espup/releases/download/v0.14.0/espup-x86_64-unknown-linux-gnu && \
-        chmod +x /tmp/espup && \
-        mv /tmp/espup /usr/local/bin/espup && \
-        espup install && \
+        if ! command -v espup &> /dev/null; then \
+            echo 'Installing espup via cargo...'; \
+            cargo install espup --version 0.15.1; \
+        fi && \
+        if [ ! -f /root/.espup/export-esp.sh ]; then \
+            echo 'Setting up ESP toolchain...'; \
+            espup install --targets esp32,esp32c3; \
+        fi && \
         . /root/.espup/export-esp.sh && \
         cargo pio espidf menuconfig {{ if mod == "release" { "-r true" } else { "" } }}"
 
-# upload release | debug  
+# upload release | debug
 upload: _build-image
     @echo "Upload requires hardware access - using privileged Docker container"
     docker run --rm -v $(pwd):/app -w /app --privileged -v /dev:/dev {{DOCKER_IMAGE}} bash -c "\
-        wget -O /tmp/espup https://github.com/esp-rs/espup/releases/download/v0.14.0/espup-x86_64-unknown-linux-gnu && \
-        chmod +x /tmp/espup && \
-        mv /tmp/espup /usr/local/bin/espup && \
-        espup install && \
+        if ! command -v espup &> /dev/null; then \
+            echo 'Installing espup via cargo...'; \
+            cargo install espup --version 0.15.1; \
+        fi && \
+        if [ ! -f /root/.espup/export-esp.sh ]; then \
+            echo 'Setting up ESP toolchain...'; \
+            espup install --targets esp32,esp32c3; \
+        fi && \
         . /root/.espup/export-esp.sh && \
         cargo pio exec -- run -t upload"
 
 # build release | debug
-build mod = "release": 
+build mod = "release":
     @just _docker-esp "cargo pio build {{ if mod == "release" { "-r" } else { "" } }}"
 
-ota mod = "release": 
+ota mod = "release":
     @just _docker-esp "cargo pio exec -- run -t upload -e ota"
 
 install: upload monitor
