@@ -1,15 +1,46 @@
-/.vscode
-/.embuild
-/target
-/Cargo.lock
-/build
-.pio
-CMakeFiles/
+# IDE and Editor files
+/.vscode/
+/.idea/
+*.swp
+*.swo
+*~
+
+# Environment and user-specific files
 .env
-src/CMakeLists.txt
-sdkconfig.debug*
-sdkconfig.release*
-sdkconfig.old
-managed_components
+.env.local
 .espup.sh
 tmp/espup.sh
+
+# Rust build artifacts
+/target/
+Cargo.lock
+/machine/target/
+
+# ESP-IDF build artifacts
+/.embuild/
+/build/
+.pio/
+CMakeFiles/
+managed_components/
+
+# Generated sdkconfig files (keep defaults and specific configs)
+sdkconfig
+sdkconfig.old
+sdkconfig.debug*
+sdkconfig.release*
+
+# PlatformIO
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# System files
+.DS_Store
+Thumbs.db
