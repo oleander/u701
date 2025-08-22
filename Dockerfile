@@ -1,5 +1,5 @@
 # ESP32 development environment using Rust base image
-FROM rust:1.75
+FROM rust:1.82
 
 # Install system dependencies for ESP32 development
 RUN apt-get update && apt-get install -y \
@@ -16,12 +16,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PlatformIO and ESP32 tools
-RUN pip3 install platformio && \
-    cargo install espup cargo-pio just && \
+RUN pip3 install --break-system-packages platformio && \
+    cargo install --locked espup cargo-pio just && \
     espup install --targets esp32,esp32c3
 
-# Set up environment
-ENV ESPUP_PATH="/tmp/espup.sh"
+# Set up environment - espup sets up export-esp.sh in the home directory
+ENV ESPUP_PATH="/root/export-esp.sh"
 WORKDIR /workspace
 
 # Default command

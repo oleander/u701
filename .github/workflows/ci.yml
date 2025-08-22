@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile', 'docker-compose.yml') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-docker-
 
@@ -53,17 +53,17 @@ jobs:
       # Run clippy in container
       - name: Clippy
         run: |
-          docker run --rm -v ${{ github.workspace }}:/home/esp32/workspace u701-builder \
+          docker run --rm -v ${{ github.workspace }}:/workspace u701-builder \
             /bin/bash -c "source \$ESPUP_PATH && cargo clippy --target xtensa-esp32-espidf -- -D warnings"
 
       # Build project in container  
       - name: Build
         run: |
-          docker run --rm -v ${{ github.workspace }}:/home/esp32/workspace u701-builder \
+          docker run --rm -v ${{ github.workspace }}:/workspace u701-builder \
             /bin/bash -c "source \$ESPUP_PATH && RUSTFLAGS='-C opt-level=0 -C debuginfo=0 -C codegen-units=16' CARGO_PROFILE_RELEASE_OPT_LEVEL=0 CARGO_BUILD_JOBS=\$(nproc) cargo pio build"
 
       # Test the project
       - name: Test
         run: |
-          docker run --rm -v ${{ github.workspace }}:/home/esp32/workspace u701-builder \
+          docker run --rm -v ${{ github.workspace }}:/workspace u701-builder \
             /bin/bash -c "source \$ESPUP_PATH && just test"
