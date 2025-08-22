@@ -2,7 +2,7 @@
 FROM espressif/idf-rust:esp32_1.88.0.0
 
 ARG RUST_TOOLCHAIN=nightly
-ARG CARGO_PIO_VERSION=0.3.6
+ARG CARGO_PIO_VERSION=latest
 
 ENV HOME=/home/esp \
     RUSTUP_HOME=/home/esp/.rustup \
@@ -29,12 +29,11 @@ RUN --mount=type=cache,id=rustup,target=/home/esp/.rustup,uid=1000,gid=1000 \
     curl -fsSL https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash && \
     rustup toolchain install ${RUST_TOOLCHAIN} --profile minimal -c rust-src -c rustfmt -c clippy && \
     rustup default ${RUST_TOOLCHAIN} && \
-    cargo binstall -y cargo-pio@${CARGO_PIO_VERSION}
+    cargo binstall -y cargo-pio
 
-# PlatformIO core (joined curl+python; cached)
-RUN --mount=type=cache,id=pio-installer,target=/home/esp/.pio-cache-dir,uid=1000,gid=1000 \
-    --mount=type=cache,id=pio-core,target=/home/esp/.platformio,uid=1000,gid=1000 \
-    curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py | python3 -
+# PlatformIO core (install via pip; cached)
+RUN --mount=type=cache,id=pio-core,target=/home/esp/.platformio,uid=1000,gid=1000 \
+    pip3 install --user --break-system-packages platformio
 
 WORKDIR /app
 
