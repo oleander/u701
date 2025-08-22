@@ -1,6 +1,6 @@
 FROM rust:latest
 
-# Install system dependencies
+# Install system dependencies and update CA certificates
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -11,7 +11,10 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     expect \
     wget \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates
 
 # Install required Rust components
 RUN rustup toolchain install nightly \

@@ -1,28 +1,12 @@
-
-set shell := ["bash", "-cu"]
 set dotenv-load := true
 
-# Docker image name
-DOCKER_IMAGE := "u701"
-UPLOAD_PORT := `ls /dev/tty.usb* 2>/dev/null | head -n 1 || echo "/dev/ttyUSB0"`
+DOCKER_IMAGE := "u701:latest"
+UPLOAD_PORT := env_var_or_default("UPLOAD_PORT", "/dev/ttyUSB0")
 
-# Build Docker image if it doesn't exist
 _build-image:
-    @if ! docker image ls {{DOCKER_IMAGE}} | grep -q {{DOCKER_IMAGE}}; then \
-        echo "Building Docker image..."; \
-        docker build -t {{DOCKER_IMAGE}} .; \
-    fi
+    docker build -t {{DOCKER_IMAGE}} .
 
-# Run command in Docker container
-_docker-run *args: _build-image
-    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} {{args}}
-
-# Run command in Docker container with device access for hardware operations
-_docker-run-hw *args: _build-image
-    docker run --rm -v $(pwd):/app -w /app --privileged -v /dev:/dev {{DOCKER_IMAGE}} {{args}}
-
-# Install espup inside container and run a command
-_docker-esp *args: _build-image
+_docker-esp args:
     docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
         wget -O /tmp/espup https://github.com/esp-rs/espup/releases/download/v0.14.0/espup-x86_64-unknown-linux-gnu && \
         chmod +x /tmp/espup && \
@@ -50,11 +34,40 @@ update:
 setup: 
     @echo "Docker image setup complete. ESP toolchain will be installed on-demand."
 
-test: _build-image
-    docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
-        if [ -f .cargo/config.toml ]; then mv .cargo/config.toml .cargo/config.toml.bak; fi && \
-        cargo test --workspace && \
-        if [ -f .cargo/config.toml.bak ]; then mv .cargo/config.toml.bak .cargo/config.toml; fi"
+# Test command with fallback to local execution if Docker fails
+test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Try Docker first, fall back to local if it fails
+    if docker build -t {{DOCKER_IMAGE}} . > /dev/null 2>&1; then
+        echo "Using Docker for tests..."
+        docker run --rm -v $(pwd):/app -w /app {{DOCKER_IMAGE}} bash -c "\
+            if [ -f .cargo/config.toml ]; then mv .cargo/config.toml .cargo/config.toml.bak; fi && \
+            cargo test --workspace && \
+            if [ -f .cargo/config.toml.bak ]; then mv .cargo/config.toml.bak .cargo/config.toml; fi"
+    else
+        echo "Docker build failed, using local Rust toolchain for tests..."
+        # Ensure nightly toolchain is available
+        if ! rustup toolchain list | grep -q nightly; then
+            echo "Installing nightly Rust toolchain..."
+            rustup toolchain install nightly
+        fi
+        rustup override set nightly
+        
+        # Temporarily move cargo config if it exists
+        if [ -f .cargo/config.toml ]; then 
+            mv .cargo/config.toml .cargo/config.toml.bak
+        fi
+        
+        # Run tests
+        cargo test --workspace
+        
+        # Restore cargo config
+        if [ -f .cargo/config.toml.bak ]; then 
+            mv .cargo/config.toml.bak .cargo/config.toml
+        fi
+    fi
 
 # menuconfig release | debug
 menuconfig mod = "release": _build-image

@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install just
+        run: brew install just
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -40,11 +43,74 @@ jobs:
       - name: Build project
         run: cargo build --workspace
 
-      - name: Run tests
-        run: cargo test --workspace
-
       - name: Restore cargo config
         run: |
           if [ -f .cargo/config.toml.bak ]; then
             mv .cargo/config.toml.bak .cargo/config.toml
           fi
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run tests with just
+        run: just test
+
+  cargo-pio-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            target
+            .pio
+            .embuild
+            ~/.espup
+          key: ${{ runner.os }}-cargo-pio-${{ hashFiles('**/Cargo.lock', 
+            'platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-pio-
+
+      - name: Run cargo pio build with just
+        run: just build
