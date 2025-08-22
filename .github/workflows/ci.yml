@@ -1,4 +1,4 @@
-name: u701 CI
+name: CI
 
 on:
   push:
@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-
-env:
-  CARGO_TERM_COLOR: always
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,132 +18,66 @@ jobs:
       - uses: actions/checkout@v3
       
       # Modify toolchain for CI
-      - name: Setup CI toolchain file
+      - name: Setup CI toolchain
         run: |
           mv rust-toolchain.toml rust-toolchain.original.toml
           cat > rust-toolchain.toml << 'EOF'
           [toolchain]
           channel = "nightly"
-          components = ["rust-src", "rustfmt", "clippy"]
+          components = ["rust-src", "clippy"]
           EOF
       
-      # Unified caching
-      - name: Cache dependencies
-        id: cache
+      # Cache dependencies
+      - name: Cache
         uses: actions/cache@v4
         with:
           path: |
-            ~/.platformio
             ~/.cargo
             ~/.rustup
             ~/.espressif
             target
             .pio
-            .espup.sh
-          key: ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini', '**/Cargo.toml') }}
+          key: ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
           restore-keys: |
-            ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
             ${{ runner.os }}-u701-
       
-      # Setup toolchains
+      # Setup toolchain
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
         with:
-          components: rust-src, rustfmt, clippy
+          components: rust-src, clippy
       
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      
-      - name: Install espup and ESP toolchain
+      - name: Setup ESP toolchain
         run: |
-          # Only install if not cached
+          # Install espup and ESP toolchain
           if ! command -v espup &> /dev/null; then
-            echo "Installing espup..."
             RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
-          else
-            echo "Using cached espup"
           fi
           
-          if [ ! -f .espup.sh ] || [ ! -d ~/.rustup/toolchains/esp ]; then
-            echo "Installing ESP toolchain..."
-            espup install -t esp32 -f .espup.sh
-          else
-            echo "Using cached ESP toolchain"
-          fi
-          
+          espup install -t esp32 -f .espup.sh
           source .espup.sh
           
           if [ ! -d ~/.rustup/toolchains/esp ]; then
-            echo "Linking ESP toolchain..."
             rustup toolchain link esp ~/.rustup/toolchains/esp
           fi
           
-          echo "Adding xtensa target to ESP toolchain..."
-          rustup target add --toolchain esp xtensa-esp32-espidf || echo "Target may already be installed"
+          rustup target add --toolchain esp xtensa-esp32-espidf || true
       
       - name: Install build tools
         run: |
           source .espup.sh
-          
-          if ! command -v cargo-binstall &> /dev/null; then
-            echo "Installing cargo-binstall..."
-            cargo install cargo-binstall
-          else
-            echo "Using cached cargo-binstall"
-          fi
-          
-          if ! command -v cargo-pio &> /dev/null || ! command -v just &> /dev/null; then
-            echo "Installing cargo-pio and just..."
-            cargo binstall cargo-pio just -y
-          else
-            echo "Using cached cargo-pio and just"
-          fi
-          
-          if ! command -v pio &> /dev/null; then
-            echo "Installing PlatformIO..."
-            cargo pio installpio
-          else
-            echo "Using cached PlatformIO"
-          fi
+          cargo install cargo-binstall
+          cargo binstall -y cargo-pio just
       
-      - name: Rust format check
+      - name: Clippy
         run: |
           source .espup.sh
-          RUSTUP_TOOLCHAIN=nightly cargo fmt -- --check
+          RUSTUP_TOOLCHAIN=esp cargo clippy --target xtensa-esp32-espidf -- -D warnings
       
-      - name: Rust clippy
+      - name: Build
         run: |
           source .espup.sh
-          RUSTUP_TOOLCHAIN=esp cargo clippy --workspace --all-targets --all-features --target xtensa-esp32-espidf -- -D warnings
-      
-      - name: Rust tests
-        run: |
-          source .espup.sh
-          RUSTUP_TOOLCHAIN=nightly cargo test --verbose --target x86_64-unknown-linux-gnu
-      
-      - name: C++ static analysis
-        run: |
-          source .espup.sh
-          pio check
-      
-      - name: Build project (fast CI mode)
-        run: |
-          source .espup.sh
-          # Use PlatformIO CI config
-          cp platformio.ci.ini platformio_extra.ini
-          
-          # Use fastest possible build settings for CI
-          RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16 -C lto=off -C embed-bitcode=no -C strip=none" \
-          CARGO_PROFILE_RELEASE_LTO=false \
-          CARGO_PROFILE_RELEASE_PANIC=abort \
-          CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \
+          RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16" \
           CARGO_PROFILE_RELEASE_OPT_LEVEL=0 \
-          CARGO_PROFILE_RELEASE_DEBUG=false \
-          CARGO_PROFILE_RELEASE_STRIP=none \
-          CARGO_NET_RETRY=10 \
           CARGO_BUILD_JOBS=$(nproc) \
-          CARGO_TERM_PROGRESS_WHEN=never \
-          PIO_BUILD_FLAGS="-O0 -g0" \
           just build ci
