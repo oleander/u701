@@ -17,15 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Modify toolchain for CI
-      - name: Setup CI toolchain
-        run: |
-          mv rust-toolchain.toml rust-toolchain.original.toml
-          cat > rust-toolchain.toml << 'EOF'
-          [toolchain]
-          channel = "nightly"
-          components = ["rust-src", "clippy"]
-          EOF
+      # Toolchain is already configured in rust-toolchain.toml
 
       # Cache dependencies
       - name: Cache
