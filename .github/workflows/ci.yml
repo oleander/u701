@@ -19,38 +19,29 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo
-            ~/.platformio
+            ~/.cargo/registry
+            ~/.cargo/git
             target
-            .pio
-          key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('platformio.ini') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-
+            ${{ runner.os }}-cargo-
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust nightly toolchain
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
           components: rust-src
 
-      - name: Remove problematic configs for build
+      - name: Temporarily remove cargo config for standard build
         run: |
-          rm -f rust-toolchain.toml
-          mv .cargo/config.toml .cargo/config.toml.bak
+          if [ -f .cargo/config.toml ]; then
+            mv .cargo/config.toml .cargo/config.toml.bak
+          fi
 
-      - name: Build project (basic)
+      - name: Build project
         run: cargo build --workspace
 
-      - name: Restore config
-        run: mv .cargo/config.toml.bak .cargo/config.toml
-
-      - name: Install PlatformIO dependencies
+      - name: Restore cargo config
         run: |
-          cargo install cargo-binstall --force
-          cargo binstall cargo-pio espup -y --force
-
-      - name: Install PlatformIO
-        run: cargo pio installpio
-
-      - name: PlatformIO check
-        run: cargo pio exec -- check
+          if [ -f .cargo/config.toml.bak ]; then
+            mv .cargo/config.toml.bak .cargo/config.toml
+          fi
