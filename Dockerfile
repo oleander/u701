@@ -1,40 +1,64 @@
 # syntax=docker/dockerfile:1.8
 FROM espressif/idf-rust:esp32_1.88.0.0
 
+ARG RUST_TOOLCHAIN=nightly
+ARG CARGO_PIO_VERSION=0.3.6
+
 ENV HOME=/home/esp \
     RUSTUP_HOME=/home/esp/.rustup \
     CARGO_HOME=/home/esp/.cargo \
+    PATH=/home/esp/.cargo/bin:$PATH \
     CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse \
-    PATH=/home/esp/.cargo/bin:$PATH
+    PLATFORMIO_CORE_DIR=/home/esp/.platformio \
+    PLATFORMIO_INSTALLER_TMPDIR=/home/esp/.pio-cache-dir
 
-# Installs nightly toolchain
-RUN rustup toolchain install nightly --profile minimal -c rust-src -c rustfmt -c clippy
-RUN rustup default nightly
+# Create /app directory and change ownership to esp user
+USER root
+RUN mkdir -p /app && chown esp:esp /app
+USER esp
 
-# Installs cargo-pio
-RUN curl -fsSL https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-RUN cargo binstall -y cargo-pio
+# Make cache dirs once; reuse via --mount=type=cache in later RUNs
+RUN mkdir -p \
+  /home/esp/.cargo/registry /home/esp/.cargo/git /home/esp/.rustup \
+  /home/esp/.platformio /home/esp/.pio-cache-dir /app/target
 
+# Toolchain + cargo-pio (single layer, cached)
+RUN --mount=type=cache,id=rustup,target=/home/esp/.rustup,uid=1000,gid=1000 \
+    --mount=type=cache,id=cargo-reg,target=/home/esp/.cargo/registry,uid=1000,gid=1000 \
+    --mount=type=cache,id=cargo-git,target=/home/esp/.cargo/git,uid=1000,gid=1000 \
+    curl -fsSL https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash && \
+    rustup toolchain install ${RUST_TOOLCHAIN} --profile minimal -c rust-src -c rustfmt -c clippy && \
+    rustup default ${RUST_TOOLCHAIN} && \
+    cargo binstall -y cargo-pio@${CARGO_PIO_VERSION}
 
-# Fetches all dependencies for the Rust project
-COPY Cargo.toml Cargo.lock ./
-COPY machine/Cargo.toml machine/
-ENV CARGO_HOME=/home/esp/.cargo
-RUN mkdir -p $CARGO_HOME
-RUN cargo fetch
-
-# Installs PlatformIO (pio)
-ENV PLATFORMIO_INSTALLER_TMPDIR=/home/esp/.pio-cache-dir
-RUN mkdir -p $PLATFORMIO_INSTALLER_TMPDIR
-VOLUME $PLATFORMIO_INSTALLER_TMPDIR
-# How to join the two lines (curl and python3)?
-RUN curl -fsSL -o installer.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py
-RUN python3 installer.py
-
-RUN cargo pio installpio $PLATFORMIO_INSTALLER_TMPDIR
-COPY platformio.ini .
-RUN cargo pio build --pio-installation $PLATFORMIO_INSTALLER_TMPDIR
+# PlatformIO core (joined curl+python; cached)
+RUN --mount=type=cache,id=pio-installer,target=/home/esp/.pio-cache-dir,uid=1000,gid=1000 \
+    --mount=type=cache,id=pio-core,target=/home/esp/.platformio,uid=1000,gid=1000 \
+    curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py | python3 -
 
 WORKDIR /app
+
+# Copy ONLY manifests to prime Cargo layer cache
+COPY Cargo.toml Cargo.lock ./
+COPY machine/Cargo.toml machine/
+
+# Pre-fetch crates into cache (doesn't depend on source changes)
+RUN --mount=type=cache,id=cargo-reg,target=/home/esp/.cargo/registry,uid=1000,gid=1000 \
+    --mount=type=cache,id=cargo-git,target=/home/esp/.cargo/git,uid=1000,gid=1000 \
+    --mount=type=cache,id=target-cache,target=/app/target,uid=1000,gid=1000 \
+    cargo fetch
+
+# Prime PIO packages once, cache them
+COPY platformio.ini .
+RUN --mount=type=cache,id=pio-core,target=/home/esp/.platformio,uid=1000,gid=1000 \
+    cargo pio installpio ${PLATFORMIO_INSTALLER_TMPDIR}
+
+# Source last so edits don’t invalidate deps
 COPY . .
 
+# Build using reusable caches for cargo, target, and PlatformIO
+RUN --mount=type=cache,id=cargo-reg,target=/home/esp/.cargo/registry,uid=1000,gid=1000 \
+    --mount=type=cache,id=cargo-git,target=/home/esp/.cargo/git,uid=1000,gid=1000 \
+    --mount=type=cache,id=target-cache,target=/app/target,uid=1000,gid=1000 \
+    --mount=type=cache,id=pio-core,target=/home/esp/.platformio,uid=1000,gid=1000 \
+    cargo pio build --pio-installation ${PLATFORMIO_INSTALLER_TMPDIR}
