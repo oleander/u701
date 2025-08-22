@@ -33,7 +33,10 @@ jobs:
             ~/.cargo
             target
             .pio
-          key: ${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
+            ${{ runner.os }}-cargo-
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly

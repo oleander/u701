@@ -17,7 +17,11 @@ jobs:
             ~/.cargo
             target
             .pio
-          key: ${{ hashFiles('platformio.ini') }}-${{ hashFiles('**/Cargo.lock') }}
+            ~/.espressif
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+            ${{ runner.os }}-pio-
 
       - name: Setup rust nightly
         uses: dtolnay/rust-toolchain@nightly
@@ -29,6 +33,12 @@ jobs:
           # Install espup first without using custom toolchain
           RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
           espup install -t esp32 -f .espup.sh
+          # Source the ESP environment setup file
+          source .espup.sh
+          # Create a symbolic link for the 'esp' toolchain if needed
+          if [ ! -d ~/.rustup/toolchains/esp ]; then
+            rustup toolchain link esp ~/.rustup/toolchains/esp
+          fi
 
       - name: Install cargo tools
         run: |

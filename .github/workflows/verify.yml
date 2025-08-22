@@ -29,9 +29,15 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
+            ~/.platformio
+            ~/.espressif
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+            .pio
+          key: ${{ runner.os }}-verify-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-verify-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-verify-
 
       - name: Install espup
         run: |
@@ -44,6 +50,12 @@ jobs:
             sudo mv espup /usr/local/bin/
           }
           espup install -t esp32 -f .espup.sh
+          # Source the ESP environment setup file
+          source .espup.sh
+          # Create a symbolic link for the 'esp' toolchain if needed
+          if [ ! -d ~/.rustup/toolchains/esp ]; then
+            rustup toolchain link esp ~/.rustup/toolchains/esp
+          fi
 
       - name: Format check
         run: |
@@ -86,6 +98,12 @@ jobs:
           # Install espup first without using custom toolchain
           RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
           espup install -t esp32 -f .espup.sh
+          # Source the ESP environment setup file
+          source .espup.sh
+          # Create a symbolic link for the 'esp' toolchain if needed
+          if [ ! -d ~/.rustup/toolchains/esp ]; then
+            rustup toolchain link esp ~/.rustup/toolchains/esp
+          fi
 
       - name: Install cargo dependencies
         run: |
@@ -96,9 +114,18 @@ jobs:
       - name: Cache PlatformIO
         uses: actions/cache@v4
         with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-platformio-${{ hashFiles('**/platformio.ini') }}
-          restore-keys: ${{ runner.os }}-platformio-
+          path: |
+            ~/.platformio
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.espressif
+            target
+            .pio
+          key: ${{ runner.os }}-cpp-verify-${{ hashFiles('**/platformio.ini') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cpp-verify-${{ hashFiles('**/platformio.ini') }}
+            ${{ runner.os }}-cpp-verify-
 
       - name: Run static analysis
         run: |
