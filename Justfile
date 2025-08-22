@@ -4,7 +4,7 @@ docker-build:
     docker build -t u701 .
 
 build: docker-build
-    docker run --rm -it u701 bash -c "cargo pio build --workspace"
+    docker run --rm -it u701 bash -c "cargo pio build --pio-installation /home/esp/.pio-cache-dir"
 
 test: docker-build
     docker run -it --rm u701 bash -c "cargo test --workspace --target aarch64-unknown-linux-gnu"
