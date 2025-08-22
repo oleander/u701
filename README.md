@@ -1,4 +1,4 @@
-# u701 [![Rust Build Status](https://github.com/oleander/u701/actions/workflows/rust.yml/badge.svg)](https://github.com/oleander/u701/actions/workflows/rust.yml)
+# u701 [![Rust Build Status](https://github.com/oleander/u701/actions/workflows/ci.yml/badge.svg)](https://github.com/oleander/u701/actions/workflows/ci.yml)
 
 **u701** is a BLE proxy developed in Rust and C++ for the [Terrain Command](https://carpe-iter.com/support/rally-command-getting-started/) controller by [Carpe Iter](https://carpe-iter.com). This software enables BLE event remapping for iOS device compatibility, expanding upon the original Android-only support. It operates on an ESP32C3 microcontroller but is designed to be portable to other platforms.
 
