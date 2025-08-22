@@ -7,6 +7,18 @@
 * `cargo install cargo-pio espup just`
 * `just setup build`
 
+## Docker Container
+
+Docker images are automatically published to the GitHub Container Registry on every push to the main branch:
+- `ghcr.io/oleander/u701:latest` - Latest stable build from main branch
+- `ghcr.io/oleander/u701:main-<sha>` - Specific commit builds
+
+To use the container:
+```bash
+docker pull ghcr.io/oleander/u701:latest
+docker run -it ghcr.io/oleander/u701:latest
+```
+
 ## Hardware Support
 
 - Terrain Command v2
