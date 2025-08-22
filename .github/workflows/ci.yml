@@ -1,4 +1,4 @@
-name: Rust Build Status
+name: CI
 
 on:
   push:
@@ -96,7 +96,8 @@ jobs:
             target
             .pio
             .embuild
-          key: ${{ runner.os }}-cargo-pio-${{ hashFiles('**/Cargo.lock', 'platformio.ini') }}
+          key: ${{ runner.os }}-cargo-pio-${{ hashFiles('**/Cargo.lock',
+            'platformio.ini') }}
           restore-keys: |
             ${{ runner.os }}-cargo-pio-
 
