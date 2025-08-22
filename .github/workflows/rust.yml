@@ -36,8 +36,14 @@ jobs:
       - name: Run tests (machine)
         run: cargo test --verbose --package machine --target x86_64-unknown-linux-gnu
 
-      - name: Setup ESP toolchain
+      - name: Setup ESP toolchain and fix cargo config
         run: |
+          # Temporarily modify cargo config to avoid ${CARGO_BUILD_TARGET} issue
+          if grep -q 'target = "${CARGO_BUILD_TARGET}"' .cargo/config.toml; then
+            sed -i 's/target = "${CARGO_BUILD_TARGET}"/# target = "${CARGO_BUILD_TARGET}"/' .cargo/config.toml
+            sed -i 's/# target = "xtensa-esp32-espidf"/target = "xtensa-esp32-espidf"/' .cargo/config.toml
+          fi
+
           # Install espup and ESP toolchain
           if ! command -v espup &> /dev/null; then
             RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
@@ -55,4 +61,4 @@ jobs:
       - name: Clippy
         run: |
           source .espup.sh
-          RUSTUP_TOOLCHAIN=esp cargo clippy --target xtensa-esp32-espidf -- -D warnings
+          RUSTUP_TOOLCHAIN=esp cargo clippy --workspace --all-targets --all-features -- -D warnings
