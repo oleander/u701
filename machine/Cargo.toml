@@ -12,4 +12,4 @@ path = "src/lib.rs"
 [dependencies.lazy_static]
 features = ["spin_no_std"]
 default-features = false
-version = "1.4.0"
+version = "1.5.0"
