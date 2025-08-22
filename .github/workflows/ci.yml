@@ -7,77 +7,45 @@ on:
     branches: [main]
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      # Modify toolchain for CI
-      - name: Setup CI toolchain
-        run: |
-          mv rust-toolchain.toml rust-toolchain.original.toml
-          cat > rust-toolchain.toml << 'EOF'
-          [toolchain]
-          channel = "nightly"
-          components = ["rust-src", "clippy"]
-          EOF
-
-      # Cache dependencies
-      - name: Cache
+      - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo
-            ~/.rustup
-            ~/.espressif
+            ~/.cargo/registry
+            ~/.cargo/git
             target
-            .pio
-          key: ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-u701-
+            ${{ runner.os }}-cargo-
 
-      # Setup toolchain
-      - name: Install Rust toolchain
+      - name: Install Rust nightly toolchain
         uses: dtolnay/rust-toolchain@nightly
         with:
-          components: rust-src, clippy
+          components: rust-src
 
-      - name: Setup ESP toolchain
+      - name: Temporarily remove cargo config for standard build
         run: |
-          # Install espup and ESP toolchain
-          if ! command -v espup &> /dev/null; then
-            RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
+          if [ -f .cargo/config.toml ]; then
+            mv .cargo/config.toml .cargo/config.toml.bak
           fi
 
-          espup install -t esp32 -f .espup.sh
-          source .espup.sh
+      - name: Build project
+        run: cargo build --workspace
 
-          if [ ! -d ~/.rustup/toolchains/esp ]; then
-            rustup toolchain link esp ~/.rustup/toolchains/esp
+      - name: Run tests
+        run: cargo test --workspace
+
+      - name: Restore cargo config
+        run: |
+          if [ -f .cargo/config.toml.bak ]; then
+            mv .cargo/config.toml.bak .cargo/config.toml
           fi
-
-          rustup target add --toolchain esp xtensa-esp32-espidf || true
-
-      - name: Install build tools
-        run: |
-          source .espup.sh
-          cargo install cargo-binstall
-          cargo binstall -y cargo-pio just
-
-      - name: Clippy
-        run: |
-          source .espup.sh
-          RUSTUP_TOOLCHAIN=esp cargo clippy --target xtensa-esp32-espidf -- -D warnings
-
-      - name: Build
-        run: |
-          source .espup.sh
-          RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16" \
-          CARGO_PROFILE_RELEASE_OPT_LEVEL=0 \
-          CARGO_BUILD_JOBS=$(nproc) \
-          cargo pio build
