@@ -110,6 +110,7 @@ jobs:
 
       - name: Setup ESP development environment
         run: |
+          mkdir -p tmp
           espup install -f tmp/espup.sh
           espup update -f tmp/espup.sh
 
