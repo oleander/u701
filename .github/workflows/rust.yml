@@ -24,9 +24,11 @@ jobs:
       - name: Setup CI toolchain file
         run: |
           mv rust-toolchain.toml rust-toolchain.original.toml
-          echo '[toolchain]
-channel = "nightly"
-components = ["rust-src"]' > rust-toolchain.toml
+          cat > rust-toolchain.toml << 'EOF'
+          [toolchain]
+          channel = "nightly"
+          components = ["rust-src"]
+          EOF
 
       - name: Cache Cargo dependencies
         uses: actions/cache@v4
