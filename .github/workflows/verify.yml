@@ -66,6 +66,14 @@ jobs:
           if [ ! -d ~/.rustup/toolchains/esp ]; then
             rustup toolchain link esp ~/.rustup/toolchains/esp
           fi
+          # Debug ESP toolchain setup
+          echo "Listing Rust toolchains:"
+          rustup toolchain list
+          echo "Checking ESP toolchain:"
+          ls -la ~/.rustup/toolchains/esp/bin/
+          # Add target explicitly to avoid ${CARGO_BUILD_TARGET} issue
+          echo "Adding xtensa target to ESP toolchain"
+          rustup target add --toolchain esp xtensa-esp32-espidf || echo "Target may already be installed"
 
       - name: Format check
         run: |
@@ -124,6 +132,14 @@ jobs:
           if [ ! -d ~/.rustup/toolchains/esp ]; then
             rustup toolchain link esp ~/.rustup/toolchains/esp
           fi
+          # Debug ESP toolchain setup
+          echo "Listing Rust toolchains:"
+          rustup toolchain list
+          echo "Checking ESP toolchain:"
+          ls -la ~/.rustup/toolchains/esp/bin/
+          # Add target explicitly to avoid ${CARGO_BUILD_TARGET} issue
+          echo "Adding xtensa target to ESP toolchain"
+          rustup target add --toolchain esp xtensa-esp32-espidf || echo "Target may already be installed"
 
       - name: Install cargo dependencies
         run: |
