@@ -15,69 +15,55 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      # Modify toolchain for CI
-      - name: Setup CI toolchain
-        run: |
-          mv rust-toolchain.toml rust-toolchain.original.toml
-          cat > rust-toolchain.toml << 'EOF'
-          [toolchain]
-          channel = "nightly"
-          components = ["rust-src", "clippy"]
-          EOF
+      # Cache Docker layers for faster builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # Cache dependencies
-      - name: Cache
+      - name: Cache Docker layers
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cargo
-            ~/.rustup
-            ~/.espressif
-            target
-            .pio
-          key: ${{ runner.os }}-u701-${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile', 'docker-compose.yml') }}
           restore-keys: |
-            ${{ runner.os }}-u701-
+            ${{ runner.os }}-docker-
 
-      # Setup toolchain
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rust-src, clippy
-
-      - name: Setup ESP toolchain
+      # Try to use pre-built image, fallback to building locally
+      - name: Pull or build Docker image
         run: |
-          # Install espup and ESP toolchain
-          if ! command -v espup &> /dev/null; then
-            RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
+          # Try to pull the latest image from registry first
+          if docker pull ghcr.io/${{ github.repository }}:latest 2>/dev/null; then
+            echo "Using pre-built image from registry"
+            docker tag ghcr.io/${{ github.repository }}:latest u701-builder
+          else
+            echo "Building Docker image locally"
+            docker build \
+              --cache-from=type=local,src=/tmp/.buildx-cache \
+              --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+              -t u701-builder .
+            
+            # Move cache to avoid growing cache
+            if [ -d /tmp/.buildx-cache-new ]; then
+              rm -rf /tmp/.buildx-cache
+              mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+            fi
           fi
 
-          espup install -t esp32 -f .espup.sh
-          source .espup.sh
-
-          if [ ! -d ~/.rustup/toolchains/esp ]; then
-            rustup toolchain link esp ~/.rustup/toolchains/esp
-          fi
-
-          rustup target add --toolchain esp xtensa-esp32-espidf || true
-
-      - name: Install build tools
-        run: |
-          source .espup.sh
-          cargo install cargo-binstall
-          cargo binstall -y cargo-pio just
-
+      # Run clippy in container
       - name: Clippy
         run: |
-          source .espup.sh
-          RUSTUP_TOOLCHAIN=esp cargo clippy --target xtensa-esp32-espidf -- -D warnings
+          docker run --rm -v ${{ github.workspace }}:/home/esp32/workspace u701-builder \
+            /bin/bash -c "source \$ESPUP_PATH && cargo clippy --target xtensa-esp32-espidf -- -D warnings"
 
+      # Build project in container  
       - name: Build
         run: |
-          source .espup.sh
-          RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16" \
-          CARGO_PROFILE_RELEASE_OPT_LEVEL=0 \
-          CARGO_BUILD_JOBS=$(nproc) \
-          cargo pio build
+          docker run --rm -v ${{ github.workspace }}:/home/esp32/workspace u701-builder \
+            /bin/bash -c "source \$ESPUP_PATH && RUSTFLAGS='-C opt-level=0 -C debuginfo=0 -C codegen-units=16' CARGO_PROFILE_RELEASE_OPT_LEVEL=0 CARGO_BUILD_JOBS=\$(nproc) cargo pio build"
+
+      # Test the project
+      - name: Test
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/home/esp32/workspace u701-builder \
+            /bin/bash -c "source \$ESPUP_PATH && just test"
