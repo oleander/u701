@@ -6,6 +6,7 @@ set dotenv-load := true
 DOCKER_IMAGE := "u701"
 UPLOAD_PORT := `ls /dev/tty.usb* 2>/dev/null | head -n 1 || echo "/dev/ttyUSB0"`
 
+
 # Build Docker image if it doesn't exist
 _build-image:
     @if ! docker image ls {{DOCKER_IMAGE}} | grep -q {{DOCKER_IMAGE}}; then \
