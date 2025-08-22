@@ -1,8 +1,8 @@
 
-set shell := ["zsh", "-cu"]
+set shell := ["bash", "-cu"]
 set dotenv-load := true
 
-UPLOAD_PORT := `ls /dev/tty.usb* | head -n 1`
+UPLOAD_PORT := `ls /dev/tty.usb* 2>/dev/null | head -n 1 || echo "/dev/ttyUSB0"`
 ESPUP_PATH := "tmp/espup.sh"
 
 clean:
