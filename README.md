@@ -4,8 +4,21 @@
 
 ## Setup
 
+### Native Setup
+
 * `cargo install cargo-pio espup just`
 * `just setup build`
+
+### Docker Setup (Recommended)
+
+For a consistent development environment across all platforms:
+
+* Install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+* `./docker/dev.sh build` - Build the development environment
+* `./docker/dev.sh dev` - Start the development container
+* `./docker/dev.sh shell` - Open a shell in the container
+
+See [DOCKER.md](DOCKER.md) for complete Docker documentation.
 
 ## Hardware Support
 
@@ -16,9 +29,18 @@
 
 ## Flashing the ESP32
 
+### Native Flashing
+
 1. Connect the ESP32 to your computer.
 2. Run `just upload` to flash the ESP32.
 3. Run `just monitor` to view the serial output.
+
+### Docker Flashing
+
+1. Connect the ESP32 to your computer.
+2. Run `./docker/dev.sh upload` or `just docker-upload` to flash the ESP32.
+3. Run `./docker/dev.sh monitor` or `just docker-monitor` to view the serial output.
+4. Or combine both with `./docker/dev.sh install` or `just docker-install`.
 
 ## Features
 

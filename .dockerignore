@@ -1,0 +1,47 @@
+# Build artifacts
+target/
+.pio/
+.embuild/
+build/
+CMakeFiles/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env
+.espup.sh
+tmp/espup.sh
+
+# Logs
+*.log
+
+# Dependencies
+Cargo.lock
+dependencies.lock
+
+# Configuration files that shouldn't be in container
+sdkconfig.debug*
+sdkconfig.release*
+sdkconfig.old
+
+# Temporary files
+tmp/
+actions-runner/
+_PipelineMapping/
+_actions/
+
+# Local settings
+**/.claude/settings.local.json

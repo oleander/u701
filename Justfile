@@ -45,3 +45,40 @@ fmt: setup
     cd machine && cargo clippy --all-targets --all-features --fix --allow-dirty
 
 install: upload monitor
+
+# Docker commands
+docker-build:
+    docker/dev.sh build
+
+docker-dev:
+    docker/dev.sh dev
+
+docker-shell:
+    docker/dev.sh shell
+
+docker-build-project:
+    docker/dev.sh build-project
+
+docker-test:
+    docker/dev.sh test
+
+docker-upload:
+    docker/dev.sh upload
+
+docker-monitor:
+    docker/dev.sh monitor
+
+docker-install:
+    docker/dev.sh install
+
+docker-ota:
+    docker/dev.sh ota
+
+docker-clean:
+    docker/dev.sh clean
+
+docker-logs:
+    docker/dev.sh logs
+
+docker-stop:
+    docker/dev.sh stop
