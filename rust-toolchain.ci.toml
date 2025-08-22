@@ -1,0 +1,4 @@
+[toolchain]
+# CI-specific toolchain configuration
+channel = "nightly"
+components = ["rust-src"]

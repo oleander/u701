@@ -1,2 +1,6 @@
 [toolchain]
+# This defines the default toolchain
+# For local development: use esp (linked by espup)
+# For CI: use nightly and we'll link 'esp' manually
 channel = "esp"
+components = ["rust-src"]

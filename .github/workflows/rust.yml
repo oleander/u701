@@ -20,13 +20,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Use CI-specific toolchain file
+      - name: Setup CI toolchain file
+        run: |
+          cp rust-toolchain.ci.toml rust-toolchain.toml
+
       - name: Cache Cargo dependencies
         uses: actions/cache@v4
         with:
           path: |
+            ~/.platformio
             ~/.cargo
             target
-          key: ${{ hashFiles('**/Cargo.lock') }}
+            .pio
+          key: ${{ hashFiles('**/Cargo.lock', '**/platformio.ini') }}-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -36,10 +43,17 @@ jobs:
       - name: Install espup and ESP toolchain
         run: |
           # Install espup first without using custom toolchain
-          RUSTUP_TOOLCHAIN=nightly cargo install cargo-binstall
-          # Use a specific working version to avoid dependency conflicts
           RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
+          # Install Xtensa toolchain for ESP32
           espup install -t esp32 -f .espup.sh
+          # Source the ESP environment setup file
+          source .espup.sh
+          # Create a symbolic link for the 'esp' toolchain if needed
+          if [ ! -d ~/.rustup/toolchains/esp ]; then
+            rustup toolchain link esp ~/.rustup/toolchains/esp
+          fi
+          # Install cargo-pio and other required tools
+          cargo install cargo-pio
 
       - name: Run tests (main)
         run: cargo test --verbose --target x86_64-unknown-linux-gnu
@@ -47,7 +61,7 @@ jobs:
       - name: Build (main)
         run: |
           source .espup.sh
-          cargo build --target xtensa-esp32-espidf
+          RUSTUP_TOOLCHAIN=esp cargo build --target xtensa-esp32-espidf
 
       - name: Run tests (machine)
         run: cargo test --verbose --package machine --target x86_64-unknown-linux-gnu
@@ -55,7 +69,7 @@ jobs:
       - name: Clippy (main)
         run: |
           source .espup.sh
-          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          RUSTUP_TOOLCHAIN=esp cargo clippy --workspace --all-targets --all-features -- -D warnings
 
       # - name: Clippy (machine)
       #   uses: actions-rs/cargo@v1
