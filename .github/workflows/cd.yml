@@ -20,7 +20,7 @@ jobs:
         run: docker build -t ${{ env.DOCKER_IMAGE }}:${{ github.sha }} .
 
       - name: Run tests in Docker
-        run: docker run --rm ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+        run: docker run --rm ${{ env.DOCKER_IMAGE }}:${{ github.sha }} bash -c "cargo test --workspace --target aarch64-unknown-linux-gnu"
 
       - name: Tag image as latest (on main branch)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
