@@ -131,7 +131,18 @@ jobs:
           source .espup.sh
           pio check
       
-      - name: Build project
+      - name: Build project (fast CI mode)
         run: |
           source .espup.sh
-          just build
+          # Use fastest possible build settings for CI
+          RUSTFLAGS="-C opt-level=0 -C debuginfo=0 -C codegen-units=16 -C lto=off -C embed-bitcode=no -C strip=none" \
+          CARGO_PROFILE_RELEASE_LTO=false \
+          CARGO_PROFILE_RELEASE_PANIC=abort \
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \
+          CARGO_PROFILE_RELEASE_OPT_LEVEL=0 \
+          CARGO_PROFILE_RELEASE_DEBUG=false \
+          CARGO_PROFILE_RELEASE_STRIP=none \
+          CARGO_NET_RETRY=10 \
+          CARGO_BUILD_JOBS=$(nproc) \
+          CARGO_TERM_PROGRESS_WHEN=never \
+          just build ci

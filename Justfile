@@ -31,9 +31,9 @@ menuconfig mod = "release": setup
 upload:
     . {{ESPUP_PATH}} && cargo +esp pio exec -- run -t upload
 
-# build release | debug
+# build release | debug | ci
 build mod = "release": setup
-    . {{ESPUP_PATH}} && cargo pio build {{ if mod == "release" { "-r" } else { "" } }}
+    . {{ESPUP_PATH}} && cargo pio build {{ if mod == "release" { "-r" } else if mod == "ci" { "--no-debug-info --force-smart-build --build-cache" } else { "" } }}
 
 ota mod = "release": setup
     . {{ESPUP_PATH}} && cargo +esp pio exec -- run -t upload -e ota
