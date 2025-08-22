@@ -17,6 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
+      # Modify the toolchain for CI compatibility
+      - name: Setup CI toolchain file
+        run: |
+          mv rust-toolchain.toml rust-toolchain.original.toml
+          echo '[toolchain]
+channel = "stable"
+components = ["rust-src", "rustfmt", "clippy"]' > rust-toolchain.toml
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -65,7 +73,7 @@ jobs:
       - name: Clippy
         run: |
           source .espup.sh
-          cargo clippy --workspace --all-targets --all-features --target xtensa-esp32-espidf -- -D warnings
+          RUSTUP_TOOLCHAIN=esp cargo clippy --workspace --all-targets --all-features --target xtensa-esp32-espidf -- -D warnings
 
       - name: Test
         run: |
@@ -77,6 +85,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
+      # Modify the toolchain for CI compatibility
+      - name: Setup CI toolchain file
+        run: |
+          mv rust-toolchain.toml rust-toolchain.original.toml
+          echo '[toolchain]
+channel = "nightly"
+components = ["rust-src"]' > rust-toolchain.toml
 
       - name: Set up Python
         uses: actions/setup-python@v4

@@ -20,10 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Use CI-specific toolchain file
+      # Modify the toolchain for CI compatibility
       - name: Setup CI toolchain file
         run: |
-          cp rust-toolchain.ci.toml rust-toolchain.toml
+          mv rust-toolchain.toml rust-toolchain.original.toml
+          echo '[toolchain]
+channel = "nightly"
+components = ["rust-src"]' > rust-toolchain.toml
 
       - name: Cache Cargo dependencies
         uses: actions/cache@v4

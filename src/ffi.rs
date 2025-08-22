@@ -23,7 +23,7 @@ pub extern "C" fn app_main() -> i32 {
 
   info!("[app_main] Entering main loop");
   if let Err(e) = crate::main() {
-    error!("[error] Error: {:?}", e);
+    error!("[error] Error: {e:?}");
     return 1;
   }
 
@@ -31,11 +31,11 @@ pub extern "C" fn app_main() -> i32 {
 }
 
 pub fn send_media_key(keys: [u8; 2]) {
-  info!("[media] Sending media key {:?}", keys);
+  info!("[media] Sending media key {keys:?}");
   unsafe { ble_keyboard_write(keys.as_ptr()) };
 }
 
 pub fn send_shortcut(index: u8) {
-  info!("[shortcut] Sending shortcut at index {}", index);
+  info!("[shortcut] Sending shortcut at index {index}");
   unsafe { ble_keyboard_print([b'a' + index, 0].as_ptr()) };
 }
