@@ -38,4 +38,8 @@ build mod = "release": setup
 ota mod = "release": setup
     . {{ESPUP_PATH}} && cargo +esp pio exec -- run -t upload -e ota
 
+fmt: setup
+    . {{ESPUP_PATH}} && cargo fmt --all
+    cargo fmt --package machine
+
 install: upload monitor

@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     match state.transition(event_id) {
       Some(Action::Media(media_key)) => send_media_key(media_key.into()),
       Some(Action::Short(index)) => send_shortcut(index),
-      None => debug!("[main] No action {event_id}")
+      None => debug!("[main] No action {event_id}"),
     }
 
     unsafe {
@@ -42,6 +42,6 @@ pub fn on_event(event: Option<&[u8; 4]>) {
   match event {
     Some(&[_, _, 0, _]) => debug!("Button was released"),
     Some(&[_, _, n, _]) => CHANNEL.0.send(n).unwrap(),
-    None => error!("[BUG] Received {event:?} event")
+    None => error!("[BUG] Received {event:?} event"),
   }
 }

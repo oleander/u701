@@ -11,13 +11,13 @@ use constants::*;
 pub enum State {
   Combo(u8, u8),
   Key(u8),
-  Meta(u8)
+  Meta(u8),
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Action {
   Media(MediaControl),
-  Short(u8)
+  Short(u8),
 }
 
 impl State {
