@@ -28,6 +28,8 @@ sdkconfig
 sdkconfig.old
 sdkconfig.debug*
 sdkconfig.release*
+sdkconfig.lolin32*
+sdkconfig.ota*
 
 # PlatformIO
 .pioenvs/
