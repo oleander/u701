@@ -1,14 +1,10 @@
-version: '3.8'
-
 services:
   # Main development environment
   u701-dev:
     build:
       context: .
-      target: final
       args:
         RUST_VERSION: 1.75.0
-        UBUNTU_VERSION: 22.04
     container_name: u701-dev
     volumes:
       # Mount source code for live development
@@ -36,10 +32,8 @@ services:
   u701-builder:
     build:
       context: .
-      target: builder
       args:
         RUST_VERSION: 1.75.0
-        UBUNTU_VERSION: 22.04
     container_name: u701-builder
     volumes:
       - .:/home/esp32/workspace
@@ -54,7 +48,6 @@ services:
   u701-ota:
     build:
       context: .
-      target: final
     container_name: u701-ota
     volumes:
       - .:/home/esp32/workspace

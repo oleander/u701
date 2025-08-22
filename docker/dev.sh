@@ -56,14 +56,14 @@ show_help() {
 build_images() {
     print_info "Building Docker images..."
     cd "$PROJECT_ROOT"
-    docker-compose build u701-dev
+    docker compose build u701-dev
     print_success "Docker images built successfully"
 }
 
 start_dev() {
     print_info "Starting development environment..."
     cd "$PROJECT_ROOT"
-    docker-compose up -d u701-dev
+    docker compose up -d u701-dev
     print_success "Development environment started"
     print_info "Use 'docker/dev.sh shell' to access the container"
 }
@@ -73,25 +73,25 @@ open_shell() {
     cd "$PROJECT_ROOT"
     
     # Check if container is running
-    if ! docker-compose ps u701-dev | grep -q "Up"; then
+    if ! docker compose ps u701-dev | grep -q "Up"; then
         print_warning "Development container not running. Starting it..."
-        docker-compose up -d u701-dev
+        docker compose up -d u701-dev
         sleep 2
     fi
     
-    docker-compose exec u701-dev /bin/bash
+    docker compose exec u701-dev /bin/bash
 }
 
 build_project() {
     print_info "Building ESP32 project in container..."
     cd "$PROJECT_ROOT"
-    docker-compose exec u701-dev bash -c "source \$ESPUP_PATH && just build"
+    docker compose exec u701-dev bash -c "source \$ESPUP_PATH && just build"
 }
 
 run_tests() {
     print_info "Running Rust tests in container..."
     cd "$PROJECT_ROOT"
-    docker-compose exec u701-dev bash -c "source \$ESPUP_PATH && just test"
+    docker compose exec u701-dev bash -c "source \$ESPUP_PATH && just test"
 }
 
 upload_firmware() {
@@ -104,32 +104,32 @@ upload_firmware() {
         exit 1
     fi
     
-    docker-compose exec u701-dev bash -c "source \$ESPUP_PATH && just upload"
+    docker compose exec u701-dev bash -c "source \$ESPUP_PATH && just upload"
 }
 
 monitor_serial() {
     print_info "Monitoring ESP32 serial output..."
     cd "$PROJECT_ROOT"
-    docker-compose exec u701-dev bash -c "source \$ESPUP_PATH && just monitor"
+    docker compose exec u701-dev bash -c "source \$ESPUP_PATH && just monitor"
 }
 
 install_firmware() {
     print_info "Installing firmware (upload + monitor)..."
     cd "$PROJECT_ROOT"
-    docker-compose exec u701-dev bash -c "source \$ESPUP_PATH && just install"
+    docker compose exec u701-dev bash -c "source \$ESPUP_PATH && just install"
 }
 
 start_ota() {
     print_info "Starting OTA server..."
     cd "$PROJECT_ROOT"
-    docker-compose up -d u701-ota
+    docker compose up -d u701-ota
     print_success "OTA server started on port 3232"
 }
 
 clean_docker() {
     print_info "Cleaning Docker images and containers..."
     cd "$PROJECT_ROOT"
-    docker-compose down -v
+    docker compose down -v
     docker system prune -f
     print_success "Docker cleanup completed"
 }
@@ -137,13 +137,13 @@ clean_docker() {
 show_logs() {
     print_info "Showing container logs..."
     cd "$PROJECT_ROOT"
-    docker-compose logs -f u701-dev
+    docker compose logs -f u701-dev
 }
 
 stop_containers() {
     print_info "Stopping all containers..."
     cd "$PROJECT_ROOT"
-    docker-compose down
+    docker compose down
     print_success "All containers stopped"
 }
 

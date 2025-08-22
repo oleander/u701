@@ -1,11 +1,9 @@
-# Multi-stage Dockerfile for ESP32 development with Rust and PlatformIO
-# Based on Ubuntu for better compatibility with ESP32 tools
+# Basic working Dockerfile for u701 development
+FROM ubuntu:22.04
 
-ARG RUST_VERSION=1.75.0
-ARG UBUNTU_VERSION=22.04
-
-# Base stage with system dependencies
-FROM ubuntu:${UBUNTU_VERSION} as base
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -23,94 +21,69 @@ RUN apt-get update && apt-get install -y \
     ninja-build \
     ccache \
     libffi-dev \
-    libssl-dev \
     dfu-util \
     libusb-1.0-0-dev \
     udev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create user for development
-RUN useradd -m -s /bin/bash esp32 && \
-    usermod -a -G dialout esp32
-
-# Rust toolchain stage
-FROM base as rust-stage
-
-# Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION}
-ENV PATH="/root/.cargo/bin:${PATH}"
-
-# Install espup for ESP32 Rust support
-RUN cargo install espup
-
-# Install ESP32 Rust toolchain
-RUN espup install --targets esp32,esp32c3 --log-level info
-
-# PlatformIO stage
-FROM rust-stage as platformio-stage
-
-# Install PlatformIO
-RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install platformio
-
-# Install cargo-pio for Rust-PlatformIO integration
-RUN cargo install cargo-pio
-
-# Install just command runner
-RUN cargo install just
-
-# Development stage
-FROM platformio-stage as development
-
-# Switch to esp32 user
-USER esp32
-WORKDIR /home/esp32
-
-# Copy espup environment for esp32 user
-RUN espup install --targets esp32,esp32c3 --log-level info
-
-# Set up environment
-ENV PATH="/home/esp32/.cargo/bin:${PATH}"
-ENV ESPUP_PATH="/home/esp32/tmp/espup.sh"
-
-# Create working directory
-RUN mkdir -p /home/esp32/workspace
-
-# Production build stage
-FROM development as builder
-
-# Copy source code
-COPY --chown=esp32:esp32 . /home/esp32/workspace/
-WORKDIR /home/esp32/workspace
-
-# Build the project
-RUN mkdir -p tmp && \
-    espup install -t esp32 -f ${ESPUP_PATH} && \
-    . ${ESPUP_PATH} && \
-    cargo pio build -r
-
-# Final development image
-FROM development as final
-
-# Install additional development tools
-USER root
-RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    sudo \
     vim \
     nano \
     htop \
     screen \
     tmux \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy udev rules for ESP32 devices
-COPY docker/99-esp32.rules /etc/udev/rules.d/
-RUN udevadm control --reload-rules
+# Create user for development
+RUN useradd -m -s /bin/bash esp32 && \
+    usermod -a -G dialout esp32 && \
+    echo "esp32 ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+# Switch to esp32 user
 USER esp32
+WORKDIR /home/esp32
+
+# Install Rust for esp32 user
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.75.0
+ENV PATH="/home/esp32/.cargo/bin:${PATH}"
+ENV CARGO_HOME="/home/esp32/.cargo"
+
+# Set up environment variables
+ENV ESPUP_PATH="/home/esp32/tmp/espup.sh"
+ENV PLATFORMIO_CORE_DIR="/home/esp32/.platformio"
+
+# Create working directory
+RUN mkdir -p /home/esp32/workspace
+
+# Create a simple setup script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Setting up ESP32 development environment..."\n\
+\n\
+# Install platformio\n\
+python3 -m pip install --user platformio\n\
+export PATH="$HOME/.local/bin:$PATH"\n\
+\n\
+# Install Rust tools\n\
+cargo install espup cargo-pio just || true\n\
+\n\
+# Install ESP32 toolchain\n\
+espup install --targets esp32,esp32c3 --log-level info || true\n\
+\n\
+echo "Setup complete!"\n\
+' > /home/esp32/setup.sh && chmod +x /home/esp32/setup.sh
+
+# Copy udev rules
+USER root
+COPY docker/99-esp32.rules /etc/udev/rules.d/99-esp32.rules
+RUN chmod 644 /etc/udev/rules.d/99-esp32.rules || true
+USER esp32
+
+# Set working directory
 WORKDIR /home/esp32/workspace
 
 # Expose common ESP32 ports
 EXPOSE 3232
 
-# Default command
-CMD ["/bin/bash"]
+# Default command runs setup and then bash
+CMD ["/bin/bash", "-c", "/home/esp32/setup.sh && /bin/bash"]

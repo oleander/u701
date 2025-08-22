@@ -1,0 +1,81 @@
+# Simplified Dockerfile for ESP32 development with Rust and PlatformIO
+# Using official Rust image as base to avoid SSL issues
+
+ARG RUST_VERSION=1.75.0
+
+# Use official Rust image
+FROM rust:${RUST_VERSION}-slim as rust-base
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    pkg-config \
+    libudev-dev \
+    libssl-dev \
+    python3 \
+    python3-pip \
+    python3-venv \
+    cmake \
+    ninja-build \
+    ccache \
+    libffi-dev \
+    dfu-util \
+    libusb-1.0-0-dev \
+    udev \
+    ca-certificates \
+    sudo \
+    vim \
+    nano \
+    htop \
+    screen \
+    tmux \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PlatformIO using virtual environment
+RUN python3 -m pip install --upgrade pip --break-system-packages && \
+    python3 -m pip install platformio --break-system-packages
+
+# Install ESP32 Rust toolchain and tools
+RUN cargo install espup cargo-pio just && \
+    espup install --targets esp32,esp32c3 --log-level info
+
+# Create user for development
+RUN useradd -m -s /bin/bash esp32 && \
+    usermod -a -G dialout esp32 && \
+    echo "esp32 ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Switch to esp32 user and set up environment
+USER esp32
+WORKDIR /home/esp32
+
+# Install Rust for esp32 user
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION}
+
+# Install user-specific tools
+RUN . /home/esp32/.cargo/env && \
+    cargo install espup cargo-pio just && \
+    espup install --targets esp32,esp32c3 --log-level info
+
+# Copy udev rules
+COPY --chown=root:root docker/99-esp32.rules /etc/udev/rules.d/
+
+# Set up environment variables
+ENV PATH="/home/esp32/.cargo/bin:${PATH}"
+ENV CARGO_HOME="/home/esp32/.cargo"
+ENV ESPUP_PATH="/home/esp32/tmp/espup.sh"
+ENV PLATFORMIO_CORE_DIR="/home/esp32/.platformio"
+
+# Create working directory
+RUN mkdir -p /home/esp32/workspace
+
+# Set working directory
+WORKDIR /home/esp32/workspace
+
+# Expose common ESP32 ports
+EXPOSE 3232
+
+# Default command
+CMD ["/bin/bash"]
