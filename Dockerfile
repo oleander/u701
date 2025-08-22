@@ -72,5 +72,5 @@ RUN --mount=type=cache,id=cargo-reg,target=${CARGO_HOME}/registry,uid=${USER_UID
 # Source last so edits don't invalidate deps
 COPY . .
 
-RUN echo "/home/esp/export-esp.sh" > /home/esp/.bashrc
+RUN echo ". /home/esp/export-esp.sh" > /home/esp/.bashrc
 ENTRYPOINT ["/bin/bash", "-l"]
