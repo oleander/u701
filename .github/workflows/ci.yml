@@ -51,7 +51,7 @@ jobs:
         run: |
           # Install espup and ESP toolchain
           if ! command -v espup &> /dev/null; then
-            RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.14.0 --locked
+            RUSTUP_TOOLCHAIN=nightly cargo install espup --version 0.15.1 --locked
           fi
 
           espup install -t esp32 -f .espup.sh
