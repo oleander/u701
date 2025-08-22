@@ -1,44 +1,40 @@
-# syntax=docker/dockerfile:1.7-labs
+# syntax=docker/dockerfile:1.8
 FROM espressif/idf-rust:esp32_1.88.0.0
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Build args for user ID (defaults to common esp user)
-ARG USER_UID=1000
-ARG USER_GID=1000
-
-# Set HOME and use user-specific locations + faster crate index
 ENV HOME=/home/esp \
     RUSTUP_HOME=/home/esp/.rustup \
     CARGO_HOME=/home/esp/.cargo \
     CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse \
     PATH=/home/esp/.cargo/bin:$PATH
 
-# Always at the top, as it does not change often
+# Installs nightly toolchain
 RUN rustup toolchain install nightly --profile minimal -c rust-src -c rustfmt -c clippy
 RUN rustup default nightly
+
+# Installs cargo-pio
 RUN curl -fsSL https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 RUN cargo binstall -y cargo-pio
 
-WORKDIR /app
 
-# ---- dependency caching: copy manifests first ----
+# Fetches all dependencies for the Rust project
 COPY Cargo.toml Cargo.lock ./
 COPY machine/Cargo.toml machine/
-
 ENV CARGO_HOME=/home/esp/.cargo
 RUN mkdir -p $CARGO_HOME
-
 RUN cargo fetch
 
-# ---- now copy sources and build ----
+# Installs PlatformIO (pio)
+ENV PLATFORMIO_INSTALLER_TMPDIR=/home/esp/.pio-cache-dir
+RUN mkdir -p $PLATFORMIO_INSTALLER_TMPDIR
+VOLUME $PLATFORMIO_INSTALLER_TMPDIR
+# How to join the two lines (curl and python3)?
+RUN curl -fsSL -o installer.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py
+RUN python3 installer.py
+
+RUN cargo pio installpio $PLATFORMIO_INSTALLER_TMPDIR
+COPY platformio.ini .
+RUN cargo pio build --pio-installation $PLATFORMIO_INSTALLER_TMPDIR
+
+WORKDIR /app
 COPY . .
 
-RUN rustup target add xtensa-esp32-espidf
-ENV CARGO_BUILD_TARGET=xtensa-esp32-espidf
-ENV CARGO_TARGET_DIR=/home/esp/.cargo/target
-
-RUN cargo build --workspace
-
-# SHELL ["/bin/bash", "--rcfile", "/home/esp/.bashrc"]
-ENTRYPOINT ["cargo"]
