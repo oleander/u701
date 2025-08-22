@@ -86,4 +86,14 @@ RUN --mount=type=cache,id=cargo-reg,target=${CARGO_HOME}/registry,uid=${USER_UID
 
 # Source last so edits don't invalidate deps
 COPY . .
-ENTRYPOINT ["/bin/bash", "-c", "source /home/esp/export-esp.sh && exec \"$@\"", "--"]
+
+# Create entrypoint script and fix permissions
+USER root
+RUN echo '#!/bin/bash' > /entrypoint.sh && \
+    echo 'source /home/esp/export-esp.sh' >> /entrypoint.sh && \
+    echo 'exec "$@"' >> /entrypoint.sh && \
+    chmod +x /entrypoint.sh && \
+    chown -R ${USER_NAME}:${USER_NAME} ${HOME_DIR}/.cargo ${HOME_DIR}/.rustup ${APP_DIR}
+USER ${USER_NAME}
+
+ENTRYPOINT ["/entrypoint.sh"]
