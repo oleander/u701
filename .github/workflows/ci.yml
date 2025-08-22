@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install just
+        run: brew install just
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -51,6 +54,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
@@ -70,21 +78,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Build Docker image
-        run: |
-          docker build -t u701 .
-
-      - name: Run tests in Docker container
-        run: |
-          docker run --rm -v $(pwd):/app -w /app u701 bash -c "
-            if [ -f .cargo/config.toml ]; then mv .cargo/config.toml .cargo/config.toml.bak; fi && \
-            cargo test --workspace && \
-            if [ -f .cargo/config.toml.bak ]; then mv .cargo/config.toml.bak .cargo/config.toml; fi"
+      - name: Run tests with just
+        run: just test
 
   cargo-pio-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Cache Docker layers
         uses: actions/cache@v4
@@ -107,34 +112,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-pio-
 
-      - name: Build Docker image
-        run: |
-          docker build -t u701 .
-
-      - name: Run cargo pio build in Docker container
-        run: |
-          # Try cargo pio build with fallback options
-          docker run --rm -v $(pwd):/app -w /app u701 bash -c "
-            set -e
-            echo 'Attempting cargo pio build...'
-            if ! cargo pio build; then
-              echo 'cargo pio build failed, checking if ESP environment needs setup...'
-              if [ ! -f /root/.espup/export-esp.sh ]; then
-                echo 'ESP environment not found, trying manual setup...'
-                wget -O /tmp/espup https://github.com/esp-rs/espup/releases/download/v0.15.1/espup-x86_64-unknown-linux-gnu
-                chmod +x /tmp/espup
-                /tmp/espup install --targets esp32,esp32c3 || true
-              fi
-              echo 'Retrying cargo pio build...'
-              cargo pio build
-            fi
-          " || {
-            echo "First attempt failed, trying alternative approach..."
-            docker run --rm -v $(pwd):/app -w /app u701 bash -c "
-              set -e
-              echo 'Installing cargo-pio directly...'
-              cargo install cargo-pio || true
-              echo 'Trying cargo pio build again...'
-              cargo pio build || echo 'Build failed but continuing...'
-            "
-          }
+      - name: Run cargo pio build with just
+        run: just build
