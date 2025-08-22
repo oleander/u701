@@ -107,7 +107,10 @@ jobs:
           components: rust-src
 
       - name: Install cargo-pio and espup
-        run: cargo install cargo-pio espup
+        run: |
+          cargo install cargo-pio
+          # Install espup from git to get latest version with potential dependency fixes
+          cargo install --git https://github.com/esp-rs/espup espup
 
       - name: Setup ESP development environment
         run: |
