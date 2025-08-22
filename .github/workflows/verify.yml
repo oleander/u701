@@ -17,14 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       # Modify the toolchain for CI compatibility
       - name: Setup CI toolchain file
         run: |
           mv rust-toolchain.toml rust-toolchain.original.toml
-          echo '[toolchain]
-channel = "stable"
-components = ["rust-src", "rustfmt", "clippy"]' > rust-toolchain.toml
+          cat > rust-toolchain.toml << 'EOF'
+          [toolchain]
+          channel = "stable"
+          components = ["rust-src", "rustfmt", "clippy"]
+          EOF
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -68,7 +70,7 @@ components = ["rust-src", "rustfmt", "clippy"]' > rust-toolchain.toml
       - name: Format check
         run: |
           source .espup.sh
-          cargo fmt -- --check
+          RUSTUP_TOOLCHAIN=stable cargo fmt -- --check
 
       - name: Clippy
         run: |
@@ -78,21 +80,23 @@ components = ["rust-src", "rustfmt", "clippy"]' > rust-toolchain.toml
       - name: Test
         run: |
           source .espup.sh
-          cargo test --target x86_64-unknown-linux-gnu
+          RUSTUP_TOOLCHAIN=stable cargo test --target x86_64-unknown-linux-gnu
 
   cpp-checks:
     name: C++ Verification
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       # Modify the toolchain for CI compatibility
       - name: Setup CI toolchain file
         run: |
           mv rust-toolchain.toml rust-toolchain.original.toml
-          echo '[toolchain]
-channel = "nightly"
-components = ["rust-src"]' > rust-toolchain.toml
+          cat > rust-toolchain.toml << 'EOF'
+          [toolchain]
+          channel = "nightly"
+          components = ["rust-src", "rustfmt", "clippy"]
+          EOF
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -102,7 +106,7 @@ components = ["rust-src"]' > rust-toolchain.toml
       - name: Setup rust nightly
         uses: dtolnay/rust-toolchain@nightly
         with:
-          components: rust-src
+          components: rust-src, rustfmt, clippy
 
       - name: Install PlatformIO
         run: |
