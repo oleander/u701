@@ -42,6 +42,6 @@ fmt: setup
     . {{ESPUP_PATH}} && cargo fmt --all
     cargo fmt --package machine
     . {{ESPUP_PATH}} && RUSTUP_TOOLCHAIN=esp cargo clippy --workspace --all-targets --all-features --target xtensa-esp32-espidf --fix --allow-dirty
-    cargo clippy --package machine --all-targets --all-features --fix --allow-dirty
+    cd machine && cargo clippy --all-targets --all-features --fix --allow-dirty
 
 install: upload monitor
