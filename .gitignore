@@ -20,4 +20,12 @@ _PipelineMapping/
 _actions/
 tmp/cache/bolt.db
 
+# ESP-IDF component lock files
+dependencies.lock
+
+# CI-specific configurations
+platformio.ci.ini
+rust-toolchain.ci.toml
+rust-toolchain.original.toml
+
 **/.claude/settings.local.json
